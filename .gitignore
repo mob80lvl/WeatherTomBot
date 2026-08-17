@@ -1,0 +1,38 @@
+# Backup files
+*.backup_*
+*.bak
+*.backup
+
+# Update scripts
+apply_update.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Environment
+.env
+.env.local
+
+# Runtime data
+*.json
+!env.example
+
+# Logs
+*.log
+
+# Generated
+generated_media/
+white_label_media/
+*.tmp

@@ -3372,13 +3372,14 @@ def index():
     <script>document.getElementById('dt').textContent = new Date().toLocaleString('ru-RU');</script></body></html>'''
 
 @app.route('/set_webhook', methods=['GET'])
+@app.route('/set_webhook', methods=['GET'])
 def set_webhook():
     """Устанавливает webhook с защитой секретным токеном."""
     webhook_url = WEBHOOK_URL or request.host_url.rstrip("/") + "/webhook"
     webhook_secret = os.getenv("WEBHOOK_SECRET", "")
     if webhook_secret:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}&secret_token={webhook_secret}"
-        logger.info(f"Устанавливаем webhook с секретным токеном")
+        logger.info("Устанавливаем webhook с секретным токеном")
     else:
         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}"
         logger.warning("WEBHOOK_SECRET не задан! Webhook не защищен.")
@@ -3389,7 +3390,7 @@ def set_webhook():
         logger.error(f"Ошибка установки webhook: {e}", exc_info=True)
         return f"Error: {e}"
 
-@app.route('/webhook_info', methods=['GET'])
+
 def webhook_info():
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getWebhookInfo"
     try:
@@ -3524,6 +3525,3 @@ def validate_config():
     
     logger.info("Конфигурация валидна")
 
-if __name__ == '__main__':
-    validate_config()
-    app.run(host='0.0.0.0', port=5000, debug=False)

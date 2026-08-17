@@ -7,6 +7,10 @@ guarded by a process-local lock.
 """
 import os, json, time, uuid, secrets, hashlib, threading, math, logging
 
+logger = logging.getLogger("features"), logging
+
+logger = logging.getLogger("features"), logging
+
 logger = logging.getLogger("features")
 from datetime import datetime, timedelta
 from functools import wraps
@@ -199,6 +203,7 @@ def set_alert(uid, kind, enabled=True, threshold=None):
     alerts[kind] = {"enabled": bool(enabled), "threshold": validated_threshold}
     set_notification_prefs(uid, alerts=alerts)
     return alerts[kind]
+
 
 def alerts(uid):
     return notification_prefs(uid).get("alerts", {})
@@ -511,6 +516,7 @@ def create_api_key(uid, name="default"):
         logger.error(f"Ошибка создания API ключа: {e}", exc_info=True)
         return None, None
 
+
 def verify_api_key(raw):
     """Проверяет API ключ с учетом соли и статуса активности."""
     if not raw:
@@ -535,6 +541,7 @@ def verify_api_key(raw):
     except Exception as e:
         logger.error(f"Ошибка проверки API ключа: {e}", exc_info=True)
         return None
+
 
 def team_for(uid):
     db = _db()
