@@ -5,9 +5,7 @@ The module is intentionally storage-light (JSON) so it remains deployable on
 PythonAnywhere without a database. All write operations are atomic-ish and
 guarded by a process-local lock.
 """
-import os, json, time, uuid, secrets, hashlib, threading, math, logging
-
-logger = logging.getLogger("features")
+import os, json, time, uuid, secrets, hashlib, threading, math
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify
@@ -187,16 +185,9 @@ def set_notification_prefs(uid, **changes):
     return prefs
 
 def set_alert(uid, kind, enabled=True, threshold=None):
-    """Устанавливает параметры уведомления с валидацией типов."""
     prefs = notification_prefs(uid)
     alerts = prefs.setdefault("alerts", {})
-    validated_threshold = None
-    if threshold is not None:
-        try:
-            validated_threshold = float(threshold)
-        except (TypeError, ValueError):
-            validated_threshold = None
-    alerts[kind] = {"enabled": bool(enabled), "threshold": validated_threshold}
+    alerts[kind] = {"enabled": bool(enabled), "threshold": threshold}
     set_notification_prefs(uid, alerts=alerts)
     return alerts[kind]
 
@@ -491,50 +482,26 @@ def re_safe(s):
     return "".join(c if c.isalnum() else "_" for c in str(s))[:60]
 
 def create_api_key(uid, name="default"):
-    """Создает API ключ с улучшенной безопасностью (соль + 32 символа)."""
     if not (_business(uid) or _admin(uid)):
-        logger.warning(f"Попытка создания API ключа без прав: user={uid}")
-        return None, None
-    try:
-        keys = _load(API_KEY_FILE, {})
-        raw = "wt_" + secrets.token_urlsafe(32)
-        salt = secrets.token_hex(16)
-        digest = hashlib.sha256((salt + raw).encode()).hexdigest()
-        keys[digest] = {
-            "owner": str(uid), "name": name, "created_at": _now(),
-            "last_used": None, "salt": salt, "active": True, "usage_count": 0
-        }
-        _save(API_KEY_FILE, keys)
-        logger.info(f"API ключ создан: user={uid}, name={name}")
-        return raw, keys[digest]
-    except Exception as e:
-        logger.error(f"Ошибка создания API ключа: {e}", exc_info=True)
-        return None, None
+        return None
+    keys = _load(API_KEY_FILE, {})
+    raw = "wt_" + secrets.token_urlsafe(24)
+    digest = hashlib.sha256(raw.encode()).hexdigest()
+    keys[digest] = {"owner": str(uid), "name": name, "created_at": _now(), "last_used": None}
+    _save(API_KEY_FILE, keys)
+    return raw
 
 def verify_api_key(raw):
-    """Проверяет API ключ с учетом соли и статуса активности."""
     if not raw:
         return None
-    try:
-        keys = _load(API_KEY_FILE, {})
-        for digest, item in keys.items():
-            if not item.get("active", True):
-                continue
-            salt = item.get("salt", "")
-            expected_digest = hashlib.sha256((salt + raw).encode()).hexdigest()
-            if digest == expected_digest:
-                item["last_used"] = _now()
-                item["usage_count"] = item.get("usage_count", 0) + 1
-                try:
-                    _save(API_KEY_FILE, keys)
-                except Exception:
-                    pass
-                return item
-        logger.warning(f"Невалидный API ключ: {raw[:10]}...")
-        return None
-    except Exception as e:
-        logger.error(f"Ошибка проверки API ключа: {e}", exc_info=True)
-        return None
+    digest = hashlib.sha256(raw.encode()).hexdigest()
+    keys = _load(API_KEY_FILE, {})
+    item = keys.get(digest)
+    if item:
+        item["last_used"] = _now()
+        _save(API_KEY_FILE, keys)
+        return item
+    return None
 
 def team_for(uid):
     db = _db()
@@ -616,12 +583,8 @@ def daily_notification_job():
     today = local_now.strftime("%Y-%m-%d")
     sent = 0
     changed = False
-    errors_count = 0
 
-    # Rate limiting: максимум 100 пользователей за раз
-    users_list = list(db.get("users", {}).items())[:100]
-
-    for uid, profile in users_list:
+    for uid, profile in db.get("users", {}).items():
         prefs = profile.get("notifications", {})
         city = _city(uid)
         if not city:
@@ -693,15 +656,16 @@ def daily_notification_job():
                     changed = True
 
         except Exception as exc:
-            # Изолируем ошибку для каждого пользователя
-            errors_count += 1
-            logger.error(f"Ошибка обработки уведомлений для пользователя {uid}: {exc}")
+            # One broken user/API response must never stop notifications for everyone else.
+            try:
+                logger = __import__("logging").getLogger("features")
+                logger.exception("Notification check failed for user %s: %s", uid, exc)
+            except Exception:
+                pass
             continue
 
     if changed:
         _save_db(db)
-    if sent > 0 or errors_count > 0:
-        logger.info(f"Уведомления: отправлено={sent}, ошибок={errors_count}")
     return sent
 
 def process_due_channels():
