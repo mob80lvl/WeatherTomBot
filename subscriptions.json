@@ -1,0 +1,16 @@
+{
+  "8684148229": {
+    "plan": "business",
+    "expiry": "2026-09-11T22:08:38.743293",
+    "activated_by": "payment_b2b",
+    "activated_at": "2026-08-12T22:08:38.743293",
+    "b2b_type": "business"
+  },
+  "1030398779": {
+    "plan": "business",
+    "expiry": "2026-09-12T07:31:14.789843",
+    "activated_by": "payment_b2b",
+    "activated_at": "2026-08-13T07:31:14.789843",
+    "b2b_type": "business"
+  }
+}
