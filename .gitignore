@@ -1,38 +1,24 @@
-# Backup files
-*.backup_*
-*.bak
-*.backup
+# Секреты - НИКОГДА не загружать!
+.env
+.env.*
 
-# Update scripts
-apply_update.py
+# Данные пользователей
+*.json
+!env.example
+
+# Логи
+*.log
 
 # Python
 __pycache__/
 *.py[cod]
-*.so
-.Python
-venv/
-env/
+*.pyc
 .venv/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*~
+# Бэкапы
+*.backup_*
 
-# Environment
-.env
-.env.local
-
-# Runtime data
-*.json
-!env.example
-
-# Logs
-*.log
-
-# Generated
+# Временные файлы
+*.tmp
 generated_media/
 white_label_media/
-*.tmp
