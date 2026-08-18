@@ -203,6 +203,68 @@ def check_api_rate_limit(uid, limit=100, window=3600):
     }
 
 
+
+def log_api_request(uid, endpoint, params=None, status_code=200):
+    """Логирует API запрос для мониторинга использования."""
+    import time
+    db = _db()
+    user_data = db["users"].setdefault(str(uid), {})
+    
+    # Инициализируем историю если её нет
+    if "api_history" not in user_data:
+        user_data["api_history"] = []
+    
+    # Добавляем запись
+    log_entry = {
+        "timestamp": _now(),
+        "endpoint": endpoint,
+        "params": params or {},
+        "status": status_code
+    }
+    
+    user_data["api_history"].append(log_entry)
+    
+    # Ограничиваем историю последними 100 запросами
+    if len(user_data["api_history"]) > 100:
+        user_data["api_history"] = user_data["api_history"][-100:]
+    
+    _save_db(db)
+    logger.info(f"API request logged: user={uid}, endpoint={endpoint}, status={status_code}")
+
+def get_api_stats(uid):
+    """Возвращает статистику использования API."""
+    db = _db()
+    user_data = db["users"].get(str(uid), {})
+    history = user_data.get("api_history", [])
+    
+    if not history:
+        return {
+            "total_requests": 0,
+            "by_endpoint": {},
+            "last_24h": 0,
+            "last_7d": 0
+        }
+    
+    # Статистика по эндпоинтам
+    by_endpoint = {}
+    for req in history:
+        endpoint = req.get("endpoint", "unknown")
+        by_endpoint[endpoint] = by_endpoint.get(endpoint, 0) + 1
+    
+    # Запросы за последние 24 часа
+    import time
+    now = time.time()
+    last_24h = sum(1 for req in history if now - req.get("timestamp", 0) < 86400)
+    last_7d = sum(1 for req in history if now - req.get("timestamp", 0) < 604800)
+    
+    return {
+        "total_requests": len(history),
+        "by_endpoint": by_endpoint,
+        "last_24h": last_24h,
+        "last_7d": last_7d
+    }
+
+
 def get_api_inline_keyboard():
     """Создает inline-клавиатуру для API управления."""
     return {
@@ -213,10 +275,11 @@ def get_api_inline_keyboard():
             ],
             [
                 {"text": "🏙 Установить город", "callback_data": "api_set_city"},
-                {"text": "📊 Мой профиль", "callback_data": "api_profile"}
+                {"text": "📊 Статистика", "callback_data": "api_stats"}
             ],
             [
-                {"text": "🗑 Удалить все ключи", "callback_data": "api_delete_all"}
+                {"text": "👤 Мой профиль", "callback_data": "api_profile"},
+                {"text": "🗑 Удалить ключи", "callback_data": "api_delete_all"}
             ]
         ]
     }
@@ -1089,6 +1152,31 @@ def handle(uid, text):
             _send(uid, msg)
         return True
 
+    if low == "/api_stats":
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_api"))
+            return True
+        
+        stats = get_api_stats(uid)
+        
+        if stats["total_requests"] == 0:
+            _send(uid, "📊 Статистика API\n\nВы ещё не использовали API.")
+            return True
+        
+        stats_text = f"""📊 Статистика использования API
+
+📈 Всего запросов: {stats["total_requests"]}
+🕐 За последние 24 часа: {stats["last_24h"]}
+📅 За последние 7 дней: {stats["last_7d"]}
+
+📍 По эндпоинтам:
+"""
+        for endpoint, count in sorted(stats["by_endpoint"].items(), key=lambda x: x[1], reverse=True):
+            stats_text += f"  • {endpoint}: {count} запросов\n"
+        
+        _send(uid, stats_text)
+        return True
+
     if low.startswith("/api_city"):
         if not _business(uid):
             _send(uid, _FT(uid, "business_api"))
@@ -1225,6 +1313,7 @@ def register_routes(app):
         fn = CFG.get("get_weather_aggregated")
         if not fn: return jsonify({"ok":False,"error":"weather_unavailable"}), 503
         result = fn(city, _lang(item["owner"]))
+        log_api_request(item["owner"], "/weather", {"city": city}, 200)
         return jsonify({"ok":True,"city":city,"weather":result})
 
     @app.route("/api/v1/forecast", methods=["GET"])
@@ -1238,7 +1327,9 @@ def register_routes(app):
             return jsonify({"ok":False,"error":"invalid_days"}), 400
         fn = CFG.get("get_forecast_aggregated")
         if not city or not fn: return jsonify({"ok":False,"error":"city_required"}), 400
-        return jsonify({"ok":True,"city":city,"forecast":fn(city, days, _lang(item["owner"]))})
+        result = fn(city, days, _lang(item["owner"]))
+        log_api_request(item["owner"], "/forecast", {"city": city, "days": days}, 200)
+        return jsonify({"ok":True,"city":city,"forecast":result})
 
     @app.route("/api/v1/me", methods=["GET"])
     def api_me():

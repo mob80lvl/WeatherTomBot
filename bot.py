@@ -2352,6 +2352,18 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                     profile_text = f"📊 Ваш API Профиль\n\n🆔 User ID: {chat_id}\n🔑 API ключей: {api_keys_count}\n🏙 Город по умолчанию: {profile.get('api_default_city', 'не установлен')}\n📅 Первая активность: {first_seen}"
                     send_message(chat_id, profile_text)
                 return "ok", 200
+
+            elif data_str == "api_stats":
+                if advanced_features:
+                    stats = advanced_features.get_api_stats(chat_id)
+                    if stats["total_requests"] == 0:
+                        send_message(chat_id, "📊 Статистика API\n\nВы ещё не использовали API.")
+                    else:
+                        stats_text = f"📊 Статистика API\n\n📈 Всего: {stats['total_requests']}\n🕐 24ч: {stats['last_24h']}\n📅 7 дней: {stats['last_7d']}\n\nПо эндпоинтам:\n"
+                        for endpoint, count in sorted(stats["by_endpoint"].items(), key=lambda x: x[1], reverse=True):
+                            stats_text += f"  • {endpoint}: {count}\n"
+                        send_message(chat_id, stats_text)
+                return "ok", 200
             
             elif data_str == "api_delete_all":
                 if advanced_features:
