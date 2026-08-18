@@ -1099,7 +1099,7 @@ _NEW_TEXTS = {
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Аналитика*\n\nBusiness: статистика подключённых каналов и публикаций.",
         "autopost_menu":"📢 *Автопостинг*\n\nBusiness позволяет автоматически публиковать погоду в Telegram-канале.\n\nКоманды:\n/channel @channel CITY 08:00 — добавить канал\n/channels — мои каналы",
-        "card_menu":"🖼 *Погодная карточка*\n\nBusiness: /generate_card CITY",
+        "card_menu":"🖼 Погодная карточка\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — создать API-ключ.",
         "team_menu":"👥 *Команда*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
@@ -1115,7 +1115,7 @@ _NEW_TEXTS = {
         "trip_city":"✈️ *Trip*\n\nSend the destination city.","trip_days":"📅 How many days? Choose a number from 1 to 10.",
         "trip_result":"✈️ *Trip forecast: {city}*\n\n{result}","ai_button":"🤖 *AI Assistant*\n\nSend a question about the weather, your trip, or what to do today.",
         "autopost_menu":"📢 *Auto-posting*\n\nBusiness can automatically publish weather to Telegram channels.\n\nCommands:\n/channel @channel CITY 08:00 — add a channel\n/channels — my channels",
-        "card_menu":"🖼 *Weather Card*\n\nBusiness: /generate_card CITY",
+        "card_menu":"🖼 Weather Card\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — create an API key.",
         "team_menu":"👥 *Team*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
@@ -1131,7 +1131,7 @@ _NEW_TEXTS = {
         "trip_city":"✈️ *Viaje*\n\nEscribe la ciudad de destino.","trip_days":"📅 ¿Cuántos días? Elige de 1 a 10.",
         "trip_result":"✈️ *Pronóstico del viaje: {city}*\n\n{result}","ai_button":"🤖 *Asistente IA*\n\nEscribe una pregunta sobre el tiempo, tu viaje o qué hacer hoy.",
         "autopost_menu":"📢 *Publicación automática*\n\nBusiness puede publicar automáticamente el tiempo en canales de Telegram.\n\nComandos:\n/channel @channel CITY 08:00\n/channels",
-        "card_menu":"🖼 *Tarjeta meteorológica*\n\nBusiness: /generate_card CITY",
+        "card_menu":"🖼 Tarjeta meteorológica\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey",
         "team_menu":"👥 *Equipo*\n\nBusiness: /team create NAME",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
@@ -1147,7 +1147,7 @@ _NEW_TEXTS = {
         "trip_city":"✈️ *旅行*\n\n请输入目的地城市。","trip_days":"📅 几天？请选择 1 到 10。",
         "trip_result":"✈️ *旅行预报：{city}*\n\n{result}","ai_button":"🤖 *AI助手*\n\n请输入关于天气、旅行或今天活动的问题。",
         "autopost_menu":"📢 *自动发布*\n\nBusiness 可自动将天气发布到 Telegram 频道。\n\n命令：\n/channel @channel CITY 08:00\n/channels",
-        "card_menu":"🖼 *天气卡片*\n\nBusiness：/generate_card CITY",
+        "card_menu":"🖼 天气卡片\n\nBusiness：/generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness：/apikey",
         "team_menu":"👥 *团队*\n\nBusiness：/team create NAME",
         "whitelabel_menu":"🏷 *白标*\n\nBusiness：/white_label NAME",
@@ -1224,14 +1224,39 @@ def set_user_lang(chat_id, lang):
 # ============================================================
 
 def get_user_city(chat_id):
+    """Возвращает город пользователя."""
     try:
-        if os.path.exists(USERS_FILE):
-            with open(USERS_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                return data.get(str(chat_id))
-    except:
-        pass
-    return None
+        # Пробуем прочитать из users_city.json напрямую
+        import json, os
+        cities_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users_city.json")
+        cities = {}
+        if os.path.exists(cities_path):
+            with open(cities_path, 'r', encoding='utf-8') as f:
+                cities = json.load(f)
+        
+        # Преобразуем chat_id в строку для поиска
+        city = cities.get(str(chat_id))
+        if city:
+            logger.info(f"get_user_city: found city repr={repr(city)} for chat_id={chat_id}")
+            return city
+        
+        # Если не нашли - проверяем features.json
+        features_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "features.json")
+        if os.path.exists(features_path):
+            with open(features_path, 'r', encoding='utf-8') as f:
+                db = json.load(f)
+            user = db.get("users", {}).get(str(chat_id), {})
+            city = user.get("city")
+            if city:
+                logger.info(f"get_user_city: found city '{city}' in features.json for chat_id={chat_id}")
+                return city
+        
+        logger.info(f"get_user_city: city not found for chat_id={chat_id}")
+        return None
+    except Exception as e:
+        logger.error(f"Ошибка get_user_city: {e}", exc_info=True)
+        return None
+
 
 def save_user_city(chat_id, city):
     try:
@@ -2420,6 +2445,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
         lang = get_user_lang(chat_id)
         keyboard = get_main_keyboard(chat_id)
         current_city = get_user_city(chat_id)
+        logger.info(f"DEBUG current_city: repr={repr(current_city)}, type={type(current_city).__name__}, len={len(current_city) if current_city else 0}, chat_id={chat_id}")
         is_subscribed = is_user_subscribed(chat_id)
         b2b_type = get_user_b2b_type(chat_id)
 
@@ -2660,19 +2686,30 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
             _clear_user_state(chat_id); send_message(chat_id,T(lang,"btn_back"),get_main_keyboard(chat_id)); return "ok",200
 
         if text == T(lang, "btn_card"):
+            logger.info(f"CARD: user={chat_id}, plan={get_current_plan(chat_id)}, city={current_city}")
             if get_current_plan(chat_id) == "free":
+                logger.info(f"CARD: показываем paywall")
                 _paywall(chat_id, "premium")
                 return "ok", 200
             if advanced_features:
-                weather = get_weather_aggregated(current_city, lang)
-                brand = advanced_features._db().get("white_labels", {}).get(str(chat_id), {})
-                path = advanced_features.generate_weather_card(weather, current_city, brand=brand)
-                if path:
-                    send_photo(chat_id, path, T(lang, "card_ready"))
-                else:
-                    send_message(chat_id, T(lang, "card_menu"), keyboard)
+                try:
+                    logger.info(f"CARD: получаем погоду для {current_city}")
+                    weather = get_weather_aggregated(current_city, lang)
+                    logger.info(f"CARD: погода получена: {weather.get('temp', 'error')}")
+                    brand = advanced_features._db().get("white_labels", {}).get(str(chat_id), {})
+                    logger.info(f"CARD: генерируем карточку")
+                    path = advanced_features.generate_weather_card(weather, current_city, brand=brand)
+                    logger.info(f"CARD: карточка создана: {path}")
+                    if path:
+                        send_photo(chat_id, path, "🖼 Карточка готова.")
+                    else:
+                        send_message(chat_id, "🖼 Не удалось создать карточку")
+                except Exception as e:
+                    logger.error(f"CARD: Ошибка: {e}", exc_info=True)
+                    send_message(chat_id, f"❌ Ошибка: {str(e)[:100]}")
+            else:
+                logger.error("CARD: advanced_features не загружен")
             return "ok", 200
-
         if text == T(lang, "btn_whitelabel"):
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")

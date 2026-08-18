@@ -7,9 +7,7 @@ guarded by a process-local lock.
 """
 import os, json, time, uuid, secrets, hashlib, threading, math, logging
 
-logger = logging.getLogger("features"), logging
 
-logger = logging.getLogger("features"), logging
 
 logger = logging.getLogger("features")
 from datetime import datetime, timedelta
@@ -18,8 +16,11 @@ from flask import request, jsonify
 
 try:
     from PIL import Image, ImageDraw, ImageFont
-except Exception:
+    logger.info("PIL imported successfully")
+except Exception as e:
+    logger.error(f"Failed to import PIL: {e}", exc_info=True)
     Image = ImageDraw = ImageFont = None
+
 
 FEATURE_FILE = os.getenv("FEATURES_FILE", "features.json")
 API_KEY_FILE = os.getenv("API_KEYS_FILE", "api_keys.json")
@@ -613,10 +614,90 @@ def post_weather_card(channel_id, city, caption=None):
     return result
 
 def generate_weather_card(weather, city, brand=None):
-    os.makedirs(MEDIA_DIR, exist_ok=True)
-    safe = re_safe(city)
-    path = os.path.join(MEDIA_DIR, f"weather_{safe}_{int(time.time())}.png")
-    if Image is None:
+    logger.info(f"generate_weather_card: START city={city!r}, brand={brand}")
+    try:
+        os.makedirs(MEDIA_DIR, exist_ok=True)
+        logger.info(f"generate_weather_card: MEDIA_DIR created: {MEDIA_DIR}")
+        safe = re_safe(city)
+        path = os.path.join(MEDIA_DIR, f"weather_{safe}_{int(time.time())}.png")
+        logger.info(f"generate_weather_card: path={path}")
+        
+        if Image is None:
+            logger.error("generate_weather_card: Image (PIL) is None!")
+            return None
+        
+        logger.info("generate_weather_card: creating image...")
+        img = Image.new("RGB", (1200, 630), (22, 30, 55))
+        draw = ImageDraw.Draw(img)
+        
+        try:
+            font_big = ImageFont.truetype("DejaVuSans.ttf", 92)
+            font = ImageFont.truetype("DejaVuSans.ttf", 42)
+            small = ImageFont.truetype("DejaVuSans.ttf", 30)
+        except Exception as font_err:
+            logger.warning(f"generate_weather_card: font error: {font_err}")
+            font_big = font = small = ImageFont.load_default()
+        
+        temp = weather.get("temp", "—")
+        desc = weather.get("description", "—")
+        wind = weather.get("wind_speed", "—")
+        
+        logger.info(f"generate_weather_card: drawing text temp={temp}, desc={desc}, wind={wind}")
+        
+        brand = brand if isinstance(brand, dict) else {}
+        accent = (255, 215, 0)
+        primary = str(brand.get("primary") or "").lstrip("#")
+        if len(primary) == 6:
+            try:
+                accent = tuple(int(primary[i:i+2], 16) for i in (0, 2, 4))
+            except ValueError:
+                pass
+        
+        # Обрезаем длинное название города
+        city_display = str(city)
+        if len(city_display) > 30:
+            city_display = city_display[:27] + "..."
+        
+        # Дополнительные данные прогноза
+        feels = weather.get("feels_like", "—")
+        humidity = weather.get("humidity", "—")
+        pressure = weather.get("pressure", "—")
+        
+        # Текущая дата
+        from datetime import datetime
+        date_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+        
+        # Отрисовка полного прогноза
+        draw.text((60, 40), city_display, font=font, fill=(255,255,255))
+        draw.text((60, 110), f"{temp}°", font=font_big, fill=accent)
+        draw.text((70, 230), str(desc), font=font, fill=(255,255,255))
+        draw.text((70, 290), f"Ощущается как: {feels}°", font=small, fill=(220,230,240))
+        draw.text((70, 330), f"Влажность: {humidity}%", font=small, fill=(220,230,240))
+        draw.text((70, 370), f"Ветер: {wind} м/с", font=small, fill=(220,230,240))
+        draw.text((70, 410), f"Давление: {pressure} мм рт.ст.", font=small, fill=(220,230,240))
+        draw.text((70, 460), date_str, font=small, fill=(150,160,180))
+        
+        brand_name = brand.get("name") or "WeatherTomBot"
+        # Защита от мусорных значений (кнопки меню, слишком длинные)
+        if not isinstance(brand_name, str) or len(brand_name) > 30 or "Назад" in brand_name or "Back" in brand_name or "⬅" in brand_name:
+            brand_name = "WeatherTomBot"
+        logo = brand.get("logo")
+        if logo and os.path.exists(str(logo)):
+            try:
+                logo_img = Image.open(str(logo)).convert("RGBA")
+                logo_img.thumbnail((120, 120))
+                img.paste(logo_img, (1020, 470), logo_img)
+            except Exception:
+                pass
+        
+        draw.text((70, 520), brand_name, font=small, fill=(170,180,200))
+        
+        logger.info(f"generate_weather_card: saving to {path}")
+        img.save(path, "PNG")
+        logger.info(f"generate_weather_card: SUCCESS path={path}")
+        return path
+    except Exception as e:
+        logger.error(f"generate_weather_card: EXCEPTION: {e}", exc_info=True)
         return None
     img = Image.new("RGB", (1200, 630), (22, 30, 55))
     draw = ImageDraw.Draw(img)
