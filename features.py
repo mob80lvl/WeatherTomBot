@@ -153,6 +153,75 @@ def get_api_default_city(uid):
     db = _db()
     return db["users"].get(str(uid), {}).get("api_default_city")
 
+
+
+def check_api_rate_limit(uid, limit=100, window=3600):
+    """Проверяет rate limit для API запросов.
+    
+    Args:
+        uid: ID пользователя
+        limit: максимальное количество запросов
+        window: временное окно в секундах (по умолчанию 1 час)
+    
+    Returns:
+        (bool, dict): (разрешено ли, информация о лимите)
+    """
+    import time
+    db = _db()
+    user_data = db["users"].setdefault(str(uid), {})
+    
+    # Инициализируем счётчик если его нет
+    if "api_requests" not in user_data:
+        user_data["api_requests"] = []
+    
+    now = time.time()
+    # Убираем старые запросы
+    user_data["api_requests"] = [
+        req_time for req_time in user_data["api_requests"]
+        if now - req_time < window
+    ]
+    
+    # Проверяем лимит
+    if len(user_data["api_requests"]) >= limit:
+        _save_db(db)
+        return False, {
+            "limit": limit,
+            "used": len(user_data["api_requests"]),
+            "window": window,
+            "reset_in": int(window - (now - user_data["api_requests"][0]))
+        }
+    
+    # Добавляем текущий запрос
+    user_data["api_requests"].append(now)
+    _save_db(db)
+    
+    return True, {
+        "limit": limit,
+        "used": len(user_data["api_requests"]),
+        "remaining": limit - len(user_data["api_requests"]),
+        "window": window
+    }
+
+
+def get_api_inline_keyboard():
+    """Создает inline-клавиатуру для API управления."""
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "🔑 Создать API-ключ", "callback_data": "api_create_key"},
+                {"text": "📖 Документация", "callback_data": "api_help"}
+            ],
+            [
+                {"text": "🏙 Установить город", "callback_data": "api_set_city"},
+                {"text": "📊 Мой профиль", "callback_data": "api_profile"}
+            ],
+            [
+                {"text": "🗑 Удалить все ключи", "callback_data": "api_delete_all"}
+            ]
+        ]
+    }
+
+
 def add_favorite(uid, city):
     city = (city or "").strip()
     if not city:
@@ -515,6 +584,14 @@ def create_api_key(uid, name="default"):
         return None, None
     try:
         keys = _load(API_KEY_FILE, {})
+        
+        # Проверяем лимит ключей (максимум 5 на пользователя)
+        user_keys_count = sum(1 for k, v in keys.items() if v.get("owner") == str(uid) and v.get("active"))
+        max_keys = 5
+        
+        if user_keys_count >= max_keys:
+            logger.warning(f"Превышен лимит API ключей: user={uid}, count={user_keys_count}/{max_keys}")
+            return None, None
         raw = "wt_" + secrets.token_urlsafe(32)
         salt = secrets.token_hex(16)
         digest = hashlib.sha256((salt + raw).encode()).hexdigest()

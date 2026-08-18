@@ -2209,6 +2209,18 @@ def format_trip_forecast_text(lang, city, result):
         return T(lang, "trip_result", city=city, result="❌ Нет данных прогноза.")
     return T(lang, "trip_result", city=city, result="\n\n".join(rows))
 
+def answer_callback_query(callback_query_id, text=None):
+    """Отвечает на callback_query чтобы убрать 'часики' у пользователя."""
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/answerCallbackQuery"
+    payload = {"callback_query_id": callback_query_id}
+    if text:
+        payload["text"] = text
+    try:
+        requests.post(url, json=payload, timeout=10)
+    except Exception as e:
+        logger.error(f"Ошибка answer_callback_query: {e}")
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     # Защита webhook секретным токеном
@@ -2271,6 +2283,89 @@ def webhook():
                     T(lang, "included") + "\n" + T(lang, "personal_features") + "\n📢 " + T(lang, "btn_autopost") + "\n🔑 " + T(lang, "btn_api")
                 )
             send_message(chat_id, success_text, keyboard)
+            return "ok", 200
+
+        # Обработка callback_query (inline-кнопки)
+        callback_query = data.get('callback_query')
+        if callback_query:
+            callback_id = callback_query['id']
+            chat_id = callback_query['message']['chat']['id']
+            data_str = callback_query['data']
+            lang = get_user_lang(chat_id)
+            
+            # Ответ на callback чтобы убрать "часики"
+            answer_callback_query(callback_id)
+            
+            # Обработка API кнопок
+            if data_str == "api_create_key":
+                if advanced_features:
+                    raw_key, key_info = advanced_features.create_api_key(chat_id)
+                    if raw_key:
+                        send_message(chat_id, f"🔑 API-ключ создан:\n`{raw_key}`")
+                    else:
+                        send_message(chat_id, "❌ Ошибка создания ключа. Проверьте подписку Business.")
+                return "ok", 200
+            
+            elif data_str == "api_help":
+                if advanced_features:
+                    default_city = advanced_features.get_api_default_city(chat_id) or "не установлен"
+                    help_text = f"""📖 API Документация
+
+🌍 Базовый URL:
+https://mob100500lvl.pythonanywhere.com/api/v1
+
+📍 Эндпоинты:
+• GET /weather?city=Город
+• GET /forecast?city=Город&days=5
+• GET /me
+
+🔑 Авторизация:
+Заголовок: X-API-Key: ваш_ключ
+
+🏙 Город по умолчанию: {default_city}
+
+📊 Лимиты:
+• Максимум 5 API ключей
+• 100 запросов в час на ключ
+
+💡 Пример:
+curl -H "X-API-Key: ВАШ_КЛЮЧ" \
+"https://mob100500lvl.pythonanywhere.com/api/v1/weather"
+"""
+                    send_message(chat_id, help_text)
+                return "ok", 200
+                return "ok", 200
+            
+            elif data_str == "api_set_city":
+                if advanced_features:
+                    _set_user_state(chat_id, "api_city_input")
+                    send_message(chat_id, "🏙 Введите город по умолчанию для API запросов:")
+                return "ok", 200
+            
+            elif data_str == "api_profile":
+                if advanced_features:
+                    db = advanced_features._db()
+                    profile = db["users"].get(str(chat_id), {})
+                    api_keys_file = advanced_features._load(advanced_features.API_KEY_FILE, {})
+                    api_keys_count = sum(1 for k, v in api_keys_file.items() if v.get("owner") == str(chat_id))
+                    first_seen = profile.get('first_seen', 'N/A')[:10] if profile.get('first_seen') else 'N/A'
+                    profile_text = f"📊 Ваш API Профиль\n\n🆔 User ID: {chat_id}\n🔑 API ключей: {api_keys_count}\n🏙 Город по умолчанию: {profile.get('api_default_city', 'не установлен')}\n📅 Первая активность: {first_seen}"
+                    send_message(chat_id, profile_text)
+                return "ok", 200
+            
+            elif data_str == "api_delete_all":
+                if advanced_features:
+                    keys = advanced_features._load(advanced_features.API_KEY_FILE, {})
+                    deleted = 0
+                    for digest, info in list(keys.items()):
+                        if info.get("owner") == str(chat_id):
+                            del keys[digest]
+                            deleted += 1
+                    advanced_features._save(advanced_features.API_KEY_FILE, keys)
+                    send_message(chat_id, f"🗑 Удалено API-ключей: {deleted}")
+                return "ok", 200
+            
+            # Для других callback_query просто возвращаем ok
             return "ok", 200
 
         message = data.get('message', {})
@@ -2379,6 +2474,22 @@ def webhook():
             _clear_user_state(chat_id)
             send_message(chat_id, T(lang, "city_changed" if state.get("mode") == "change_city" else "city_saved", city=city_name), get_main_keyboard(chat_id))
             send_message(chat_id, format_weather_text(chat_id, weather), get_main_keyboard(chat_id))
+            return "ok", 200
+
+        # Обработка ввода города для API
+        if state.get("mode") == "api_city_input":
+            if text.strip().startswith("/"):
+                _clear_user_state(chat_id)
+                send_message(chat_id, T(lang, "invalid_action"), get_main_keyboard(chat_id))
+                return "ok", 200
+            city_name = text.strip()
+            if not city_name:
+                send_message(chat_id, "🏙 Введите город для API:", get_main_keyboard(chat_id))
+                return "ok", 200
+            if advanced_features:
+                advanced_features.set_api_default_city(chat_id, city_name)
+            _clear_user_state(chat_id)
+            send_message(chat_id, f"✅ Город для API: *{city_name}*", get_main_keyboard(chat_id))
             return "ok", 200
 
         # No city yet: prompt only after stateful city input had a chance to run.
@@ -2664,7 +2775,7 @@ def webhook():
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")
             else:
-                send_message(chat_id, T(lang, "api_menu"), keyboard)
+                send_message(chat_id, T(lang, "api_menu"), advanced_features.get_api_inline_keyboard() if advanced_features else None)
             return "ok", 200
 
         elif action == "team":
