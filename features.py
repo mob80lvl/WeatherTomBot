@@ -140,6 +140,19 @@ def favorites(uid):
     db = _db()
     return db["users"].get(str(uid), {}).get("favorites", [])
 
+
+def set_api_default_city(uid, city):
+    db = _db()
+    p = db["users"].setdefault(str(uid), {})
+    p["api_default_city"] = city
+    _save_db(db)
+    logger.info(f"API default city set: user={uid}, city={city}")
+    return city
+
+def get_api_default_city(uid):
+    db = _db()
+    return db["users"].get(str(uid), {}).get("api_default_city")
+
 def add_favorite(uid, city):
     city = (city or "").strip()
     if not city:
@@ -806,6 +819,17 @@ FEATURE_TEXTS["en"]["analytics"] = "📊 Analytics\nRevenue: {revenue:.2f}\nMRR:
 FEATURE_TEXTS["es"]["analytics"] = "📊 Analítica\nIngresos: {revenue:.2f}\nMRR: {mrr:.2f}\nARPU: {arpu:.2f}\nPagos: {payments}\nUsuarios de pago: {paying_users}\n\nEmbudo: {funnel}\nRetención: {retention}\nFuentes: {sources}"
 FEATURE_TEXTS["zh"]["analytics"] = "📊 分析\n收入：{revenue:.2f}\nMRR：{mrr:.2f}\nARPU：{arpu:.2f}\n支付次数：{payments}\n付费用户：{paying_users}\n\n漏斗：{funnel}\n留存：{retention}\n来源：{sources}"
 
+
+FEATURE_TEXTS["ru"]["api_menu"] = "🔑 *API Управление*\n\nВыберите действие:"
+FEATURE_TEXTS["ru"]["api_key_created"] = "🔑 API-ключ создан:\n`{api_key}`\n\n📖 Документация: /api_help"
+FEATURE_TEXTS["ru"]["api_city_set"] = "✅ Город по умолчанию для API: *{city}*"
+FEATURE_TEXTS["ru"]["api_city_prompt"] = "🏙 Введите город по умолчанию для API запросов:"
+
+FEATURE_TEXTS["en"]["api_menu"] = "🔑 *API Management*\n\nChoose an action:"
+FEATURE_TEXTS["en"]["api_key_created"] = "🔑 API key created:\n`{api_key}`\n\n📖 Docs: /api_help"
+FEATURE_TEXTS["en"]["api_city_set"] = "✅ Default API city: *{city}*"
+FEATURE_TEXTS["en"]["api_city_prompt"] = "🏙 Enter default city for API requests:"
+
 def _FT(uid, key, **kwargs):
     lang = _lang(uid)
     text = FEATURE_TEXTS.get(lang, FEATURE_TEXTS["en"]).get(key, FEATURE_TEXTS["en"].get(key, key))
@@ -975,6 +999,32 @@ def handle(uid, text):
         _send(uid, _FT(uid, "promo_applied") if ok else _FT(uid, "promo_error", result=result))
         return True
 
+
+    if low in ("/api", "/api_help"):
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_api"))
+            return True
+        if low == "/api":
+            _send(uid, _FT(uid, "api_menu"))
+        else:
+            default_city = get_api_default_city(uid) or "не установлен"
+            msg = "📖 API Документация\n\nGET /weather?city=Город\nGET /forecast?city=Город&days=5\nGET /me\n\nГород по умолчанию: " + default_city
+            _send(uid, msg)
+        return True
+
+    if low.startswith("/api_city"):
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_api"))
+            return True
+        parts = raw.split(maxsplit=1)
+        if len(parts) < 2:
+            _send(uid, _FT(uid, "api_city_prompt"))
+            return True
+        city = parts[1].strip()
+        set_api_default_city(uid, city)
+        _send(uid, _FT(uid, "api_city_set", city=city))
+        return True
+
     if low == "/plans":
         _send(uid, _FT(uid, "plans"))
         return True
@@ -1092,6 +1142,8 @@ def register_routes(app):
         item = verify_api_key(request.headers.get("X-API-Key") or request.args.get("api_key"))
         if not item: return jsonify({"ok":False,"error":"invalid_api_key"}), 401
         city = request.args.get("city")
+        if not city:
+            city = get_api_default_city(item["owner"])
         if not city: return jsonify({"ok":False,"error":"city_required"}), 400
         fn = CFG.get("get_weather_aggregated")
         if not fn: return jsonify({"ok":False,"error":"weather_unavailable"}), 503
