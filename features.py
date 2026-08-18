@@ -215,8 +215,9 @@ def log_api_request(uid, endpoint, params=None, status_code=200):
         user_data["api_history"] = []
     
     # Добавляем запись
+    import time as _time
     log_entry = {
-        "timestamp": _now(),
+        "timestamp": _time.time(),
         "endpoint": endpoint,
         "params": params or {},
         "status": status_code
@@ -251,11 +252,27 @@ def get_api_stats(uid):
         endpoint = req.get("endpoint", "unknown")
         by_endpoint[endpoint] = by_endpoint.get(endpoint, 0) + 1
     
-    # Запросы за последние 24 часа
+    # Запросы за последние 24 часа (безопасное преобразование timestamp)
     import time
     now = time.time()
-    last_24h = sum(1 for req in history if now - req.get("timestamp", 0) < 86400)
-    last_7d = sum(1 for req in history if now - req.get("timestamp", 0) < 604800)
+    
+    def safe_timestamp(ts):
+        """Безопасно преобразует timestamp в число."""
+        if isinstance(ts, (int, float)):
+            return ts
+        # Если строка - пытаемся распарсить
+        try:
+            from datetime import datetime
+            if isinstance(ts, str):
+                # Пробуем ISO формат
+                dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+                return dt.timestamp()
+        except (ValueError, TypeError):
+            pass
+        return 0
+    
+    last_24h = sum(1 for req in history if now - safe_timestamp(req.get("timestamp", 0)) < 86400)
+    last_7d = sum(1 for req in history if now - safe_timestamp(req.get("timestamp", 0)) < 604800)
     
     return {
         "total_requests": len(history),
@@ -1301,6 +1318,255 @@ def handle(uid, text):
 
     return False
 
+
+
+# HTML шаблон для API Dashboard
+API_DASHBOARD_HTML = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherTomBot API Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+.header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+.header h1 { font-size: 26px; margin-bottom: 8px; }
+.content { padding: 30px; }
+.section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+.section h2 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.stat-value { font-size: 30px; font-weight: bold; color: #667eea; }
+.stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+.key-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.key-name { font-weight: bold; }
+.key-meta { font-size: 12px; color: #666; margin-top: 4px; }
+.key-hash {
+    font-family: monospace;
+    background: #f0f0f0;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin-top: 4px;
+    display: inline-block;
+}
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+.btn-danger:hover { background: #c0392b; }
+.login-box {
+    max-width: 400px;
+    margin: 50px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+}
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 14px;
+}
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.alert-error { background: #ffe5e5; color: #c0392b; border-left: 4px solid #e74c3c; }
+.code {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+.footer {
+    text-align: center;
+    padding: 15px;
+    color: #999;
+    font-size: 12px;
+}
+</style>
+</head>
+<body>
+{{CONTENT}}
+<div class="footer">WeatherTomBot API v3.1.0 - 2026</div>
+</body>
+</html>
+"""
+
+def render_dashboard(uid=None, error=None):
+    """Рендерит HTML страницу Dashboard."""
+    if not uid:
+        # Форма входа
+        error_html = f'<div class="alert alert-error">{error}</div>' if error else ''
+        content = f"""
+        <div class="login-box">
+            <h2 style="color: #667eea;">🔐 API Dashboard</h2>
+            {error_html}
+            <form method="POST" action="/api/dashboard">
+                <input type="text" name="api_key" placeholder="Введите ваш API-ключ" required>
+                <button type="submit">Войти</button>
+            </form>
+            <p style="margin-top: 15px; font-size: 13px; color: #666;">
+                Получить ключ: команда <b>/apikey</b> в боте
+            </p>
+        </div>
+        """
+        return API_DASHBOARD_HTML.replace("{{CONTENT}}", content)
+    
+    # Dashboard для авторизованного пользователя
+    db = _db()
+    profile = db["users"].get(str(uid), {})
+    stats = get_api_stats(uid)
+    
+    keys = _load(API_KEY_FILE, {})
+    user_keys = [(d, i) for d, i in keys.items() if i.get("owner") == str(uid)]
+    
+    # Статистика
+    content = f"""
+    <div class="container">
+        <div class="header">
+            <h1>🌤 WeatherTomBot API</h1>
+            <p>Панель управления для пользователя {uid}</p>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>📊 Статистика использования</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">{stats['total_requests']}</div>
+                        <div class="stat-label">Всего запросов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{stats['last_24h']}</div>
+                        <div class="stat-label">За 24 часа</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{stats['last_7d']}</div>
+                        <div class="stat-label">За 7 дней</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{len(user_keys)}</div>
+                        <div class="stat-label">API ключей</div>
+                    </div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>🔑 Ваши API ключи</h2>
+    """
+    
+    if user_keys:
+        for digest, info in user_keys:
+            created = str(info.get('created_at', 'N/A'))[:10]
+            usage = info.get('usage_count', 0)
+            content += f"""
+                <div class="key-item">
+                    <div>
+                        <div class="key-name">{info.get('name', 'default')}</div>
+                        <div class="key-meta">Создан: {created} | Использован: {usage} раз</div>
+                        <div class="key-hash">{digest[:16]}...</div>
+                    </div>
+                    <form method="POST" action="/api/dashboard">
+                        <input type="hidden" name="delete_key" value="{digest}">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Удалить этот ключ?')">🗑 Удалить</button>
+                    </form>
+                </div>
+            """
+    else:
+        content += '<p style="color: #666;">Нет ключей. Создайте через бота: /apikey</p>'
+    
+    default_city = get_api_default_city(uid) or "не установлен"
+    
+    content += f"""
+            </div>
+            <div class="section">
+                <h2>📖 Быстрая справка</h2>
+                <p><b>🏙 Город по умолчанию:</b> {default_city}</p>
+                <p style="margin-top: 10px;"><b>Пример запроса:</b></p>
+                <div class="code">curl -H "X-API-Key: ВАШ_КЛЮЧ" "https://mob100500lvl.pythonanywhere.com/api/v1/weather?city=Moscow"</div>
+                <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                    ⚠️ Лимиты: 100 запросов/час | Максимум 5 ключей
+                </p>
+            </div>
+        </div>
+    </div>
+    """
+    
+    return API_DASHBOARD_HTML.replace("{{CONTENT}}", content)
+
 def register_routes(app):
     @app.route("/api/v1/weather", methods=["GET"])
     def api_weather():
@@ -1341,6 +1607,55 @@ def register_routes(app):
         total = sum(float(x.get("amount", 0) or 0) for x in own)
         return jsonify({"ok":True,"user_id":uid,"profile":db["users"].get(uid,{}),
                         "payments":{"count":len(own),"total":total}})
+
+
+
+    @app.route("/api/docs", methods=["GET"])
+    def api_docs():
+        """Интерактивная документация API."""
+        with open('api_docs.html', 'r', encoding='utf-8') as f:
+            return f.read()
+
+    @app.route("/api/dashboard", methods=["GET", "POST"])
+    def api_dashboard():
+        """Веб-интерфейс для управления API."""
+        from flask import make_response, redirect
+        
+        if request.method == "POST":
+            api_key = request.form.get("api_key") or request.headers.get("X-API-Key")
+            delete_key = request.form.get("delete_key")
+            
+            # Удаление ключа
+            if delete_key and api_key:
+                item = verify_api_key(api_key)
+                if item:
+                    keys = _load(API_KEY_FILE, {})
+                    if delete_key in keys and keys[delete_key].get("owner") == str(item["owner"]):
+                        del keys[delete_key]
+                        _save(API_KEY_FILE, keys)
+                        return redirect("/api/dashboard?key=" + api_key)
+            
+            # Вход через API ключ
+            if api_key:
+                item = verify_api_key(api_key)
+                if item:
+                    html = render_dashboard(uid=item["owner"])
+                    response = make_response(html)
+                    response.set_cookie("api_key", api_key, max_age=30*24*3600, httponly=True)
+                    return response
+                else:
+                    return render_dashboard(error="❌ Неверный API-ключ"), 401
+        
+        # GET запрос
+        api_key = request.args.get("key") or request.cookies.get("api_key")
+        if api_key:
+            item = verify_api_key(api_key)
+            if item:
+                return render_dashboard(uid=item["owner"])
+            else:
+                return render_dashboard(error="❌ Неверный или истёкший ключ"), 401
+        
+        return render_dashboard()
 
     @app.route("/api/v1/admin/analytics", methods=["GET"])
     def api_admin_analytics():
