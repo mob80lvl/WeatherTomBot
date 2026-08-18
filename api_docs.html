@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeatherTomBot API Docs</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+}
+.header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 25px;
+    text-align: center;
+}
+.header h1 { font-size: 26px; margin-bottom: 5px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.auth-box {
+    background: #16213e;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #0f3460;
+}
+.auth-box input {
+    width: 100%;
+    padding: 12px;
+    background: #0f3460;
+    border: 1px solid #667eea;
+    border-radius: 8px;
+    color: white;
+    margin: 10px 0;
+}
+.endpoint-card {
+    background: #16213e;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid #0f3460;
+}
+.endpoint-header {
+    padding: 15px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.endpoint-header:hover { background: #0f3460; }
+.method {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 12px;
+    min-width: 55px;
+    text-align: center;
+    background: #28a745;
+    color: white;
+}
+.endpoint-path { font-family: monospace; font-size: 15px; flex: 1; }
+.endpoint-desc { color: #aaa; font-size: 13px; }
+.endpoint-body {
+    padding: 20px;
+    border-top: 1px solid #0f3460;
+    display: none;
+}
+.endpoint-body.open { display: block; }
+.params-table { width: 100%; margin: 15px 0; border-collapse: collapse; }
+.params-table th, .params-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #0f3460;
+}
+.params-table th { color: #667eea; }
+.param-input {
+    padding: 8px;
+    background: #0f3460;
+    border: 1px solid #667eea;
+    border-radius: 6px;
+    color: white;
+    width: 100%;
+}
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    margin-top: 10px;
+}
+.btn-try { background: #28a745; color: white; }
+.btn-try:hover { background: #218838; }
+.response-box {
+    background: #0a0a15;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    word-break: break-all;
+}
+.response-box.show { display: block; }
+.status-ok { color: #28a745; font-weight: bold; }
+.status-error { color: #dc3545; font-weight: bold; }
+.example-code {
+    background: #0a0a15;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    margin: 10px 0;
+    overflow-x: auto;
+}
+.copy-btn {
+    background: #0f3460;
+    color: #667eea;
+    border: 1px solid #667eea;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+}
+.copy-btn:hover { background: #667eea; color: white; }
+.info-box {
+    background: #0f3460;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #667eea;
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>📖 WeatherTomBot API</h1>
+    <p>Интерактивная документация v3.1.0</p>
+</div>
+<div class="container">
+    <div class="auth-box">
+        <h3>🔑 Авторизация</h3>
+        <input type="text" id="apiKey" placeholder="Вставьте ваш API-ключ">
+        <button class="btn btn-try" onclick="checkApiKey()" style="margin-top: 10px;">✅ Проверить ключ</button>
+        <div id="auth-status" style="margin-top: 10px; font-size: 14px;"></div>
+        <p style="font-size: 12px; color: #888; margin-top: 10px;">
+            💡 После ввода ключа нажмите на любой эндпоинт ниже и отправьте запрос
+        </p>
+    </div>
+    
+    <div class="info-box">
+        <b>🌍 Базовый URL:</b> https://mob100500lvl.pythonanywhere.com/api/v1<br>
+        <b>⚠️ Лимиты:</b> 100 запросов/час | Максимум 5 ключей
+    </div>
+    
+    <!-- GET /weather -->
+    <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint('weather')">
+            <span class="method">GET</span>
+            <span class="endpoint-path">/weather</span>
+            <span class="endpoint-desc">Текущая погода</span>
+        </div>
+        <div class="endpoint-body" id="weather">
+            <table class="params-table">
+                <tr><th>Параметр</th><th>Тип</th><th>Описание</th><th>Значение</th></tr>
+                <tr>
+                    <td>city</td>
+                    <td>string</td>
+                    <td>Город (опционально, если задан город по умолчанию)</td>
+                    <td><input type="text" class="param-input" id="weather-city" placeholder="Moscow"></td>
+                </tr>
+            </table>
+            <button class="btn btn-try" onclick="testWeather()">🚀 Отправить запрос</button>
+            <div class="response-box" id="weather-response"></div>
+            <div class="example-code">
+curl -H "X-API-Key: ВАШ_КЛЮЧ" \<br>
+"https://mob100500lvl.pythonanywhere.com/api/v1/weather?city=Moscow"
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- GET /forecast -->
+    <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint('forecast')">
+            <span class="method">GET</span>
+            <span class="endpoint-path">/forecast</span>
+            <span class="endpoint-desc">Прогноз на N дней</span>
+        </div>
+        <div class="endpoint-body" id="forecast">
+            <table class="params-table">
+                <tr><th>Параметр</th><th>Тип</th><th>Описание</th><th>Значение</th></tr>
+                <tr>
+                    <td>city</td>
+                    <td>string</td>
+                    <td>Город (опционально)</td>
+                    <td><input type="text" class="param-input" id="forecast-city" placeholder="Moscow"></td>
+                </tr>
+                <tr>
+                    <td>days</td>
+                    <td>integer</td>
+                    <td>Количество дней (1-10, по умолчанию 5)</td>
+                    <td><input type="number" class="param-input" id="forecast-days" value="5" min="1" max="10"></td>
+                </tr>
+            </table>
+            <button class="btn btn-try" onclick="testForecast()">🚀 Отправить запрос</button>
+            <div class="response-box" id="forecast-response"></div>
+            <div class="example-code">
+curl -H "X-API-Key: ВАШ_КЛЮЧ" \<br>
+"https://mob100500lvl.pythonanywhere.com/api/v1/forecast?city=Moscow&days=5"
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- GET /me -->
+    <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint('me')">
+            <span class="method">GET</span>
+            <span class="endpoint-path">/me</span>
+            <span class="endpoint-desc">Ваш профиль</span>
+        </div>
+        <div class="endpoint-body" id="me">
+            <p style="color: #aaa; margin-bottom: 15px;">Возвращает информацию о вашем профиле, подписке и статистике платежей.</p>
+            <button class="btn btn-try" onclick="testMe()">🚀 Отправить запрос</button>
+            <div class="response-box" id="me-response"></div>
+            <div class="example-code">
+curl -H "X-API-Key: ВАШ_КЛЮЧ" \<br>
+"https://mob100500lvl.pythonanywhere.com/api/v1/me"
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- GET /city -->
+    <div class="endpoint-card">
+        <div class="endpoint-header" onclick="toggleEndpoint('city')">
+            <span class="method">GET</span>
+            <span class="endpoint-path">/city</span>
+            <span class="endpoint-desc">Город по умолчанию</span>
+        </div>
+        <div class="endpoint-body" id="city">
+            <p style="color: #aaa; margin-bottom: 15px;">Возвращает ваш город по умолчанию для API запросов.</p>
+            <button class="btn btn-try" onclick="testCity()">🚀 Отправить запрос</button>
+            <div class="response-box" id="city-response"></div>
+            <div class="example-code">
+curl -H "X-API-Key: ВАШ_КЛЮЧ" \<br>
+"https://mob100500lvl.pythonanywhere.com/api/v1/city"
+                <button class="copy-btn" onclick="copyCode(this)">📋 Копировать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const BASE_URL = "https://mob100500lvl.pythonanywhere.com/api/v1";
+
+function toggleEndpoint(id) {
+    document.getElementById(id).classList.toggle('open');
+}
+
+function getApiKey() {
+    return document.getElementById('apiKey').value.trim();
+}
+
+async function checkApiKey() {
+    const apiKey = getApiKey();
+    const statusDiv = document.getElementById('auth-status');
+    
+    if (!apiKey) {
+        statusDiv.innerHTML = '<span style="color: #dc3545;">⚠️ Сначала вставьте ключ</span>';
+        return;
+    }
+    
+    statusDiv.innerHTML = '<span style="color: #ffc107;">⏳ Проверяю ключ...</span>';
+    
+    try {
+        const response = await fetch(BASE_URL + '/me', {
+            headers: { 'X-API-Key': apiKey }
+        });
+        
+        if (response.ok) {
+            statusDiv.innerHTML = '<span style="color: #28a745;">✅ Ключ работает! Теперь выберите эндпоинт ниже и отправьте запрос.</span>';
+        } else if (response.status === 401) {
+            statusDiv.innerHTML = '<span style="color: #dc3545;">❌ Неверный ключ. Создайте новый через /apikey в боте.</span>';
+        } else if (response.status === 429) {
+            statusDiv.innerHTML = '<span style="color: #ffc107;">⚠️ Превышен лимит запросов. Подождите немного.</span>';
+        } else {
+            statusDiv.innerHTML = '<span style="color: #dc3545;">❌ Ошибка: ' + response.status + '</span>';
+        }
+    } catch (error) {
+        statusDiv.innerHTML = '<span style="color: #dc3545;">❌ Ошибка соединения: ' + error.message + '</span>';
+    }
+}
+
+async function apiRequest(endpoint, params = {}) {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+        alert("⚠️ Введите API-ключ в поле авторизации");
+        return null;
+    }
+    
+    let url = BASE_URL + endpoint;
+    const queryString = Object.entries(params)
+        .filter(([k, v]) => v)
+        .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+        .join('&');
+    if (queryString) url += '?' + queryString;
+    
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-API-Key': apiKey }
+        });
+        const data = await response.json();
+        return { status: response.status, data };
+    } catch (error) {
+        return { status: 0, error: error.message };
+    }
+}
+
+function showResponse(id, result) {
+    const box = document.getElementById(id + '-response');
+    box.classList.add('show');
+    
+    if (result.error) {
+        box.innerHTML = '<span class="status-error">❌ Ошибка: ' + result.error + '</span>';
+    } else {
+        const statusClass = result.status === 200 ? 'status-ok' : 'status-error';
+        const statusText = result.status === 200 ? '✅ 200 OK' : '❌ ' + result.status;
+        box.innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>\n\n' + 
+                       JSON.stringify(result.data, null, 2);
+    }
+}
+
+async function testWeather() {
+    const city = document.getElementById('weather-city').value;
+    const result = await apiRequest('/weather', { city });
+    showResponse('weather', result);
+}
+
+async function testForecast() {
+    const city = document.getElementById('forecast-city').value;
+    const days = document.getElementById('forecast-days').value;
+    const result = await apiRequest('/forecast', { city, days });
+    showResponse('forecast', result);
+}
+
+async function testMe() {
+    const result = await apiRequest('/me');
+    showResponse('me', result);
+}
+
+async function testCity() {
+    const result = await apiRequest('/city');
+    showResponse('city', result);
+}
+
+function copyCode(btn) {
+    const code = btn.parentElement.innerText.replace('📋 Копировать', '').trim();
+    navigator.clipboard.writeText(code).then(() => {
+        btn.innerText = '✅ Скопировано!';
+        setTimeout(() => { btn.innerText = '📋 Копировать'; }, 2000);
+    });
+}
+</script>
+</body>
+</html>
