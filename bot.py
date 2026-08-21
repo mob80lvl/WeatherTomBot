@@ -1605,16 +1605,25 @@ def get_weather_aggregated(city_name, lang="en"):
 
 def get_forecast_aggregated(city_name, days=10, lang="en"):
     daily_data = {}
+    lat = lon = None
+    daily_min_temps = {}
+    daily_max_temps = {}
+    daily_weather_codes = {}
+    daily_uv_max = {}
+    daily_precip_sum = {}
 
     try:
         owm_url = f"https://api.openweathermap.org/data/2.5/forecast?q={city_name}&appid={OPENWEATHER_API_KEY}&units=metric&lang={api_language(lang)}"
         resp = requests.get(owm_url, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
+            _coord = data.get('city', {}).get('coord', {})
+            if _coord:
+                lat, lon = _coord.get('lat'), _coord.get('lon')
             for item in data['list']:
                 date = item['dt_txt'].split()[0]
                 if date not in daily_data:
-                    daily_data[date] = {"temps": [], "descriptions": [], "rains": [], "winds": [], "wind_degs": []}
+                    daily_data[date] = {"temps": [], "descriptions": [], "rains": [], "winds": [], "wind_degs": [], "humidities": [], "pressures": [], "weather_codes": [], "feels": [], "precip_probs": []}
                 daily_data[date]["temps"].append(item['main']['temp'])
                 daily_data[date]["descriptions"].append(item['weather'][0]['description'])
                 daily_data[date]["rains"].append(item.get('rain', {}).get('3h', 0))
@@ -1625,19 +1634,21 @@ def get_forecast_aggregated(city_name, days=10, lang="en"):
         logger.error(f"OWM Forecast ошибка: {e}")
 
     try:
-        geo_url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={OPENWEATHER_API_KEY}"
-        geo_resp = requests.get(geo_url, timeout=5)
-        if geo_resp.status_code == 200:
-            geo = geo_resp.json()
-            lat, lon = geo['coord']['lat'], geo['coord']['lon']
-            om_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m&forecast_days=14"
+        if lat is None:
+            geo_url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={OPENWEATHER_API_KEY}"
+            geo_resp = requests.get(geo_url, timeout=5)
+            if geo_resp.status_code == 200:
+                geo = geo_resp.json()
+                lat, lon = geo['coord']['lat'], geo['coord']['lon']
+        if lat is not None:
+            om_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days=14"
             om_resp = requests.get(om_url, timeout=10)
             if om_resp.status_code == 200:
                 data = om_resp.json()
                 for i, time in enumerate(data['hourly']['time']):
                     date = time.split('T')[0]
                     if date not in daily_data:
-                        daily_data[date] = {"temps": [], "descriptions": [], "rains": [], "winds": [], "wind_degs": []}
+                        daily_data[date] = {"temps": [], "descriptions": [], "rains": [], "winds": [], "wind_degs": [], "humidities": [], "pressures": [], "weather_codes": [], "feels": [], "precip_probs": []}
                     daily_data[date]["temps"].append(data['hourly']['temperature_2m'][i])
                     daily_data[date]["rains"].append(data['hourly']['precipitation'][i])
                     daily_data[date]["winds"].append(data['hourly']['wind_speed_10m'][i])
@@ -1652,36 +1663,110 @@ def get_forecast_aggregated(city_name, days=10, lang="en"):
     def _wind_direction(degrees):
         if not degrees:
             return "—"
-        # Circular mean avoids wrong results around 0/360 degrees.
         import math as _math
         sx = sum(_math.sin(_math.radians(x)) for x in degrees)
         cx = sum(_math.cos(_math.radians(x)) for x in degrees)
         angle = (_math.degrees(_math.atan2(sx, cx)) + 360) % 360
-        names = ["С", "СВ", "В", "ЮВ", "Ю", "ЮЗ", "З", "СЗ"]
-        return names[int((angle + 22.5) // 45) % 8]
+        return wind_deg_to_direction(angle)
 
     result = {}
     days_list = sorted(daily_data.keys())[:days]
+    
+    # Инициализируем daily данные (могут быть не заполнены если Open-Meteo недоступен)
+    daily_min_temps = {}
+    daily_max_temps = {}
+    daily_weather_codes = {}
+    daily_uv_max = {}
+    daily_precip_sum = {}
+    
+    # Пытаемся получить daily данные из Open-Meteo если они ещё не загружены
+    try:
+        geo_url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={OPENWEATHER_API_KEY}"
+        geo_resp = requests.get(geo_url, timeout=5)
+        if geo_resp.status_code == 200:
+            geo = geo_resp.json()
+            lat, lon = geo['coord']['lat'], geo['coord']['lon']
+            om_daily_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&daily=temperature_2m_max,temperature_2m_min,weather_code,uv_index_max,precipitation_sum&timezone=auto&forecast_days=14"
+            om_daily_resp = requests.get(om_daily_url, timeout=10)
+            if om_daily_resp.status_code == 200:
+                daily_info = om_daily_resp.json().get('daily', {})
+                daily_dates = daily_info.get('time', [])
+                daily_min_temps = {d: t for d, t in zip(daily_dates, daily_info.get('temperature_2m_min', []))}
+                daily_max_temps = {d: t for d, t in zip(daily_dates, daily_info.get('temperature_2m_max', []))}
+                daily_weather_codes = {d: c for d, c in zip(daily_dates, daily_info.get('weather_code', []))}
+                daily_uv_max = {d: u for d, u in zip(daily_dates, daily_info.get('uv_index_max', []))}
+                daily_precip_sum = {d: p for d, p in zip(daily_dates, daily_info.get('precipitation_sum', []))}
+    except Exception as e:
+        logger.error(f"Ошибка получения daily данных: {e}")
 
     for date in days_list:
         data = daily_data[date]
         if data["temps"]:
             date_obj = datetime.strptime(date, "%Y-%m-%d")
+            
+            # Описание погоды
             descriptions = data.get("descriptions", [])
             if descriptions:
                 from collections import Counter
                 desc_counter = Counter(descriptions)
                 description = desc_counter.most_common(1)[0][0]
             else:
-                description = T(lang, "forecast_word")
+                # По коду погоды из Open-Meteo
+                weather_codes = data.get("weather_codes", [])
+                if weather_codes:
+                    wc = max(set(weather_codes), key=weather_codes.count)
+                    if wc in (0, 1):
+                        description = "Ясно"
+                    elif wc in (2, 3):
+                        description = "Переменная облачность"
+                    elif 51 <= wc <= 57:
+                        description = "Морось"
+                    elif 61 <= wc <= 67:
+                        description = "Дождь"
+                    elif 71 <= wc <= 77:
+                        description = "Снег"
+                    elif 80 <= wc <= 82:
+                        description = "Ливень"
+                    elif 95 <= wc <= 99:
+                        description = "Гроза"
+                    else:
+                        description = "Облачно"
+                else:
+                    description = T(lang, "forecast_word")
+            
+            # Средние значения
+            avg_temp = round(sum(data["temps"]) / len(data["temps"]), 1)
+            avg_feels = round(sum(data.get("feels", [avg_temp])) / len(data.get("feels", [avg_temp])), 1) if data.get("feels") else avg_temp
+            avg_humidity = round(sum(data.get("humidities", [50])) / len(data.get("humidities", [50]))) if data.get("humidities") else 50
+            avg_wind = round(sum(data["winds"]) / len(data["winds"]) / 3.6, 1) if data["winds"] else 0
+            avg_pressure = round(sum(data.get("pressures", [1013])) / len(data.get("pressures", [1013])) * 0.750062, 1) if data.get("pressures") else 760
+            avg_precip_prob = round(sum(data.get("precip_probs", [0])) / len(data.get("precip_probs", [0]))) if data.get("precip_probs") else 0
+            
+            # Min/Max температура из daily
+            temp_min = daily_min_temps.get(date, min(data["temps"]))
+            temp_max = daily_max_temps.get(date, max(data["temps"]))
+            
+            # UV индекс из daily
+            uv_max = daily_uv_max.get(date)
+            
+            # Суммарные осадки из daily
+            precip_sum = daily_precip_sum.get(date, sum(data["rains"]))
+            
             result[date] = {
                 'date_str': date_obj.strftime("%d.%m.%Y"),
                 'weekday': T(lang, f"weekday_{date_obj.weekday()}"),
-                'temp': round(sum(data["temps"]) / len(data["temps"]), 1),
+                'temp': avg_temp,
+                'temp_min': round(temp_min, 1),
+                'temp_max': round(temp_max, 1),
+                'feels_like': avg_feels,
                 'description': description,
-                'rain': round(sum(data["rains"]) / len(data["rains"]), 1) if data["rains"] else 0,
-                'wind_speed': round(sum(data["winds"]) / len(data["winds"]), 1) if data["winds"] else 0,
-                'wind_direction': _wind_direction(data.get("wind_degs", []))
+                'rain': round(precip_sum, 1) if precip_sum else 0,
+                'precip_prob': avg_precip_prob,
+                'wind_speed': avg_wind,
+                'wind_direction': _wind_direction(data.get("wind_degs", [])),
+                'humidity': avg_humidity,
+                'pressure': avg_pressure,
+                'uv': round(uv_max, 1) if uv_max else None
             }
 
     return result
@@ -2274,26 +2359,89 @@ def format_weather_text(chat_id, weather_data):
     return text
 
 def format_forecast_text(chat_id, forecast_data, city_name, days):
+    """Форматирует подробный прогноз на несколько дней."""
+    from datetime import datetime
+    
     lang = get_user_lang(chat_id)
     if "error" in forecast_data:
         return T(lang, "forecast_error")
     if not forecast_data:
         return T(lang, "error_no_data_forecast")
-
+    
+    # Заголовок
     if lang == "ru":
         day_word = "день" if days == 1 else "дня" if days in (2, 3, 4) else "дней"
         title_days = f"{days} {day_word}"
     else:
         title_days = str(days)
-    text = T(lang, "forecast_title", days=title_days, city=city_name)
+    
+    text = f"📅 *Прогноз на {title_days} — {city_name}*\n\n"
+    
+    # Каждый день
     for date, item in list(forecast_data.items())[:days]:
-        text += T(lang, "forecast_day",
-                  date=item['date_str'],
-                  weekday=item['weekday'],
-                  temp=item['temp'],
-                  description=item['description'],
-                  rain=item['rain'],
-                  wind=item['wind_speed'])
+        # Иконка погоды
+        desc = item.get('description', '').lower()
+        if any(w in desc for w in ['ясно', 'солнечно', 'clear', 'sunny']):
+            icon = "☀️"
+        elif any(w in desc for w in ['переменная', 'partly']):
+            icon = "⛅"
+        elif any(w in desc for w in ['дождь', 'ливень', 'rain', 'shower']):
+            icon = "🌧"
+        elif any(w in desc for w in ['снег', 'snow']):
+            icon = "❄️"
+        elif any(w in desc for w in ['гроза', 'thunder']):
+            icon = "⛈"
+        elif any(w in desc for w in ['туман', 'fog', 'mist']):
+            icon = "🌫"
+        elif any(w in desc for w in ['морось', 'drizzle']):
+            icon = "🌦"
+        else:
+            icon = "☁️"
+        
+        # Короткий день недели
+        weekday = item.get('weekday', '')[:3]
+        
+        # Дата
+        date_str = item.get('date_str', '')
+        
+        # Min/Max температура
+        temp_min = item.get('temp_min', item.get('temp', 0))
+        temp_max = item.get('temp_max', item.get('temp', 0))
+        feels = item.get('feels_like', item.get('temp', 0))
+        
+        # Ветер
+        wind = item.get('wind_speed', 0)
+        wind_dir = item.get('wind_direction', '—')
+        
+        # Влажность и давление
+        humidity = item.get('humidity', 50)
+        pressure = item.get('pressure', 760)
+        
+        # UV индекс
+        uv = item.get('uv')
+        uv_level = get_uv_level(uv) if uv else None
+        
+        # Осадки
+        precip = item.get('rain', 0)
+        precip_prob = item.get('precip_prob', 0)
+        
+        # Формируем блок дня
+        text += f"{icon} *{weekday}, {date_str}*\n"
+        text += f"🌡 +{temp_min}°...+{temp_max}° (ощущ. +{feels}°)\n"
+        text += f"💨 {wind} м/с, {wind_dir} | 💧 {humidity}%\n"
+        text += f"📊 {pressure} мм"
+        if uv_level:
+            text += f" | ☀️ UV {uv} ({uv_level})"
+        text += "\n"
+        
+        if precip > 0 or precip_prob > 0:
+            text += f"🌧 Осадки: {precip_prob}% ({precip} мм)\n"
+        
+        text += f"{item.get('description', 'Облачно').capitalize()}\n"
+        text += "\n"
+    
+    text += f"🕐 Обновлено: {datetime.now().strftime('%H:%M')}"
+    
     return text
 
 def format_subscription_status(chat_id):
