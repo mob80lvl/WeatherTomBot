@@ -2182,89 +2182,150 @@ def get_tourism_forecast(chat_id, city_name):
 # ============================================================
 
 def get_clothing_recommendations(chat_id, temp, description, wind_speed):
+    """Рекомендации одежды с разнообразными фразами (рандомный выбор)."""
+    import random
     lang = get_user_lang(chat_id)
     recommendations = []
-
+    
+    # Пул фраз: [язык][диапазон] = список категорий, каждая = список вариантов
+    CLOTHING = {
+        "ru": {
+            "freezing": [
+                ["🧥 Тёплый пуховик", "🧥 Зимняя парка", "🧥 Пуховик с капюшоном", "🧥 Утеплённая куртка с мехом", "🧥 Длинный пуховик"],
+                ["🧶 Шерстяной свитер", "🧶 Термобельё + свитер", "🧶 Флисовая кофта", "🧶 Вязаный кардиган"],
+                ["🧤 Тёплые перчатки", "🧤 Варежки с мехом", "🧤 Утеплённые перчатки", "🧤 Кожаные перчатки с мехом"],
+                ["🧣 Шарф и шапка", "🧣 Тёплый снуд и шапка", "🧣 Шерстяной шарф и ушанка", "🧣 Балаклава и шапка"],
+                ["🥾 Тёплые ботинки", "🥾 Зимние сапоги", "🥾 Утеплённая обувь", "🥾 Сапоги с мехом"],
+            ],
+            "cold": [
+                ["🧥 Зимняя куртка", "🧥 Тёплая куртка", "🧥 Пальто с утеплителем", "🧥 Пуховик со свитером"],
+                ["🧤 Перчатки", "🧤 Лёгкие перчатки", "🧤 Варежки"],
+                ["🧣 Шарф", "🧣 Лёгкий шарф", "🧣 Снуд", "🧢 Тёплая шапка"],
+                ["🥾 Утеплённые ботинки", "🥾 Зимняя обувь", "🥾 Ботинки с мехом"],
+            ],
+            "cool": [
+                ["🧥 Осенняя куртка или пальто", "🧥 Демисезонная куртка", "🧥 Тёплый свитер и куртка", "🧥 Ветровка с подкладкой", "🧥 Тренч со свитером"],
+                ["🧣 Лёгкий шарф", "🧣 Шарф или снуд", "🧣 Палантин", "🧢 Лёгкая шапка"],
+                ["🥾 Демисезонная обувь", "🥾 Ботинки", "🥾 Непромокаемые кроссовки"],
+            ],
+            "mild": [
+                ["👕 Лёгкая куртка или свитер", "👕 Кофта или худи", "👕 Джинсовка с футболкой", "👕 Кардиган", "👕 Свитшот с лёгкой курткой"],
+                ["👖 Джинсы", "👖 Лёгкие брюки", "👖 Чиносы"],
+                ["👟 Кроссовки", "👟 Лёгкая обувь", "👟 Лоферы"],
+            ],
+            "warm": [
+                ["👕 Футболка с длинным рукавом", "👕 Лёгкая рубашка", "👕 Лонгслив", "👕 Тонкий свитер", "👕 Футболка с лёгкой рубашкой"],
+                ["👖 Лёгкие брюки", "👖 Джинсы", "🩳 Шорты днём"],
+                ["👟 Кроссовки", "👟 Сандалии", "👟 Мокасины"],
+            ],
+            "hot": [
+                ["👕 Лёгкая одежда", "👕 Футболка и шорты", "👕 Лёгкое платье или рубашка", "👕 Хлопковая одежда", "👕 Льняной костюм", "👕 Светлая свободная одежда"],
+                ["🧢 Головной убор", "🧢 Панама", "🧢 Кепка от солнца", "🕶 Солнечные очки"],
+                ["🧴 Солнцезащитный крем", "🧴 SPF-защита", "🧴 Крем от загара", "💧 Бутылка воды"],
+                ["🩴 Сандалии", "🩴 Шлёпанцы", "🩴 Лёгкие кроссовки"],
+            ],
+        },
+        "en": {
+            "freezing": [
+                ["🧥 Warm down jacket", "🧥 Winter parka", "🧥 Hooded puffer jacket", "🧥 Insulated coat"],
+                ["🧶 Wool sweater", "🧶 Thermal base + sweater", "🧶 Fleece hoodie"],
+                ["🧤 Warm gloves", "🧤 Mittens", "🧤 Insulated gloves"],
+                ["🧣 Scarf and hat", "🧣 Warm beanie and scarf"],
+                ["🥾 Insulated boots", "🥾 Winter boots"],
+            ],
+            "cold": [
+                ["🧥 Winter jacket", "🧥 Warm coat", "🧥 Puffer with sweater"],
+                ["🧤 Gloves", "🧤 Light gloves"],
+                ["🧣 Scarf", "🧣 Snood", "🧢 Warm hat"],
+                ["🥾 Insulated boots", "🥾 Winter shoes"],
+            ],
+            "cool": [
+                ["🧥 Autumn jacket or coat", "🧥 Light jacket", "🧥 Sweater with jacket"],
+                ["🧣 Light scarf", "🧣 Scarf"],
+                ["🥾 Autumn shoes", "🥾 Boots"],
+            ],
+            "mild": [["👕 Light jacket or sweater", "👕 Hoodie", "👕 Cardigan", "👕 Denim jacket"], ["👖 Jeans", "👖 Light pants"], ["👟 Sneakers", "👟 Loafers"]],
+            "warm": [["👕 Long-sleeved shirt", "👕 Light sweater", "👕 T-shirt with shirt"], ["👖 Light pants", "🩳 Shorts"], ["👟 Sneakers", "👟 Sandals"]],
+            "hot": [
+                ["👕 Light clothing", "👕 T-shirt and shorts", "👕 Cotton or linen clothes"],
+                ["🧢 Headwear", "🧢 Sun hat", "🕶 Sunglasses"],
+                ["🧴 Sunscreen", "🧴 SPF protection", "💧 Water bottle"],
+                ["🩴 Sandals", "🩴 Flip-flops"],
+            ],
+        },
+        "es": {
+            "freezing": [
+                ["🧥 Chaqueta abrigada", "🧥 Parka de invierno", "🧥 Abrigo de plumas"],
+                ["🧶 Suéter de lana", "🧶 Ropa térmica"],
+                ["🧤 Guantes calientes", "🧤 Manoplas"],
+                ["🧣 Bufanda y gorro", "🧣 Bufanda y gorro de lana"],
+                ["🥾 Botas de invierno", "🥾 Botas aislantes"],
+            ],
+            "cold": [
+                ["🧥 Chaqueta de invierno", "🧥 Abrigo"],
+                ["🧤 Guantes", "🧤 Guantes ligeros"],
+                ["🧣 Bufanda", "🧣 Bufanda ligera", "🧢 Gorro"],
+                ["🥾 Botas", "🥾 Calzado de invierno"],
+            ],
+            "cool": [
+                ["🧥 Chaqueta de otoño o abrigo", "🧥 Chaqueta ligera", "🧥 Suéter con chaqueta"],
+                ["🧣 Bufanda ligera", "🧣 Bufanda"],
+                ["🥾 Zapatos de otoño", "🥾 Botines"],
+            ],
+            "mild": [["👕 Chaqueta ligera o suéter", "👕 Suéter", "👕 Cárdigan"], ["👖 Vaqueros", "👖 Pantalones ligeros"], ["👟 Zapatillas"]],
+            "warm": [["👕 Camisa de manga larga", "👕 Camisa ligera"], ["👖 Pantalones ligeros", "🩳 Shorts"], ["👟 Zapatillas", "👟 Sandalias"]],
+            "hot": [
+                ["👕 Ropa ligera", "👕 Camiseta y shorts", "👕 Ropa de algodón"],
+                ["🧢 Sombrero", "🧢 Gorra", "🕶 Gafas de sol"],
+                ["🧴 Protector solar", "🧴 Crema solar", "💧 Botella de agua"],
+                ["🩴 Sandalias", "🩴 Chanclas"],
+            ],
+        },
+        "zh": {
+            "freezing": [["🧥 保暖羽绒服", "🧥 冬季派克大衣", "🧥 连帽羽绒服"], ["🧶 羊毛衫", "🧶 保暖内衣+毛衣"], ["🧤 保暖手套", "🧤 连指手套"], ["🧣 围巾和帽子", "🧣 围巾和毛线帽"], ["🥾 保暖靴", "🥾 雪地靴"]],
+            "cold": [["🧥 冬季夹克", "🧥 厚外套"], ["🧤 手套", "🧤 薄手套"], ["🧣 围巾", "🧢 帽子"], ["🥾 保暖鞋", "🥾 冬靴"]],
+            "cool": [["🧥 秋季夹克或大衣", "🧥 轻便夹克", "🧥 毛衣加外套"], ["🧣 轻便围巾"], ["🥾 秋季鞋", "🥾 靴子"]],
+            "mild": [["👕 轻便夹克或毛衣", "👕 卫衣", "👕 开衫"], ["👖 牛仔裤", "👖 轻便裤"], ["👟 运动鞋"]],
+            "warm": [["👕 长袖衬衫", "👕 薄毛衣"], ["👖 轻便裤", "🩳 短裤"], ["👟 运动鞋", "👟 凉鞋"]],
+            "hot": [["👕 轻便衣物", "👕 T恤和短裤", "👕 棉麻衣物"], ["🧢 帽子", "🕶 太阳镜"], ["🧴 防晒霜", "💧 水瓶"], ["🩴 凉鞋", "🩴 拖鞋"]],
+        },
+    }
+    
+    # Определяем диапазон
     if temp < -10:
-        if lang == "ru":
-            recommendations.extend(["🧥 Тёплый пуховик", "🧤 Тёплые перчатки", "🧣 Шарф и шапка"])
-        elif lang == "en":
-            recommendations.extend(["🧥 Warm down jacket", "🧤 Warm gloves", "🧣 Scarf and hat"])
-        elif lang == "es":
-            recommendations.extend(["🧥 Chaqueta abrigada", "🧤 Guantes calientes", "🧣 Bufanda y gorro"])
-        else:
-            recommendations.extend(["🧥 保暖羽绒服", "🧤 保暖手套", "🧣 围巾和帽子"])
+        range_key = "freezing"
     elif temp < 0:
-        if lang == "ru":
-            recommendations.extend(["🧥 Зимняя куртка", "🧤 Перчатки", "🧣 Шарф"])
-        elif lang == "en":
-            recommendations.extend(["🧥 Winter jacket", "🧤 Gloves", "🧣 Scarf"])
-        elif lang == "es":
-            recommendations.extend(["🧥 Chaqueta de invierno", "🧤 Guantes", "🧣 Bufanda"])
-        else:
-            recommendations.extend(["🧥 冬季夹克", "🧤 手套", "🧣 围巾"])
+        range_key = "cold"
     elif temp < 10:
-        if lang == "ru":
-            recommendations.extend(["🧥 Осенняя куртка или пальто", "🧣 Лёгкий шарф"])
-        elif lang == "en":
-            recommendations.extend(["🧥 Autumn jacket or coat", "🧣 Light scarf"])
-        elif lang == "es":
-            recommendations.extend(["🧥 Chaqueta de otoño o abrigo", "🧣 Bufanda ligera"])
-        else:
-            recommendations.extend(["🧥 秋季夹克或大衣", "🧣 轻便围巾"])
+        range_key = "cool"
     elif temp < 20:
-        if lang == "ru":
-            recommendations.append("👕 Лёгкая куртка или свитер")
-        elif lang == "en":
-            recommendations.append("👕 Light jacket or sweater")
-        elif lang == "es":
-            recommendations.append("👕 Chaqueta ligera o suéter")
-        else:
-            recommendations.append("👕 轻便夹克或毛衣")
+        range_key = "mild"
     elif temp < 25:
-        if lang == "ru":
-            recommendations.append("👕 Футболка с длинным рукавом")
-        elif lang == "en":
-            recommendations.append("👕 Long-sleeved shirt")
-        elif lang == "es":
-            recommendations.append("👕 Camisa de manga larga")
-        else:
-            recommendations.append("👕 长袖衬衫")
+        range_key = "warm"
     else:
-        if lang == "ru":
-            recommendations.extend(["👕 Лёгкая одежда", "🧢 Головной убор", "🧴 Солнцезащитный крем"])
-        elif lang == "en":
-            recommendations.extend(["👕 Light clothing", "🧢 Headwear", "🧴 Sunscreen"])
-        elif lang == "es":
-            recommendations.extend(["👕 Ropa ligera", "🧢 Sombrero", "🧴 Protector solar"])
-        else:
-            recommendations.extend(["👕 轻便衣物", "🧢 帽子", "🧴 防晒霜"])
-
-    if "дождь" in description.lower() or "rain" in description.lower() or "lluvia" in description.lower() or "雨" in description:
-        if lang == "ru":
-            recommendations.append("☂️ Зонт")
-        elif lang == "en":
-            recommendations.append("☂️ Umbrella")
-        elif lang == "es":
-            recommendations.append("☂️ Paraguas")
-        else:
-            recommendations.append("☂️ 雨伞")
-
+        range_key = "hot"
+    
+    lang_pools = CLOTHING.get(lang, CLOTHING["ru"])
+    for category in lang_pools.get(range_key, []):
+        recommendations.append(random.choice(category))
+    
+    # Дождь
+    if any(w in description.lower() for w in ["дождь", "rain", "lluvia", "雨", "морось", "drizzle"]):
+        rain_items = {"ru": ["☂️ Зонт", "☂️ Не забудьте зонт", "☂️ Зонт или дождевик"],
+                      "en": ["☂️ Umbrella", "☂️ Take an umbrella"],
+                      "es": ["☂️ Paraguas", "☂️ Lleva paraguas"],
+                      "zh": ["☂️ 雨伞", "☂️ 带伞"]}
+        recommendations.append(random.choice(rain_items.get(lang, rain_items["ru"])))
+    
+    # Сильный ветер
     if wind_speed > 10:
-        if lang == "ru":
-            recommendations.append("🌬️ Ветровка")
-        elif lang == "en":
-            recommendations.append("🌬️ Windbreaker")
-        elif lang == "es":
-            recommendations.append("🌬️ Rompevientos")
-        else:
-            recommendations.append("🌬️ 防风夹克")
-
+        wind_items = {"ru": ["🌬️ Ветровка", "🌬️ Куртка от ветра", "🌬️ Непродуваемая куртка"],
+                      "en": ["🌬️ Windbreaker", "🌬️ Windproof jacket"],
+                      "es": ["🌬️ Rompevientos", "🌬️ Chaqueta cortavientos"],
+                      "zh": ["🌬️ 防风夹克", "🌬️ 防风外套"]}
+        recommendations.append(random.choice(wind_items.get(lang, wind_items["ru"])))
+    
     return recommendations
-
-# ============================================================
-#  ФОРМАТИРОВАНИЕ СООБЩЕНИЙ (МУЛЬТИЯЗЫЧНОЕ)
-# ============================================================
 
 def get_weather_icon(weather_id=None, description=""):
     """Возвращает эмодзи иконки погоды по weather_id или описанию."""
