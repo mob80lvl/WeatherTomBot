@@ -1086,7 +1086,7 @@ app.secret_key = SECRET_KEY
 # fully multilingual and all buttons are visible on every plan.
 _NEW_TEXTS = {
     "ru": {
-        "btn_trip":"✈️ Поездка","btn_ai":"🤖 AI-помощник","btn_favorites":"⭐ Города",
+        "btn_trip":"✈️ Поездка","btn_tomorrow":"📅 Погода на завтра","btn_ai":"🤖 AI-помощник","btn_favorites":"⭐ Города",
         "btn_autopost":"📢 Автопостинг","btn_card":"🖼 Погодная карточка",
         "btn_api":"🔑 API","btn_team":"👥 Команда","btn_whitelabel":"🏷 White-label",
         "btn_analytics":"📊 Аналитика",
@@ -1106,7 +1106,7 @@ _NEW_TEXTS = {
         "analytics_menu":"📊 *Аналитика*\n\nBusiness: статистика подключённых каналов и публикаций."
     },
     "en": {
-        "btn_trip":"✈️ Trip","btn_ai":"🤖 AI Assistant","btn_favorites":"⭐ Cities",
+        "btn_trip":"✈️ Trip","btn_tomorrow":"📅 Tomorrow Weather","btn_ai":"🤖 AI Assistant","btn_favorites":"⭐ Cities",
         "btn_autopost":"📢 Auto-posting","btn_card":"🖼 Weather Card",
         "btn_api":"🔑 API","btn_team":"👥 Team","btn_whitelabel":"🏷 White-label",
         "btn_analytics":"📊 Analytics",
@@ -1122,7 +1122,7 @@ _NEW_TEXTS = {
         "analytics_menu":"📊 *Analytics*\n\nBusiness: connected-channel and posting statistics."
     },
     "es": {
-        "btn_trip":"✈️ Viaje","btn_ai":"🤖 Asistente IA","btn_favorites":"⭐ Ciudades",
+        "btn_trip":"✈️ Viaje","btn_tomorrow":"📅 Clima de mañana","btn_ai":"🤖 Asistente IA","btn_favorites":"⭐ Ciudades",
         "btn_autopost":"📢 Publicación automática","btn_card":"🖼 Tarjeta meteorológica",
         "btn_api":"🔑 API","btn_team":"👥 Equipo","btn_whitelabel":"🏷 White-label",
         "btn_analytics":"📊 Analítica",
@@ -1138,7 +1138,7 @@ _NEW_TEXTS = {
         "analytics_menu":"📊 *Analítica*\n\nBusiness: estadísticas de canales y publicaciones."
     },
     "zh": {
-        "btn_trip":"✈️ 旅行","btn_ai":"🤖 AI助手","btn_favorites":"⭐ 城市",
+        "btn_trip":"✈️ 旅行","btn_tomorrow":"📅 明天天气","btn_ai":"🤖 AI助手","btn_favorites":"⭐ 城市",
         "btn_autopost":"📢 自动发布","btn_card":"🖼 天气卡片",
         "btn_api":"🔑 API","btn_team":"👥 团队","btn_whitelabel":"🏷 白标",
         "btn_analytics":"📊 分析",
@@ -1686,6 +1686,196 @@ def get_forecast_aggregated(city_name, days=10, lang="en"):
 
     return result
 
+
+
+def get_tomorrow_detailed_forecast(city_name, lang="en"):
+    """Получает детальный прогноз на завтрашний день."""
+    try:
+        # Получаем координаты города
+        geo_url = f"https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={OPENWEATHER_API_KEY}"
+        geo_resp = requests.get(geo_url, timeout=10)
+        if geo_resp.status_code != 200:
+            return {"error": "Не удалось получить координаты города"}
+        
+        geo = geo_resp.json()
+        lat, lon = geo['coord']['lat'], geo['coord']['lon']
+        country = geo.get('sys', {}).get('country', '')
+        
+        # Получаем прогноз от Open-Meteo (есть все нужные данные)
+        om_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days=2"
+        om_resp = requests.get(om_url, timeout=15)
+        
+        if om_resp.status_code != 200:
+            return {"error": "Не удалось получить прогноз"}
+        
+        data = om_resp.json()
+        
+        # Берём данные на завтра (индекс 1, т.к. 0 - сегодня)
+        if 'daily' not in data or len(data['daily']['time']) < 2:
+            return {"error": "Нет данных на завтра"}
+        
+        tomorrow = {
+            'date': data['daily']['time'][1],
+            'temp_max': data['daily']['temperature_2m_max'][1],
+            'temp_min': data['daily']['temperature_2m_min'][1],
+            'weather_code': data['daily']['weather_code'][1],
+            'sunrise': data['daily']['sunrise'][1],
+            'sunset': data['daily']['sunset'][1],
+            'precipitation_sum': data['daily']['precipitation_sum'][1],
+            'wind_max': data['daily']['wind_speed_10m_max'][1],
+            'uv_max': data['daily']['uv_index_max'][1],
+            'country': country,
+            'city': city_name
+        }
+        
+        # Средние значения за день из hourly данных
+        # Находим индексы часов для завтрашнего дня
+        hourly_times = data['hourly']['time']
+        tomorrow_date = tomorrow['date']
+        
+        hourly_data = {
+            'temps': [],
+            'humidity': [],
+            'pressure': [],
+            'uv': [],
+            'wind_speed': [],
+            'wind_deg': [],
+            'precip_prob': [],
+            'apparent_temp': []
+        }
+        
+        for i, time_str in enumerate(hourly_times):
+            if time_str.startswith(tomorrow_date):
+                hourly_data['temps'].append(data['hourly']['temperature_2m'][i])
+                hourly_data['humidity'].append(data['hourly']['relative_humidity_2m'][i])
+                hourly_data['pressure'].append(data['hourly']['pressure_msl'][i])
+                hourly_data['uv'].append(data['hourly']['uv_index'][i])
+                hourly_data['wind_speed'].append(data['hourly']['wind_speed_10m'][i])
+                hourly_data['wind_deg'].append(data['hourly']['wind_direction_10m'][i])
+                hourly_data['precip_prob'].append(data['hourly']['precipitation_probability'][i])
+                hourly_data['apparent_temp'].append(data['hourly']['apparent_temperature'][i])
+        
+        # Считаем средние
+        tomorrow['avg_temp'] = round(sum(hourly_data['temps']) / len(hourly_data['temps']), 1) if hourly_data['temps'] else 0
+        tomorrow['avg_feels'] = round(sum(hourly_data['apparent_temp']) / len(hourly_data['apparent_temp']), 1) if hourly_data['apparent_temp'] else 0
+        tomorrow['avg_humidity'] = round(sum(hourly_data['humidity']) / len(hourly_data['humidity'])) if hourly_data['humidity'] else 0
+        tomorrow['avg_pressure'] = round(sum(hourly_data['pressure']) / len(hourly_data['pressure']) * 0.750062, 1) if hourly_data['pressure'] else 0
+        tomorrow['avg_uv'] = round(sum(hourly_data['uv']) / len(hourly_data['uv']), 1) if hourly_data['uv'] else 0
+        tomorrow['avg_wind'] = round(sum(hourly_data['wind_speed']) / len(hourly_data['wind_speed']) / 3.6, 1) if hourly_data['wind_speed'] else 0
+        
+        # Среднее направление ветра
+        if hourly_data['wind_deg']:
+            import math
+            sx = sum(math.sin(math.radians(d)) for d in hourly_data['wind_deg'] if d is not None)
+            cx = sum(math.cos(math.radians(d)) for d in hourly_data['wind_deg'] if d is not None)
+            avg_deg = (math.degrees(math.atan2(sx, cx)) + 360) % 360
+            tomorrow['wind_deg'] = round(avg_deg)
+        else:
+            tomorrow['wind_deg'] = 0
+        
+        # Средняя вероятность осадков
+        tomorrow['precip_prob'] = round(sum(hourly_data['precip_prob']) / len(hourly_data['precip_prob'])) if hourly_data['precip_prob'] else 0
+        
+        # Описание погоды по коду
+        weather_code = tomorrow['weather_code']
+        if weather_code in (0, 1):
+            tomorrow['description'] = "Ясно"
+        elif weather_code in (2, 3):
+            tomorrow['description'] = "Переменная облачность"
+        elif weather_code in (45, 48):
+            tomorrow['description'] = "Туман"
+        elif 51 <= weather_code <= 57:
+            tomorrow['description'] = "Морось"
+        elif 61 <= weather_code <= 67:
+            tomorrow['description'] = "Дождь"
+        elif 71 <= weather_code <= 77:
+            tomorrow['description'] = "Снег"
+        elif 80 <= weather_code <= 82:
+            tomorrow['description'] = "Ливень"
+        elif 85 <= weather_code <= 86:
+            tomorrow['description'] = "Снегопад"
+        elif 95 <= weather_code <= 99:
+            tomorrow['description'] = "Гроза"
+        else:
+            tomorrow['description'] = "Облачно"
+        
+        return tomorrow
+        
+    except Exception as e:
+        return {"error": f"Ошибка получения прогноза: {str(e)}"}
+
+
+def format_tomorrow_forecast_text(chat_id, forecast_data):
+    """Форматирует детальный прогноз на завтра."""
+    if "error" in forecast_data:
+        return f"❌ {forecast_data['error']}"
+    
+    from datetime import datetime
+    
+    # Дата и день недели
+    date_obj = datetime.strptime(forecast_data['date'], '%Y-%m-%d')
+    lang = get_user_lang(chat_id)
+    
+    if lang == "ru":
+        weekdays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+        weekday = weekdays[date_obj.weekday()]
+    else:
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        weekday = weekdays[date_obj.weekday()]
+    
+    # Иконка погоды по коду
+    weather_code = forecast_data['weather_code']
+    if weather_code in (0, 1):
+        icon = "☀️"
+    elif weather_code in (2, 3):
+        icon = "⛅"
+    elif weather_code in (45, 48):
+        icon = "🌫"
+    elif 51 <= weather_code <= 57:
+        icon = "🌦"
+    elif 61 <= weather_code <= 67:
+        icon = "🌧"
+    elif 71 <= weather_code <= 77:
+        icon = "❄️"
+    elif 80 <= weather_code <= 82:
+        icon = "🌧"
+    elif 85 <= weather_code <= 86:
+        icon = "❄️"
+    elif 95 <= weather_code <= 99:
+        icon = "⛈"
+    else:
+        icon = "☁️"
+    
+    # Направление ветра
+    wind_dir = wind_deg_to_direction(forecast_data.get('wind_deg'))
+    
+    # Уровень UV
+    uv_level = get_uv_level(forecast_data.get('uv_max'))
+    
+    # Форматируем время восхода/заката
+    sunrise = forecast_data.get('sunrise', '').split('T')[1] if 'T' in forecast_data.get('sunrise', '') else '—'
+    sunset = forecast_data.get('sunset', '').split('T')[1] if 'T' in forecast_data.get('sunset', '') else '—'
+    
+    # Формируем сообщение
+    text = f"📅 {icon} {weekday}, {date_obj.strftime('%d.%m.%Y')}\n\n"
+    text += f"📍 {forecast_data['city']}, {forecast_data['country']}\n\n"
+    text += f"🌡 Температура: {forecast_data['temp_min']}°C ... {forecast_data['temp_max']}°C\n"
+    text += f"🤔 Ощущается как: {forecast_data['avg_feels']}°C\n"
+    text += f"💨 Ветер: {forecast_data['avg_wind']} м/с, {wind_dir}\n"
+    text += f"💧 Влажность: {forecast_data['avg_humidity']}%\n"
+    text += f"📊 Давление: {forecast_data['avg_pressure']} мм рт.ст.\n"
+    
+    if uv_level:
+        text += f"☀️ UV-индекс: {forecast_data['uv_max']} ({uv_level})\n"
+    
+    text += f"🌧 Вероятность осадков: {forecast_data['precip_prob']}%\n"
+    text += f"🌅 Восход: {sunrise}\n"
+    text += f"🌇 Закат: {sunset}\n\n"
+    text += f"{forecast_data['description']}\n\n"
+    text += f"🕐 Обновлено: {datetime.now().strftime('%H:%M:%S')}"
+    
+    return text
+
 def get_weather_statistics(city_name, days=14):
     stats = {
         "avg_temp": 0,
@@ -2190,7 +2380,7 @@ def get_main_keyboard(chat_id):
     lang = get_user_lang(chat_id)
     return {
         "keyboard": [
-            [T(lang, "btn_weather"), T(lang, "btn_sunrise")],
+            [T(lang, "btn_weather"), T(lang, "btn_tomorrow"), T(lang, "btn_sunrise")],
             [T(lang, "btn_f3"), T(lang, "btn_f5"), T(lang, "btn_f10")],
             [T(lang, "btn_rain"), T(lang, "btn_moon")],
             [T(lang, "btn_clothing"), T(lang, "btn_stats")],
@@ -2870,6 +3060,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
         # ===== ОБРАБОТКА КНОПОК =====
         btn_map = {
             "btn_weather": "weather",
+            "btn_tomorrow": "tomorrow",
             "btn_sunrise": "sunrise",
             "btn_f3": "forecast_3",
             "btn_f5": "forecast_5",
@@ -2980,6 +3171,10 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
         if action == "weather":
             weather = get_weather_aggregated(current_city, lang)
             send_message(chat_id, format_weather_text(chat_id, weather), keyboard)
+            return "ok", 200
+        elif action == "tomorrow":
+            tomorrow = get_tomorrow_detailed_forecast(current_city, lang)
+            send_message(chat_id, format_tomorrow_forecast_text(chat_id, tomorrow), keyboard)
             return "ok", 200
 
         elif action == "change_city":
