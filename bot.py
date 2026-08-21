@@ -1464,6 +1464,33 @@ def set_notification_status(chat_id, enabled):
 #  ФУНКЦИИ ПОГОДЫ (СОКРАЩЕННЫЕ)
 # ============================================================
 
+def get_uv_level(uv):
+    """Возвращает уровень UV-индекса с описанием."""
+    if uv is None:
+        return None
+    try:
+        uv = float(uv)
+    except (TypeError, ValueError):
+        return None
+    
+    if uv < 3:
+        return "низкий"
+    elif uv < 6:
+        return "умеренный"
+    elif uv < 8:
+        return "высокий"
+    elif uv < 11:
+        return "очень высокий"
+    else:
+        return "экстремальный"
+
+def convert_pressure_to_mmhg(pressure_hpa):
+    """Конвертирует давление из гектопаскалей (hPa) в миллиметры ртутного столба (мм рт.ст.)."""
+    if pressure_hpa is None:
+        return None
+    # 1 hPa = 0.750062 мм рт.ст.
+    return round(pressure_hpa * 0.750062, 1)
+
 def get_weather_aggregated(city_name, lang="en"):
     results = []
     errors = []
@@ -1477,7 +1504,10 @@ def get_weather_aggregated(city_name, lang="en"):
                 "temp": data['main']['temp'],
                 "humidity": data['main']['humidity'],
                 "wind": data['wind']['speed'],
+                "wind_deg": data['wind'].get('deg', 0),
+                "pressure": data['main'].get('pressure'),
                 "description": data['weather'][0]['description'],
+                "weather_id": data['weather'][0].get('id', 0),
                 "source": "OpenWeatherMap"
             })
         else:
@@ -1494,6 +1524,9 @@ def get_weather_aggregated(city_name, lang="en"):
                 "temp": data['current']['temp_c'],
                 "humidity": data['current']['humidity'],
                 "wind": data['current']['wind_kph'] / 3.6,
+                "wind_deg": data['current'].get('wind_degree', 0),
+                "pressure": data['current'].get('pressure_mb'),
+                "uv": data['current'].get('uv'),
                 "description": data['current']['condition']['text'],
                 "source": "WeatherAPI"
             })
@@ -1515,6 +1548,8 @@ def get_weather_aggregated(city_name, lang="en"):
                 results.append({
                     "temp": data['temperature'],
                     "wind": data['windspeed'],
+                    "wind_deg": data.get('winddirection', 0),
+                    "weathercode": data.get('weathercode', 0),
                     "source": "Open-Meteo"
                 })
             else:
@@ -1531,6 +1566,19 @@ def get_weather_aggregated(city_name, lang="en"):
     avg_humidity = sum(humidity_values) / len(humidity_values) if humidity_values else 50
     wind_values = [r['wind'] for r in results if 'wind' in r]
     avg_wind = sum(wind_values) / len(wind_values) if wind_values else 0
+    
+    # Среднее направление ветра
+    wind_deg_values = [r.get('wind_deg') for r in results if r.get('wind_deg') is not None]
+    avg_wind_deg = sum(wind_deg_values) / len(wind_deg_values) if wind_deg_values else 0
+    
+    # Среднее давление (конвертируем из hPa в мм рт.ст.)
+    pressure_values = [r.get('pressure') for r in results if r.get('pressure')]
+    avg_pressure_hpa = sum(pressure_values) / len(pressure_values) if pressure_values else None
+    avg_pressure = convert_pressure_to_mmhg(avg_pressure_hpa) if avg_pressure_hpa else None
+    
+    # UV индекс (берём из WeatherAPI если есть)
+    uv_values = [r.get('uv') for r in results if r.get('uv') is not None]
+    avg_uv = sum(uv_values) / len(uv_values) if uv_values else None
     descriptions = [r.get('description') for r in results if r.get('description')]
     if descriptions:
         from collections import Counter
@@ -1547,6 +1595,10 @@ def get_weather_aggregated(city_name, lang="en"):
         "humidity": round(avg_humidity),
         "description": description,
         "wind_speed": round(avg_wind, 1),
+        "wind_deg": round(avg_wind_deg),
+        "pressure": round(avg_pressure, 1) if avg_pressure else None,
+        "uv": round(avg_uv, 1) if avg_uv else None,
+        "weather_id": next((r.get('weather_id') for r in results if r.get('weather_id')), None),
         "source_count": len(results),
         "sources": [r['source'] for r in results]
     }
@@ -1939,22 +1991,96 @@ def get_clothing_recommendations(chat_id, temp, description, wind_speed):
 #  ФОРМАТИРОВАНИЕ СООБЩЕНИЙ (МУЛЬТИЯЗЫЧНОЕ)
 # ============================================================
 
+def get_weather_icon(weather_id=None, description=""):
+    """Возвращает эмодзи иконки погоды по weather_id или описанию."""
+    desc_lower = str(description).lower()
+    
+    # По weather_id (OpenWeatherMap)
+    if weather_id:
+        if 200 <= weather_id < 300:  # Гроза
+            return "⛈"
+        elif 300 <= weather_id < 400:  # Морось
+            return "🌦"
+        elif 500 <= weather_id < 600:  # Дождь
+            return "🌧"
+        elif 600 <= weather_id < 700:  # Снег
+            return "❄️"
+        elif 700 <= weather_id < 800:  # Туман, дымка
+            return "🌫"
+        elif weather_id == 800:  # Ясно
+            return "☀️"
+        elif weather_id == 801:  # Малооблачно
+            return "🌤"
+        elif weather_id == 802:  # Облачно
+            return "⛅"
+        elif weather_id in (803, 804):  # Пасмурно
+            return "☁️"
+    
+    # По описанию
+    if any(word in desc_lower for word in ["гроза", "thunderstorm", "гроза"]):
+        return "⛈"
+    elif any(word in desc_lower for word in ["дождь", "ливень", "rain", "shower"]):
+        return "🌧"
+    elif any(word in desc_lower for word in ["снег", "snow"]):
+        return "❄️"
+    elif any(word in desc_lower for word in ["туман", "дымка", "fog", "mist"]):
+        return "🌫"
+    elif any(word in desc_lower for word in ["ясно", "солнечно", "clear", "sunny"]):
+        return "☀️"
+    elif any(word in desc_lower for word in ["малооблачно", "partly cloudy"]):
+        return "🌤"
+    elif any(word in desc_lower for word in ["облачно", "пасмурно", "cloudy", "overcast"]):
+        return "☁️"
+    
+    return "🌤"  # По умолчанию
+
+def wind_deg_to_direction(deg):
+    """Преобразует градусы ветра в направление."""
+    directions = ["С", "ССВ", "СВ", "ВСВ", "В", "ВЮВ", "ЮВ", "ЮЮВ",
+                  "Ю", "ЮЮЗ", "ЮЗ", "ЗЮЗ", "З", "ЗСЗ", "СЗ", "ССЗ"]
+    if deg is None:
+        return "—"
+    idx = round(deg / 22.5) % 16
+    return directions[idx]
+
 def format_weather_text(chat_id, weather_data):
     lang = get_user_lang(chat_id)
     if "error" in weather_data:
         return T(lang, "weather_error")
 
-    text = T(lang, "weather_title", city=weather_data['city'], country=weather_data['country']) + "\n\n"
-    text += T(lang, "weather_temp", temp=weather_data['temp']) + "\n"
-    text += T(lang, "weather_feels", feels=weather_data['feels_like']) + "\n"
-    text += T(lang, "weather_humidity", humidity=weather_data['humidity']) + "\n"
-    text += T(lang, "weather_wind", wind=weather_data['wind_speed']) + "\n"
-    text += T(lang, "weather_desc", description=weather_data['description'])
-
-    if weather_data.get('source_count', 0) > 0:
-        text += T(lang, "weather_sources", count=weather_data['source_count'], sources=', '.join(weather_data.get('sources', [])))
-
-    text += T(lang, "weather_updated", time=datetime.now().strftime('%H:%M:%S'))
+    # Получаем иконку погоды
+    icon = get_weather_icon(
+        weather_id=weather_data.get('weather_id'),
+        description=weather_data.get('description', '')
+    )
+    
+    # Направление ветра
+    wind_dir = wind_deg_to_direction(weather_data.get('wind_deg'))
+    
+    # Формируем красивый вывод
+    text = f"{icon} {weather_data['city']}, {weather_data['country']}\n\n"
+    text += f"🌡 Температура: {weather_data['temp']}°C\n"
+    text += f"🤔 Ощущается как: {weather_data['feels_like']}°C\n"
+    text += f"💨 Ветер: {weather_data['wind_speed']} м/с, {wind_dir}\n"
+    text += f"💧 Влажность: {weather_data['humidity']}%\n"
+    
+    # Давление (если есть)
+    pressure = weather_data.get('pressure')
+    if pressure:
+        text += f"📊 Давление: {pressure} мм рт.ст.\n"
+    
+    # UV индекс с уровнем (если есть)
+    uv = weather_data.get('uv')
+    if uv is not None:
+        uv_level = get_uv_level(uv)
+        if uv_level:
+            text += f"☀️ UV-индекс: {uv} ({uv_level})\n"
+        else:
+            text += f"☀️ UV-индекс: {uv}\n"
+    
+    text += f"\n{weather_data.get('description', '').capitalize()}\n"
+    text += f"\n🕐 Обновлено: {datetime.now().strftime('%H:%M:%S')}"
+    
     return text
 
 def format_forecast_text(chat_id, forecast_data, city_name, days):
