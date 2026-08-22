@@ -69,7 +69,7 @@ def api_language(lang):
         "it": "it", "hi": "hi", "ar": "ar"
     }.get(lang, "en")
 
-LANGUAGES = ["ru", "en", "es", "zh", "fr", "de", "ja", "ko", "it", "hi", "ar"]
+LANGUAGES = ["ru", "en"]
 
 # ============================================================
 #  ТЕКСТЫ НА ВСЕХ ЯЗЫКАХ
@@ -689,6 +689,51 @@ _NEW_TEXTS = {
         "autopost_menu":"📢 *Автопостинг*\n\nBusiness позволяет автоматически публиковать погоду в Telegram-канале.\n\nКоманды:\n/channel @channel CITY 08:00 — добавить канал\n/channels — мои каналы",
         "card_menu":"🖼 Погодная карточка\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — создать API-ключ.",
+        'api_btn_create': '🔑 Создать API-ключ',
+        'api_btn_help': '📖 Документация',
+        'api_btn_city': '🏙 Установить город',
+        'api_btn_stats': '📊 Статистика',
+        'api_btn_profile': '👤 Мой профиль',
+        'api_btn_delete': '🗑 Удалить ключи',
+        'api_key_created': '🔑 API-ключ создан:\n`{key}`',
+        'api_key_error': '❌ Ошибка создания ключа. Проверьте подписку Business.',
+        'api_help_title': '📖 API Документация',
+        'api_help_base': '🌍 Базовый URL:',
+        'api_help_endpoints': '📍 Эндпоинты:',
+        'api_help_ep_weather': '• GET /weather?city=Город',
+        'api_help_ep_forecast': '• GET /forecast?city=Город&days=5',
+        'api_help_ep_me': '• GET /me',
+        'api_help_auth': '🔑 Авторизация:',
+        'api_help_header': 'Заголовок: X-API-Key: ваш_ключ',
+        'api_help_default': '🏙 Город по умолчанию: {city}',
+        'api_help_limits': '📊 Лимиты:',
+        'api_help_limit_keys': '• Максимум 5 API ключей',
+        'api_help_limit_req': '• 100 запросов в час на ключ',
+        'api_help_example': '💡 Пример:',
+        'api_set_city_prompt': '🏙 Введите город по умолчанию для API запросов:',
+        'api_profile_title': '📊 Ваш API Профиль',
+        'api_profile_id': '🆔 User ID: {id}',
+        'api_profile_keys': '🔑 API ключей: {count}',
+        'api_profile_city': '🏙 Город по умолчанию: {city}',
+        'api_profile_first': '📅 Первая активность: {date}',
+        'api_stats_empty': '📊 Статистика API\n\nВы ещё не использовали API.',
+        'api_stats_title': '📊 Статистика API',
+        'api_stats_total': '📈 Всего: {total}',
+        'api_stats_24h': '🕐 24ч: {h24}',
+        'api_stats_7d': '📅 7 дней: {d7}',
+        'api_stats_by_ep': 'По эндпоинтам:',
+        'api_deleted': '🗑 Удалено API-ключей: {count}',
+        'api_city_not_set': 'не установлен',
+        'city_added': '✅ Город добавлен в избранные.',
+        'city_add_failed': '❌ Не удалось добавить город: {result}',
+        'city_removed': '✅ Город удалён.',
+        'city_not_found': '❌ Такой город не найден.',
+        'api_enter_city_short': '🏙 Введите город для API:',
+        'api_city_set': '✅ Город для API: *{city}*',
+        'card_ready': '🖼 Карточка готова.',
+        'card_error': '🖼 Не удалось создать карточку',
+        'logo_save_error': '❌ Не удалось сохранить логотип.',
+
         "team_menu":"👥 *Команда*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Аналитика*\n\nBusiness: статистика подключённых каналов и публикаций."
@@ -705,6 +750,51 @@ _NEW_TEXTS = {
         "autopost_menu":"📢 *Auto-posting*\n\nBusiness can automatically publish weather to Telegram channels.\n\nCommands:\n/channel @channel CITY 08:00 — add a channel\n/channels — my channels",
         "card_menu":"🖼 Weather Card\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — create an API key.",
+        'api_btn_create': '🔑 Create API Key',
+        'api_btn_help': '📖 Documentation',
+        'api_btn_city': '🏙 Set City',
+        'api_btn_stats': '📊 Statistics',
+        'api_btn_profile': '👤 My Profile',
+        'api_btn_delete': '🗑 Delete Keys',
+        'api_key_created': '🔑 API key created:\n`{key}`',
+        'api_key_error': '❌ Error creating key. Check Business subscription.',
+        'api_help_title': '📖 API Documentation',
+        'api_help_base': '🌍 Base URL:',
+        'api_help_endpoints': '📍 Endpoints:',
+        'api_help_ep_weather': '• GET /weather?city=City',
+        'api_help_ep_forecast': '• GET /forecast?city=City&days=5',
+        'api_help_ep_me': '• GET /me',
+        'api_help_auth': '🔑 Authorization:',
+        'api_help_header': 'Header: X-API-Key: your_key',
+        'api_help_default': '🏙 Default city: {city}',
+        'api_help_limits': '📊 Limits:',
+        'api_help_limit_keys': '• Maximum 5 API keys',
+        'api_help_limit_req': '• 100 requests per hour per key',
+        'api_help_example': '💡 Example:',
+        'api_set_city_prompt': '🏙 Enter default city for API requests:',
+        'api_profile_title': '📊 Your API Profile',
+        'api_profile_id': '🆔 User ID: {id}',
+        'api_profile_keys': '🔑 API keys: {count}',
+        'api_profile_city': '🏙 Default city: {city}',
+        'api_profile_first': '📅 First activity: {date}',
+        'api_stats_empty': '📊 API Statistics\n\nYou have not used the API yet.',
+        'api_stats_title': '📊 API Statistics',
+        'api_stats_total': '📈 Total: {total}',
+        'api_stats_24h': '🕐 24h: {h24}',
+        'api_stats_7d': '📅 7 days: {d7}',
+        'api_stats_by_ep': 'By endpoints:',
+        'api_deleted': '🗑 Deleted API keys: {count}',
+        'api_city_not_set': 'not set',
+        'city_added': '✅ City added to favorites.',
+        'city_add_failed': '❌ Failed to add city: {result}',
+        'city_removed': '✅ City removed.',
+        'city_not_found': '❌ City not found.',
+        'api_enter_city_short': '🏙 Enter city for API:',
+        'api_city_set': '✅ City for API: *{city}*',
+        'card_ready': '🖼 Card is ready.',
+        'card_error': '🖼 Failed to create card',
+        'logo_save_error': '❌ Failed to save logo.',
+
         "team_menu":"👥 *Team*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Analytics*\n\nBusiness: connected-channel and posting statistics."
@@ -2324,37 +2414,30 @@ def webhook():
                 if advanced_features:
                     raw_key, key_info = advanced_features.create_api_key(chat_id)
                     if raw_key:
-                        send_message(chat_id, f"🔑 API-ключ создан:\n`{raw_key}`")
+                        send_message(chat_id, T(lang, "api_key_created", key=raw_key))
                     else:
-                        send_message(chat_id, "❌ Ошибка создания ключа. Проверьте подписку Business.")
+                        send_message(chat_id, T(lang, "api_key_error"))
                 return "ok", 200
             
             elif data_str == "api_help":
                 if advanced_features:
-                    default_city = advanced_features.get_api_default_city(chat_id) or "не установлен"
-                    help_text = f"""📖 API Документация
-
-🌍 Базовый URL:
-https://mob100500lvl.pythonanywhere.com/api/v1
-
-📍 Эндпоинты:
-• GET /weather?city=Город
-• GET /forecast?city=Город&days=5
-• GET /me
-
-🔑 Авторизация:
-Заголовок: X-API-Key: ваш_ключ
-
-🏙 Город по умолчанию: {default_city}
-
-📊 Лимиты:
-• Максимум 5 API ключей
-• 100 запросов в час на ключ
-
-💡 Пример:
-curl -H "X-API-Key: ВАШ_КЛЮЧ" \
-"https://mob100500lvl.pythonanywhere.com/api/v1/weather"
-"""
+                    default_city = advanced_features.get_api_default_city(chat_id) or T(lang, "api_city_not_set")
+                    help_text = T(lang, "api_help_title") + "\n"
+                    help_text += T(lang, "api_help_base") + "\n"
+                    help_text += "https://mob100500lvl.pythonanywhere.com/api/v1\n"
+                    help_text += T(lang, "api_help_endpoints") + "\n"
+                    help_text += T(lang, "api_help_ep_weather") + "\n"
+                    help_text += T(lang, "api_help_ep_forecast") + "\n"
+                    help_text += T(lang, "api_help_ep_me") + "\n"
+                    help_text += T(lang, "api_help_auth") + "\n"
+                    help_text += T(lang, "api_help_header") + "\n"
+                    help_text += T(lang, "api_help_default", city=default_city) + "\n"
+                    help_text += T(lang, "api_help_limits") + "\n"
+                    help_text += T(lang, "api_help_limit_keys") + "\n"
+                    help_text += T(lang, "api_help_limit_req") + "\n"
+                    help_text += T(lang, "api_help_example") + "\n"
+                    help_text += 'curl -H "X-API-Key: ВАШ_КЛЮЧ" \\\n'
+                    help_text += '"https://mob100500lvl.pythonanywhere.com/api/v1/weather"\n'
                     send_message(chat_id, help_text)
                 return "ok", 200
                 return "ok", 200
@@ -2362,7 +2445,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
             elif data_str == "api_set_city":
                 if advanced_features:
                     _set_user_state(chat_id, "api_city_input")
-                    send_message(chat_id, "🏙 Введите город по умолчанию для API запросов:")
+                    send_message(chat_id, T(lang, "api_set_city_prompt"))
                 return "ok", 200
             
             elif data_str == "api_profile":
@@ -2372,7 +2455,11 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                     api_keys_file = advanced_features._load(advanced_features.API_KEY_FILE, {})
                     api_keys_count = sum(1 for k, v in api_keys_file.items() if v.get("owner") == str(chat_id))
                     first_seen = profile.get('first_seen', 'N/A')[:10] if profile.get('first_seen') else 'N/A'
-                    profile_text = f"📊 Ваш API Профиль\n\n🆔 User ID: {chat_id}\n🔑 API ключей: {api_keys_count}\n🏙 Город по умолчанию: {profile.get('api_default_city', 'не установлен')}\n📅 Первая активность: {first_seen}"
+                    profile_text = T(lang, "api_profile_title") + "\n\n"
+                    profile_text += T(lang, "api_profile_id", id=chat_id) + "\n"
+                    profile_text += T(lang, "api_profile_keys", count=api_keys_count) + "\n"
+                    profile_text += T(lang, "api_profile_city", city=profile.get('api_default_city', T(lang, "api_city_not_set"))) + "\n"
+                    profile_text += T(lang, "api_profile_first", date=first_seen)
                     send_message(chat_id, profile_text)
                 return "ok", 200
 
@@ -2380,9 +2467,13 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                 if advanced_features:
                     stats = advanced_features.get_api_stats(chat_id)
                     if stats["total_requests"] == 0:
-                        send_message(chat_id, "📊 Статистика API\n\nВы ещё не использовали API.")
+                        send_message(chat_id, T(lang, "api_stats_empty"))
                     else:
-                        stats_text = f"📊 Статистика API\n\n📈 Всего: {stats['total_requests']}\n🕐 24ч: {stats['last_24h']}\n📅 7 дней: {stats['last_7d']}\n\nПо эндпоинтам:\n"
+                        stats_text = T(lang, "api_stats_title") + "\n\n"
+                        stats_text += T(lang, "api_stats_total", total=stats['total_requests']) + "\n"
+                        stats_text += T(lang, "api_stats_24h", h24=stats['last_24h']) + "\n"
+                        stats_text += T(lang, "api_stats_7d", d7=stats['last_7d']) + "\n\n"
+                        stats_text += T(lang, "api_stats_by_ep") + "\n"
                         for endpoint, count in sorted(stats["by_endpoint"].items(), key=lambda x: x[1], reverse=True):
                             stats_text += f"  • {endpoint}: {count}\n"
                         send_message(chat_id, stats_text)
@@ -2397,7 +2488,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                             del keys[digest]
                             deleted += 1
                     advanced_features._save(advanced_features.API_KEY_FILE, keys)
-                    send_message(chat_id, f"🗑 Удалено API-ключей: {deleted}")
+                    send_message(chat_id, T(lang, "api_deleted", count=deleted))
                 return "ok", 200
             
             # Для других callback_query просто возвращаем ok
@@ -2436,7 +2527,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                     send_message(chat_id, T(get_user_lang(chat_id), "wl_saved"), get_white_label_keyboard(chat_id))
                 except Exception as e:
                     logger.error(f"Ошибка сохранения White-label logo: {e}", exc_info=True)
-                    send_message(chat_id, "❌ Не удалось сохранить логотип.", get_white_label_keyboard(chat_id))
+                    send_message(chat_id, T(lang, "logo_save_error"), get_white_label_keyboard(chat_id))
                 return "ok", 200
             return "ok", 200
 
@@ -2520,12 +2611,12 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                 return "ok", 200
             city_name = text.strip()
             if not city_name:
-                send_message(chat_id, "🏙 Введите город для API:", get_main_keyboard(chat_id))
+                send_message(chat_id, T(lang, "api_enter_city_short"), get_main_keyboard(chat_id))
                 return "ok", 200
             if advanced_features:
                 advanced_features.set_api_default_city(chat_id, city_name)
             _clear_user_state(chat_id)
-            send_message(chat_id, f"✅ Город для API: *{city_name}*", get_main_keyboard(chat_id))
+            send_message(chat_id, T(lang, "api_city_set", city=city_name), get_main_keyboard(chat_id))
             return "ok", 200
 
         # No city yet: prompt only after stateful city input had a chance to run.
@@ -2543,9 +2634,9 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
             ok, result = advanced_features.add_favorite(chat_id, city_name) if advanced_features else (False, "unavailable")
             _clear_user_state(chat_id)
             if ok:
-                send_message(chat_id, "✅ Город добавлен в избранные.", get_city_keyboard(chat_id))
+                send_message(chat_id, T(lang, "city_added"), get_city_keyboard(chat_id))
             else:
-                send_message(chat_id, f"❌ Не удалось добавить город: {result}", get_city_keyboard(chat_id))
+                send_message(chat_id, T(lang, "city_add_failed", result=result), get_city_keyboard(chat_id))
             return "ok", 200
 
         if state.get("mode") == "favorite_remove":
@@ -2556,7 +2647,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
             city_name = text.strip()
             ok = advanced_features.remove_favorite(chat_id, city_name) if advanced_features else False
             _clear_user_state(chat_id)
-            send_message(chat_id, "✅ Город удалён." if ok else "❌ Такой город не найден.", get_city_keyboard(chat_id))
+            send_message(chat_id, T(lang, "city_removed") if ok else T(lang, "city_not_found"), get_city_keyboard(chat_id))
             return "ok", 200
 
         if state.get("mode") == "wl_name":
@@ -2699,9 +2790,9 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
                     path = advanced_features.generate_weather_card(weather, current_city, brand=brand)
                     logger.info(f"CARD: карточка создана: {path}")
                     if path:
-                        send_photo(chat_id, path, "🖼 Карточка готова.")
+                        send_photo(chat_id, path, T(lang, "card_ready"))
                     else:
-                        send_message(chat_id, "🖼 Не удалось создать карточку")
+                        send_message(chat_id, T(lang, "card_error"))
                 except Exception as e:
                     logger.error(f"CARD: Ошибка: {e}", exc_info=True)
                     send_message(chat_id, f"❌ Ошибка: {str(e)[:100]}")
@@ -2823,7 +2914,7 @@ curl -H "X-API-Key: ВАШ_КЛЮЧ" \
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")
             else:
-                send_message(chat_id, T(lang, "api_menu"), advanced_features.get_api_inline_keyboard() if advanced_features else None)
+                send_message(chat_id, T(lang, "api_menu"), advanced_features.get_api_inline_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         elif action == "team":
