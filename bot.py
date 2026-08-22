@@ -732,6 +732,7 @@ _NEW_TEXTS = {
         'api_city_set': '✅ Город для API: *{city}*',
         'card_ready': '🖼 Карточка готова.',
         'card_error': '🖼 Не удалось создать карточку',
+        'card_error_generic': '❌ Ошибка: {err}',
         'logo_save_error': '❌ Не удалось сохранить логотип.',
 
         "team_menu":"👥 *Команда*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
@@ -793,6 +794,7 @@ _NEW_TEXTS = {
         'api_city_set': '✅ City for API: *{city}*',
         'card_ready': '🖼 Card is ready.',
         'card_error': '🖼 Failed to create card',
+        'card_error_generic': '❌ Error: {err}',
         'logo_save_error': '❌ Failed to save logo.',
 
         "team_menu":"👥 *Team*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
@@ -810,6 +812,30 @@ for _lang_key, _items in _EXTRA_UI_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
 
 # Final product UI: only Premium and Business are public plans.
+TEXTS["ru"].update({
+    'temp': '🌡 Температура: {temp}°C',
+    'feels_like': '🤔 Ощущается как: {feels}°C',
+    'wind_full': '💨 Ветер: {wind} м/с, {direction}',
+    'humidity': '💧 Влажность: {humidity}%',
+    'pressure_mm': '📊 Давление: {pressure} мм рт.ст.',
+    'uv_with_level': '☀️ UV-индекс: {uv} ({level})',
+    'uv_simple': '☀️ UV-индекс: {uv}',
+    'updated_time': '🕐 Обновлено: {time}',
+    'precip_prob': '🌧 Вероятность осадков: {prob}%',
+    'sunrise': '🌅 Восход: {time}',
+    'sunset': '🌇 Закат: {time}',
+    'forecast_title': '📅 *Прогноз на {days_text} — {city}*\n\n',
+    'forecast_day_line': '🌡 +{min}°...+{max}° (ощущ. +{feels}°)',
+    'forecast_wind_line': '💨 {wind} м/с, {dir} | 💧 {hum}%',
+    'forecast_pressure': '📊 {pressure} мм',
+    'forecast_uv_line': ' | ☀️ UV {uv} ({level})',
+    'forecast_precip': '🌧 Осадки: {prob}% ({mm} мм)',
+    'cloudy_default': 'Облачно',
+    'day_1': 'день', 'day_2_4': 'дня', 'day_5_plus': 'дней',
+    'uv_low': 'низкий', 'uv_moderate': 'умеренный', 'uv_high': 'высокий',
+    'uv_very_high': 'очень высокий', 'uv_extreme': 'экстремальный',
+})
+
 for _lang_code in LANGUAGES:
     _fallback = TEXTS.get(_lang_code, TEXTS["en"])
     _fallback.update({
@@ -1309,7 +1335,7 @@ def get_forecast_aggregated(city_name, days=10, lang="en"):
         sx = sum(_math.sin(_math.radians(x)) for x in degrees)
         cx = sum(_math.cos(_math.radians(x)) for x in degrees)
         angle = (_math.degrees(_math.atan2(sx, cx)) + 360) % 360
-        return wind_deg_to_direction(angle)
+        return wind_deg_to_direction(angle, lang)
 
     result = {}
     days_list = sorted(daily_data.keys())[:days]
@@ -2436,7 +2462,7 @@ def webhook():
                     help_text += T(lang, "api_help_limit_keys") + "\n"
                     help_text += T(lang, "api_help_limit_req") + "\n"
                     help_text += T(lang, "api_help_example") + "\n"
-                    help_text += 'curl -H "X-API-Key: ВАШ_КЛЮЧ" \\\n'
+                    help_text += ('curl -H "X-API-Key: ВАШ_КЛЮЧ" \\\n' if lang == "ru" else 'curl -H "X-API-Key: YOUR_KEY" \\\n')
                     help_text += '"https://mob100500lvl.pythonanywhere.com/api/v1/weather"\n'
                     send_message(chat_id, help_text)
                 return "ok", 200
@@ -2795,7 +2821,7 @@ def webhook():
                         send_message(chat_id, T(lang, "card_error"))
                 except Exception as e:
                     logger.error(f"CARD: Ошибка: {e}", exc_info=True)
-                    send_message(chat_id, f"❌ Ошибка: {str(e)[:100]}")
+                    send_message(chat_id, T(lang, "card_error_generic", err=str(e)[:100]))
             else:
                 logger.error("CARD: advanced_features не загружен")
             return "ok", 200
