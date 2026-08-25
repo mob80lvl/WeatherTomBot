@@ -813,7 +813,19 @@ _EXTRA_UI_TEXTS = {
         'alert_rain': '🌧 *Дождь!* Осадки {mm} мм. Возьмите зонт.',
         'alert_heavy_rain': '⛈ *Сильный дождь!* Осадки {mm} мм (порог {thr} мм). Осторожно, возможны подтопления.',
         'alert_storm': '⛈ *Гроза!* {desc}. Избегайте открытых пространств.',
-        'alert_no_city': '❌ Не удалось получить прогноз для уведомлений.'},
+        'alert_no_city': '❌ Не удалось получить прогноз для уведомлений.',
+        'threshold_heat': '🔥 Порог жары',
+        'threshold_frost': '❄️ Порог мороза',
+        'threshold_wind': '💨 Порог ветра',
+        'threshold_rain': '🌧 Порог дождя',
+        'threshold_heavy_rain': '⛈ Порог ливня',
+        'threshold_current': 'Текущий порог: *{thr}*',
+        'threshold_heat_prompt': '🔥 Введите температуру жары (°C):',
+        'threshold_frost_prompt': '❄️ Введите температуру мороза (°C):',
+        'threshold_wind_prompt': '💨 Введите скорость ветра (м/с):',
+        'threshold_rain_prompt': '🌧 Введите количество осадков (мм):',
+        'threshold_heavy_rain_prompt': '⛈ Введите количество осадков (мм):',
+        'threshold_saved': '✅ Порог установлен: *{thr}*',},
 "en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back","notification_frequency":"📅 Frequency","notification_freq_daily":"Daily","notification_freq_weekly":"Weekly","notification_freq_weekdays":"Weekdays","notification_freq_weekends":"Weekends","notification_freq_saved":"✅ Frequency set: *{freq}*",
         'alert_title': '⚠️ *Weather alerts for tomorrow*',
         'alert_heat': '🔥 *Heat!* Max temp {temp}°C (threshold {thr}°C). Drink water, avoid sun.',
@@ -822,7 +834,19 @@ _EXTRA_UI_TEXTS = {
         'alert_rain': '🌧 *Rain!* Precipitation {mm} mm. Take an umbrella.',
         'alert_heavy_rain': '⛈ *Heavy rain!* Precipitation {mm} mm (threshold {thr} mm). Caution, possible flooding.',
         'alert_storm': '⛈ *Storm!* {desc}. Avoid open areas.',
-        'alert_no_city': '❌ Failed to get forecast for notifications.'},
+        'alert_no_city': '❌ Failed to get forecast for notifications.',
+        'threshold_heat': '🔥 Heat threshold',
+        'threshold_frost': '❄️ Frost threshold',
+        'threshold_wind': '💨 Wind threshold',
+        'threshold_rain': '🌧 Rain threshold',
+        'threshold_heavy_rain': '⛈ Heavy rain threshold',
+        'threshold_current': 'Current threshold: *{thr}*',
+        'threshold_heat_prompt': '🔥 Enter heat temperature (°C):',
+        'threshold_frost_prompt': '❄️ Enter frost temperature (°C):',
+        'threshold_wind_prompt': '💨 Enter wind speed (m/s):',
+        'threshold_rain_prompt': '🌧 Enter precipitation (mm):',
+        'threshold_heavy_rain_prompt': '⛈ Enter precipitation (mm):',
+        'threshold_saved': '✅ Threshold set: *{thr}*',},
 }
 for _lang_key, _items in _EXTRA_UI_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
@@ -2278,7 +2302,7 @@ def get_city_keyboard(chat_id):
 
 def get_notification_keyboard(chat_id):
     lang = get_user_lang(chat_id)
-    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_frequency")],[T(lang,"notification_back")]],"resize_keyboard":True}
+    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_frequency")],[T(lang,"threshold_heat"),T(lang,"threshold_frost")],[T(lang,"threshold_wind"),T(lang,"threshold_rain")],[T(lang,"threshold_heavy_rain")],[T(lang,"notification_back")]],"resize_keyboard":True}
 
 def _show_cities(chat_id):
     lang=get_user_lang(chat_id); favs=advanced_features.favorites(chat_id) if advanced_features else []
@@ -2649,6 +2673,47 @@ def webhook():
                 send_message(chat_id,T(lang,"notification_time_prompt"),get_notification_keyboard(chat_id)); return "ok",200
             if advanced_features: advanced_features.set_notification_prefs(chat_id,time=value)
             _clear_user_state(chat_id); send_message(chat_id,T(lang,"notification_time_saved",time=value),get_notification_keyboard(chat_id)); return "ok",200
+        if state.get("mode") == "threshold_heat":
+            try:
+                value = float(text.strip())
+                if advanced_features: advanced_features.set_alert(chat_id, "heat", enabled=True, threshold=value)
+                _clear_user_state(chat_id); send_message(chat_id,T(lang,"threshold_saved",thr=value),get_notification_keyboard(chat_id)); return "ok",200
+            except:
+                send_message(chat_id,"❌ Введите число, например 30",get_notification_keyboard(chat_id)); return "ok",200
+        
+        if state.get("mode") == "threshold_frost":
+            try:
+                value = float(text.strip())
+                if advanced_features: advanced_features.set_alert(chat_id, "frost", enabled=True, threshold=value)
+                _clear_user_state(chat_id); send_message(chat_id,T(lang,"threshold_saved",thr=value),get_notification_keyboard(chat_id)); return "ok",200
+            except:
+                send_message(chat_id,"❌ Введите число, например 0",get_notification_keyboard(chat_id)); return "ok",200
+        
+        if state.get("mode") == "threshold_wind":
+            try:
+                value = float(text.strip())
+                if advanced_features: advanced_features.set_alert(chat_id, "wind", enabled=True, threshold=value)
+                _clear_user_state(chat_id); send_message(chat_id,T(lang,"threshold_saved",thr=value),get_notification_keyboard(chat_id)); return "ok",200
+            except:
+                send_message(chat_id,"❌ Введите число, например 15",get_notification_keyboard(chat_id)); return "ok",200
+        
+        if state.get("mode") == "threshold_rain":
+            try:
+                value = float(text.strip())
+                if advanced_features: advanced_features.set_alert(chat_id, "rain", enabled=True, threshold=value)
+                _clear_user_state(chat_id); send_message(chat_id,T(lang,"threshold_saved",thr=value),get_notification_keyboard(chat_id)); return "ok",200
+            except:
+                send_message(chat_id,"❌ Введите число, например 0.1",get_notification_keyboard(chat_id)); return "ok",200
+        
+        if state.get("mode") == "threshold_heavy_rain":
+            try:
+                value = float(text.strip())
+                if advanced_features: advanced_features.set_alert(chat_id, "heavy_rain", enabled=True, threshold=value)
+                _clear_user_state(chat_id); send_message(chat_id,T(lang,"threshold_saved",thr=value),get_notification_keyboard(chat_id)); return "ok",200
+            except:
+                send_message(chat_id,"❌ Введите число, например 10",get_notification_keyboard(chat_id)); return "ok",200
+        
+
         if state.get("mode") == "notification_city":
             city_name=text.strip()
             if not city_name or city_name.startswith("/"): send_message(chat_id,T(lang,"notification_city_prompt"),get_notification_keyboard(chat_id)); return "ok",200
@@ -2853,6 +2918,21 @@ def webhook():
             }
             send_message(chat_id, T(lang, "notification_frequency") + ":", kb)
             return "ok",200
+        if text == T(lang,"threshold_heat"):
+            _set_user_state(chat_id,"threshold_heat"); send_message(chat_id,T(lang,"threshold_heat_prompt"),get_notification_keyboard(chat_id)); return "ok",200
+        
+        if text == T(lang,"threshold_frost"):
+            _set_user_state(chat_id,"threshold_frost"); send_message(chat_id,T(lang,"threshold_frost_prompt"),get_notification_keyboard(chat_id)); return "ok",200
+        
+        if text == T(lang,"threshold_wind"):
+            _set_user_state(chat_id,"threshold_wind"); send_message(chat_id,T(lang,"threshold_wind_prompt"),get_notification_keyboard(chat_id)); return "ok",200
+        
+        if text == T(lang,"threshold_rain"):
+            _set_user_state(chat_id,"threshold_rain"); send_message(chat_id,T(lang,"threshold_rain_prompt"),get_notification_keyboard(chat_id)); return "ok",200
+        
+        if text == T(lang,"threshold_heavy_rain"):
+            _set_user_state(chat_id,"threshold_heavy_rain"); send_message(chat_id,T(lang,"threshold_heavy_rain_prompt"),get_notification_keyboard(chat_id)); return "ok",200
+        
         if text == T(lang,"notification_time"):
             _set_user_state(chat_id,"notification_time"); send_message(chat_id,T(lang,"notification_time_prompt"),get_notification_keyboard(chat_id)); return "ok",200
         if text == T(lang,"notification_city"):
