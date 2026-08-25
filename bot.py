@@ -805,8 +805,24 @@ _NEW_TEXTS = {
 for _lang_key, _items in _NEW_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
 _EXTRA_UI_TEXTS = {
-"ru":{"cities_title":"⭐ *Мои города*","cities_empty":"Пока нет сохранённых городов.","cities_choose":"Выберите город:","city_added":"✅ Город *{city}* добавлен.","city_removed":"✅ Город *{city}* удалён.","city_not_in_favorites":"❌ Такой город не найден в списке.","notification_settings":"🔔 *Настройки уведомлений*\n\nСтатус: {status}\n🌧 Дождь: {rain}\n💨 Сильный ветер: {wind}\n❄️ Мороз: {frost}\n☀️ Жара: {heat}\n🕘 Время: *{time}*\n📍 Город: *{city}*","notification_enabled":"✅ Включены","notification_disabled":"🔕 Выключены","notification_city_prompt":"📍 Напишите город, для которого нужны уведомления.","notification_time_prompt":"🕘 Напишите время в формате HH:MM, например 08:00.","notification_time_saved":"✅ Время уведомлений установлено: *{time}*","notification_city_saved":"✅ Город уведомлений установлен: *{city}*","notification_rain":"🌧 Дождь","notification_wind":"💨 Сильный ветер","notification_frost":"❄️ Мороз","notification_heat":"☀️ Жара","notification_time":"🕘 Время","notification_city":"📍 Город","notification_toggle":"🔔 Включить / выключить","notification_back":"🔙 Назад","notification_frequency":"📅 Периодичность","notification_freq_daily":"Ежедневно","notification_freq_weekly":"Еженедельно","notification_freq_weekdays":"Будни","notification_freq_weekends":"Выходные","notification_freq_saved":"✅ Периодичность установлена: *{freq}*"},
-"en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back","notification_frequency":"📅 Frequency","notification_freq_daily":"Daily","notification_freq_weekly":"Weekly","notification_freq_weekdays":"Weekdays","notification_freq_weekends":"Weekends","notification_freq_saved":"✅ Frequency set: *{freq}*"},
+"ru":{"cities_title":"⭐ *Мои города*","cities_empty":"Пока нет сохранённых городов.","cities_choose":"Выберите город:","city_added":"✅ Город *{city}* добавлен.","city_removed":"✅ Город *{city}* удалён.","city_not_in_favorites":"❌ Такой город не найден в списке.","notification_settings":"🔔 *Настройки уведомлений*\n\nСтатус: {status}\n🌧 Дождь: {rain}\n💨 Сильный ветер: {wind}\n❄️ Мороз: {frost}\n☀️ Жара: {heat}\n🕘 Время: *{time}*\n📍 Город: *{city}*","notification_enabled":"✅ Включены","notification_disabled":"🔕 Выключены","notification_city_prompt":"📍 Напишите город, для которого нужны уведомления.","notification_time_prompt":"🕘 Напишите время в формате HH:MM, например 08:00.","notification_time_saved":"✅ Время уведомлений установлено: *{time}*","notification_city_saved":"✅ Город уведомлений установлен: *{city}*","notification_rain":"🌧 Дождь","notification_wind":"💨 Сильный ветер","notification_frost":"❄️ Мороз","notification_heat":"☀️ Жара","notification_time":"🕘 Время","notification_city":"📍 Город","notification_toggle":"🔔 Включить / выключить","notification_back":"🔙 Назад","notification_frequency":"📅 Периодичность","notification_freq_daily":"Ежедневно","notification_freq_weekly":"Еженедельно","notification_freq_weekdays":"Будни","notification_freq_weekends":"Выходные","notification_freq_saved":"✅ Периодичность установлена: *{freq}*",
+        'alert_title': '⚠️ *Предупреждения о погоде на завтра*',
+        'alert_heat': '🔥 *Жара!* Макс. температура {temp}°C (порог {thr}°C). Пейте больше воды, избегайте солнца.',
+        'alert_frost': '❄️ *Мороз!* Мин. температура {temp}°C (порог {thr}°C). Одевайтесь тепло.',
+        'alert_wind': '💨 *Сильный ветер!* До {speed} м/с (порог {thr} м/с). Будьте осторожны на улице.',
+        'alert_rain': '🌧 *Дождь!* Осадки {mm} мм. Возьмите зонт.',
+        'alert_heavy_rain': '⛈ *Сильный дождь!* Осадки {mm} мм (порог {thr} мм). Осторожно, возможны подтопления.',
+        'alert_storm': '⛈ *Гроза!* {desc}. Избегайте открытых пространств.',
+        'alert_no_city': '❌ Не удалось получить прогноз для уведомлений.'},
+"en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back","notification_frequency":"📅 Frequency","notification_freq_daily":"Daily","notification_freq_weekly":"Weekly","notification_freq_weekdays":"Weekdays","notification_freq_weekends":"Weekends","notification_freq_saved":"✅ Frequency set: *{freq}*",
+        'alert_title': '⚠️ *Weather alerts for tomorrow*',
+        'alert_heat': '🔥 *Heat!* Max temp {temp}°C (threshold {thr}°C). Drink water, avoid sun.',
+        'alert_frost': '❄️ *Frost!* Min temp {temp}°C (threshold {thr}°C). Dress warmly.',
+        'alert_wind': '💨 *Strong wind!* Up to {speed} m/s (threshold {thr} m/s). Be careful outside.',
+        'alert_rain': '🌧 *Rain!* Precipitation {mm} mm. Take an umbrella.',
+        'alert_heavy_rain': '⛈ *Heavy rain!* Precipitation {mm} mm (threshold {thr} mm). Caution, possible flooding.',
+        'alert_storm': '⛈ *Storm!* {desc}. Avoid open areas.',
+        'alert_no_city': '❌ Failed to get forecast for notifications.'},
 }
 for _lang_key, _items in _EXTRA_UI_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
@@ -3259,6 +3275,18 @@ def login_required(f):
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated_function
+
+@app.route('/api/cron_notifications', methods=['GET'])
+def cron_notifications():
+    """Веб-хук для отправки уведомлений (cron-job.org вызывает каждый час)."""
+    try:
+        import sys, os
+        sys.path.insert(0, '/home/mob100500lvl/WeatherTomBot/WeatherTomBot')
+        from send_notifications import main as send_main
+        send_main()
+        return "OK", 200
+    except Exception as e:
+        return f"Error: {str(e)[:200]}", 500
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
