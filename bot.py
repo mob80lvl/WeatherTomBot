@@ -805,8 +805,8 @@ _NEW_TEXTS = {
 for _lang_key, _items in _NEW_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
 _EXTRA_UI_TEXTS = {
-"ru":{"cities_title":"⭐ *Мои города*","cities_empty":"Пока нет сохранённых городов.","cities_choose":"Выберите город:","city_added":"✅ Город *{city}* добавлен.","city_removed":"✅ Город *{city}* удалён.","city_not_in_favorites":"❌ Такой город не найден в списке.","notification_settings":"🔔 *Настройки уведомлений*\n\nСтатус: {status}\n🌧 Дождь: {rain}\n💨 Сильный ветер: {wind}\n❄️ Мороз: {frost}\n☀️ Жара: {heat}\n🕘 Время: *{time}*\n📍 Город: *{city}*","notification_enabled":"✅ Включены","notification_disabled":"🔕 Выключены","notification_city_prompt":"📍 Напишите город, для которого нужны уведомления.","notification_time_prompt":"🕘 Напишите время в формате HH:MM, например 08:00.","notification_time_saved":"✅ Время уведомлений установлено: *{time}*","notification_city_saved":"✅ Город уведомлений установлен: *{city}*","notification_rain":"🌧 Дождь","notification_wind":"💨 Сильный ветер","notification_frost":"❄️ Мороз","notification_heat":"☀️ Жара","notification_time":"🕘 Время","notification_city":"📍 Город","notification_toggle":"🔔 Включить / выключить","notification_back":"🔙 Назад"},
-"en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back"},
+"ru":{"cities_title":"⭐ *Мои города*","cities_empty":"Пока нет сохранённых городов.","cities_choose":"Выберите город:","city_added":"✅ Город *{city}* добавлен.","city_removed":"✅ Город *{city}* удалён.","city_not_in_favorites":"❌ Такой город не найден в списке.","notification_settings":"🔔 *Настройки уведомлений*\n\nСтатус: {status}\n🌧 Дождь: {rain}\n💨 Сильный ветер: {wind}\n❄️ Мороз: {frost}\n☀️ Жара: {heat}\n🕘 Время: *{time}*\n📍 Город: *{city}*","notification_enabled":"✅ Включены","notification_disabled":"🔕 Выключены","notification_city_prompt":"📍 Напишите город, для которого нужны уведомления.","notification_time_prompt":"🕘 Напишите время в формате HH:MM, например 08:00.","notification_time_saved":"✅ Время уведомлений установлено: *{time}*","notification_city_saved":"✅ Город уведомлений установлен: *{city}*","notification_rain":"🌧 Дождь","notification_wind":"💨 Сильный ветер","notification_frost":"❄️ Мороз","notification_heat":"☀️ Жара","notification_time":"🕘 Время","notification_city":"📍 Город","notification_toggle":"🔔 Включить / выключить","notification_back":"🔙 Назад","notification_frequency":"📅 Периодичность","notification_freq_daily":"Ежедневно","notification_freq_weekly":"Еженедельно","notification_freq_weekdays":"Будни","notification_freq_weekends":"Выходные","notification_freq_saved":"✅ Периодичность установлена: *{freq}*"},
+"en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back","notification_frequency":"📅 Frequency","notification_freq_daily":"Daily","notification_freq_weekly":"Weekly","notification_freq_weekdays":"Weekdays","notification_freq_weekends":"Weekends","notification_freq_saved":"✅ Frequency set: *{freq}*"},
 }
 for _lang_key, _items in _EXTRA_UI_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
@@ -2262,7 +2262,7 @@ def get_city_keyboard(chat_id):
 
 def get_notification_keyboard(chat_id):
     lang = get_user_lang(chat_id)
-    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_back")]],"resize_keyboard":True}
+    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_frequency")],[T(lang,"notification_back")]],"resize_keyboard":True}
 
 def _show_cities(chat_id):
     lang=get_user_lang(chat_id); favs=advanced_features.favorites(chat_id) if advanced_features else []
@@ -2271,8 +2271,11 @@ def _show_cities(chat_id):
 
 def _show_notification_settings(chat_id):
     lang=get_user_lang(chat_id)
-    prefs=advanced_features.notification_prefs(chat_id) if advanced_features else {"enabled":get_notification_status(chat_id),"time":"08:00","rain":True,"wind":True,"frost":True,"heat":True}
+    prefs=advanced_features.notification_prefs(chat_id) if advanced_features else {"enabled":get_notification_status(chat_id),"time":"08:00","frequency":"daily","rain":True,"wind":True,"frost":True,"heat":True}
     status=T(lang,"notification_enabled") if prefs.get("enabled") else T(lang,"notification_disabled")
+    freq=prefs.get("frequency","daily")
+    freq_names={"daily":T(lang,"notification_freq_daily"),"weekly":T(lang,"notification_freq_weekly"),"weekdays":T(lang,"notification_freq_weekdays"),"weekends":T(lang,"notification_freq_weekends")}
+    freq_display=freq_names.get(freq,T(lang,"notification_freq_daily"))
     city=prefs.get("city") or get_user_city(chat_id) or "—"
     text=T(lang,"notification_settings",status=status,rain="✅" if prefs.get("rain",True) else "❌",wind="✅" if prefs.get("wind",True) else "❌",frost="✅" if prefs.get("frost",True) else "❌",heat="✅" if prefs.get("heat",True) else "❌",time=prefs.get("time","08:00"),city=city)
     send_message(chat_id,text,get_notification_keyboard(chat_id))
@@ -2515,6 +2518,35 @@ def webhook():
                             deleted += 1
                     advanced_features._save(advanced_features.API_KEY_FILE, keys)
                     send_message(chat_id, T(lang, "api_deleted", count=deleted))
+                return "ok", 200
+            
+            # Обработка выбора периодичности уведомлений
+            elif data_str == "freq_daily":
+                if advanced_features:
+                    advanced_features.set_notification_prefs(chat_id, frequency="daily")
+                    send_message(chat_id, T(lang, "notification_freq_saved", freq=T(lang, "notification_freq_daily")))
+                answer_callback_query(callback_id)
+                return "ok", 200
+            
+            elif data_str == "freq_weekly":
+                if advanced_features:
+                    advanced_features.set_notification_prefs(chat_id, frequency="weekly")
+                    send_message(chat_id, T(lang, "notification_freq_saved", freq=T(lang, "notification_freq_weekly")))
+                answer_callback_query(callback_id)
+                return "ok", 200
+            
+            elif data_str == "freq_weekdays":
+                if advanced_features:
+                    advanced_features.set_notification_prefs(chat_id, frequency="weekdays")
+                    send_message(chat_id, T(lang, "notification_freq_saved", freq=T(lang, "notification_freq_weekdays")))
+                answer_callback_query(callback_id)
+                return "ok", 200
+            
+            elif data_str == "freq_weekends":
+                if advanced_features:
+                    advanced_features.set_notification_prefs(chat_id, frequency="weekends")
+                    send_message(chat_id, T(lang, "notification_freq_saved", freq=T(lang, "notification_freq_weekends")))
+                answer_callback_query(callback_id)
                 return "ok", 200
             
             # Для других callback_query просто возвращаем ok
@@ -2793,6 +2825,18 @@ def webhook():
                 if advanced_features:
                     prefs=advanced_features.notification_prefs(chat_id); advanced_features.set_notification_prefs(chat_id,**{pref:not bool(prefs.get(pref,True))})
                 _show_notification_settings(chat_id); return "ok",200
+        if text == T(lang,"notification_frequency"):
+            # Показываем inline-клавиатуру с вариантами
+            kb = {
+                "inline_keyboard": [
+                    [{"text": T(lang, "notification_freq_daily"), "callback_data": "freq_daily"}],
+                    [{"text": T(lang, "notification_freq_weekly"), "callback_data": "freq_weekly"}],
+                    [{"text": T(lang, "notification_freq_weekdays"), "callback_data": "freq_weekdays"}],
+                    [{"text": T(lang, "notification_freq_weekends"), "callback_data": "freq_weekends"}],
+                ]
+            }
+            send_message(chat_id, T(lang, "notification_frequency") + ":", kb)
+            return "ok",200
         if text == T(lang,"notification_time"):
             _set_user_state(chat_id,"notification_time"); send_message(chat_id,T(lang,"notification_time_prompt"),get_notification_keyboard(chat_id)); return "ok",200
         if text == T(lang,"notification_city"):
