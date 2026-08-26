@@ -761,7 +761,6 @@ _NEW_TEXTS = {
         'api_key_created': '🔑 API key created:\n`{api_key}`',
         'api_key_error': '❌ Error creating key. Check Business subscription.',
         'api_key_limit': '❌ Limit reached: 5 API keys. Delete old ones via «🗑 Delete keys».',
-        "api_key_recent": "⏳ A key was already created within the last minute. The message with the key is above. If you didn't receive it, wait 60 seconds and try again.",
         'api_help_title': '📖 API Documentation',
         'api_help_base': '🌍 Base URL:',
         'api_help_endpoints': '📍 Endpoints:',
@@ -828,7 +827,11 @@ _EXTRA_UI_TEXTS = {
         'threshold_wind_prompt': '💨 Введите скорость ветра (м/с):',
         'threshold_rain_prompt': '🌧 Введите количество осадков (мм):',
         'threshold_heavy_rain_prompt': '⛈ Введите количество осадков (мм):',
-        'threshold_saved': '✅ Порог установлен: *{thr}*',},
+        'threshold_saved': '✅ Порог установлен: *{thr}*',
+        'thresholds_title': '\n\n*Текущие пороги:*',
+        'thresholds_line1': '\n🔥 Жара: {heat}°C | ❄️ Мороз: {frost}°C',
+        'thresholds_line2': '\n💨 Ветер: {wind} м/с | 🌧 Дождь: {rain} мм',
+        'thresholds_line3': '\n⛈ Ливень: {heavy} мм',},
 "en":{"cities_title":"⭐ *My cities*","cities_empty":"No saved cities yet.","cities_choose":"Choose a city:","city_added":"✅ City *{city}* added.","city_removed":"✅ City *{city}* removed.","city_not_in_favorites":"❌ This city is not in your list.","notification_settings":"🔔 *Notification settings*\n\nStatus: {status}\n🌧 Rain: {rain}\n💨 Strong wind: {wind}\n❄️ Frost: {frost}\n☀️ Heat: {heat}\n🕘 Time: *{time}*\n📍 City: *{city}*","notification_enabled":"✅ Enabled","notification_disabled":"🔕 Disabled","notification_city_prompt":"📍 Send the city for notifications.","notification_time_prompt":"🕘 Send time in HH:MM format, e.g. 08:00.","notification_time_saved":"✅ Notification time set: *{time}*","notification_city_saved":"✅ Notification city set: *{city}*","notification_rain":"🌧 Rain","notification_wind":"💨 Strong wind","notification_frost":"❄️ Frost","notification_heat":"☀️ Heat","notification_time":"🕘 Time","notification_city":"📍 City","notification_toggle":"🔔 Enable / disable","notification_back":"🔙 Back","notification_frequency":"📅 Frequency","notification_freq_daily":"Daily","notification_freq_weekly":"Weekly","notification_freq_weekdays":"Weekdays","notification_freq_weekends":"Weekends","notification_freq_saved":"✅ Frequency set: *{freq}*",
         'alert_title': '⚠️ *Weather alerts for tomorrow*',
         'alert_heat': '🔥 *Heat!* Max temp {temp}°C (threshold {thr}°C). Drink water, avoid sun.',
@@ -849,7 +852,11 @@ _EXTRA_UI_TEXTS = {
         'threshold_wind_prompt': '💨 Enter wind speed (m/s):',
         'threshold_rain_prompt': '🌧 Enter precipitation (mm):',
         'threshold_heavy_rain_prompt': '⛈ Enter precipitation (mm):',
-        'threshold_saved': '✅ Threshold set: *{thr}*',},
+        'threshold_saved': '✅ Threshold set: *{thr}*',
+        'thresholds_title': '\n\n*Current thresholds:*',
+        'thresholds_line1': '\n🔥 Heat: {heat}°C | ❄️ Frost: {frost}°C',
+        'thresholds_line2': '\n💨 Wind: {wind} m/s | 🌧 Rain: {rain} mm',
+        'thresholds_line3': '\n⛈ Heavy rain: {heavy} mm',},
 }
 for _lang_key, _items in _EXTRA_UI_TEXTS.items():
     TEXTS.setdefault(_lang_key, {}).update(_items)
