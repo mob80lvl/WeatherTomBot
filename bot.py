@@ -695,8 +695,9 @@ _NEW_TEXTS = {
         'api_btn_stats': '📊 Статистика',
         'api_btn_profile': '👤 Мой профиль',
         'api_btn_delete': '🗑 Удалить ключи',
-        'api_key_created': '🔑 API-ключ создан:\n`{key}`',
+        'api_key_created': '🔑 API-ключ создан:\n`{api_key}`',
         'api_key_error': '❌ Ошибка создания ключа. Проверьте подписку Business.',
+        'api_key_limit': '❌ Достигнут лимит: 5 API-ключей. Удалите старые через «🗑 Удалить ключи».',
         'api_help_title': '📖 API Документация',
         'api_help_base': '🌍 Базовый URL:',
         'api_help_endpoints': '📍 Эндпоинты:',
@@ -757,8 +758,10 @@ _NEW_TEXTS = {
         'api_btn_stats': '📊 Statistics',
         'api_btn_profile': '👤 My Profile',
         'api_btn_delete': '🗑 Delete Keys',
-        'api_key_created': '🔑 API key created:\n`{key}`',
+        'api_key_created': '🔑 API key created:\n`{api_key}`',
         'api_key_error': '❌ Error creating key. Check Business subscription.',
+        'api_key_limit': '❌ Limit reached: 5 API keys. Delete old ones via «🗑 Delete keys».',
+        "api_key_recent": "⏳ A key was already created within the last minute. The message with the key is above. If you didn't receive it, wait 60 seconds and try again.",
         'api_help_title': '📖 API Documentation',
         'api_help_base': '🌍 Base URL:',
         'api_help_endpoints': '📍 Endpoints:',
@@ -2483,7 +2486,11 @@ def webhook():
                 if advanced_features:
                     raw_key, key_info = advanced_features.create_api_key(chat_id)
                     if raw_key:
-                        send_message(chat_id, T(lang, "api_key_created", key=raw_key))
+                        send_message(chat_id, T(lang, "api_key_created", api_key=raw_key))
+                    elif key_info == "limit":
+                        send_message(chat_id, T(lang, "api_key_limit"))
+                    elif key_info == "recent":
+                        pass  # ретрай Telegram — ключ уже создан, не дублируем
                     else:
                         send_message(chat_id, T(lang, "api_key_error"))
                 return "ok", 200
@@ -2550,13 +2557,14 @@ def webhook():
             
             elif data_str == "api_delete_all":
                 if advanced_features:
-                    keys = advanced_features._load(advanced_features.API_KEY_FILE, {})
-                    deleted = 0
-                    for digest, info in list(keys.items()):
-                        if info.get("owner") == str(chat_id):
-                            del keys[digest]
-                            deleted += 1
-                    advanced_features._save(advanced_features.API_KEY_FILE, keys)
+                    with advanced_features.FEATURE_LOCK:
+                        keys = advanced_features._load(advanced_features.API_KEY_FILE, {})
+                        deleted = 0
+                        for digest, info in list(keys.items()):
+                            if info.get("owner") == str(chat_id):
+                                del keys[digest]
+                                deleted += 1
+                        advanced_features._save(advanced_features.API_KEY_FILE, keys)
                     send_message(chat_id, T(lang, "api_deleted", count=deleted))
                 return "ok", 200
             

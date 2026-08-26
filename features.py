@@ -5,6 +5,7 @@ The module is intentionally storage-light (JSON) so it remains deployable on
 PythonAnywhere without a database. All write operations are atomic-ish and
 guarded by a process-local lock.
 """
+import fcntl
 import os, json, time, uuid, secrets, hashlib, threading, math, logging
 
 
@@ -283,26 +284,25 @@ def get_api_stats(uid):
     }
 
 
-def get_api_inline_keyboard():
+def get_api_inline_keyboard(lang="ru"):
     """Создает inline-клавиатуру для API управления."""
+    from bot import T
     return {
         "inline_keyboard": [
             [
-                {"text": "🔑 Создать API-ключ", "callback_data": "api_create_key"},
-                {"text": "📖 Документация", "callback_data": "api_help"}
+                {"text": T(lang, "api_btn_create"), "callback_data": "api_create_key"},
+                {"text": T(lang, "api_btn_help"), "callback_data": "api_help"}
             ],
             [
-                {"text": "🏙 Установить город", "callback_data": "api_set_city"},
-                {"text": "📊 Статистика", "callback_data": "api_stats"}
+                {"text": T(lang, "api_btn_city"), "callback_data": "api_set_city"},
+                {"text": T(lang, "api_btn_stats"), "callback_data": "api_stats"}
             ],
             [
-                {"text": "👤 Мой профиль", "callback_data": "api_profile"},
-                {"text": "🗑 Удалить ключи", "callback_data": "api_delete_all"}
+                {"text": T(lang, "api_btn_profile"), "callback_data": "api_profile"},
+                {"text": T(lang, "api_btn_delete"), "callback_data": "api_delete_all"}
             ]
         ]
     }
-
-
 def add_favorite(uid, city):
     city = (city or "").strip()
     if not city:
@@ -339,9 +339,17 @@ def notification_prefs(uid):
     db = _db()
     p = db["users"].setdefault(str(uid), {})
     return p.setdefault("notifications", {
-        "enabled": False, "time": "08:00", "rain": True,
-        "storm": True, "wind": True, "temp": True,
-        "heat": True, "frost": True, "heavy_rain": True
+        "enabled": False, "time": "08:00", "frequency": "daily",
+        "rain": True, "storm": True, "wind": True, "temp": True,
+        "heat": True, "frost": True, "heavy_rain": True,
+        "alerts": {
+            "rain": {"enabled": True, "threshold": 0.1},
+            "storm": {"enabled": True, "threshold": None},
+            "wind": {"enabled": True, "threshold": 15},
+            "heat": {"enabled": True, "threshold": 30},
+            "frost": {"enabled": True, "threshold": 0},
+            "heavy_rain": {"enabled": True, "threshold": 10}
+        }
     })
 
 def set_notification_prefs(uid, **changes):
@@ -739,34 +747,47 @@ def re_safe(s):
     return "".join(c if c.isalnum() else "_" for c in str(s))[:60]
 
 def create_api_key(uid, name="default"):
-    """Создает API ключ с улучшенной безопасностью (соль + 32 символа)."""
+    """Создает API ключ. Межпроцессная атомарность (fcntl) + антиспам (60 сек).
+    Защита от дубликатов при повторных webhook-запросах Telegram."""
     if not (_business(uid) or _admin(uid)):
         logger.warning(f"Попытка создания API ключа без прав: user={uid}")
         return None, None
     try:
-        keys = _load(API_KEY_FILE, {})
-        
-        # Проверяем лимит ключей (максимум 5 на пользователя)
-        user_keys_count = sum(1 for k, v in keys.items() if v.get("owner") == str(uid) and v.get("active"))
-        max_keys = 5
-        
-        if user_keys_count >= max_keys:
-            logger.warning(f"Превышен лимит API ключей: user={uid}, count={user_keys_count}/{max_keys}")
-            return None, None
-        raw = "wt_" + secrets.token_urlsafe(32)
-        salt = secrets.token_hex(16)
-        digest = hashlib.sha256((salt + raw).encode()).hexdigest()
-        keys[digest] = {
-            "owner": str(uid), "name": name, "created_at": _now(),
-            "last_used": None, "salt": salt, "active": True, "usage_count": 0
-        }
-        _save(API_KEY_FILE, keys)
-        logger.info(f"API ключ создан: user={uid}, name={name}")
-        return raw, keys[digest]
+        lock_path = API_KEY_FILE + ".lock"
+        with open(lock_path, "w") as lock_file:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            try:
+                keys = _load(API_KEY_FILE, {})
+                
+                # Антиспам: не создавать новый ключ, если был создан менее 60 сек назад
+                now_ts = time.time()
+                for v in keys.values():
+                    if v.get("owner") == str(uid) and v.get("created_ts"):
+                        if now_ts - v["created_ts"] < 60:
+                            logger.warning(f"Антиспам: ключ уже создан недавно, пропуск: user={uid}")
+                            return None, "recent"
+                
+                user_keys_count = sum(1 for v in keys.values() if v.get("owner") == str(uid) and v.get("active"))
+                max_keys = 5
+                if user_keys_count >= max_keys:
+                    logger.warning(f"Превышен лимит API ключей: user={uid}, count={user_keys_count}/{max_keys}")
+                    return None, "limit"
+                raw = "wt_" + secrets.token_urlsafe(32)
+                salt = secrets.token_hex(16)
+                digest = hashlib.sha256((salt + raw).encode()).hexdigest()
+                keys[digest] = {
+                    "owner": str(uid), "name": name, "created_at": _now(),
+                    "created_ts": now_ts,
+                    "last_used": None, "salt": salt, "active": True, "usage_count": 0
+                }
+                _save(API_KEY_FILE, keys)
+                logger.info(f"API ключ создан: user={uid}, name={name}")
+                return raw, keys[digest]
+            finally:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
     except Exception as e:
         logger.error(f"Ошибка создания API ключа: {e}", exc_info=True)
         return None, None
-
 
 def verify_api_key(raw):
     """Проверяет API ключ с учетом соли и статуса активности."""
@@ -1040,22 +1061,12 @@ FEATURE_TEXTS = {
     "en": {
         "trip_button":"✈️ Open “Trip” and choose the city and duration with buttons.", "ai_button":"🤖 Откройте AI и напишите свой вопрос.", "help":"🌟 WeatherTomBot\n\n⭐ Cities — saved cities\n🔔 Notifications — weather warnings\n✈️ Trip — travel forecast\n🤖 AI — weather assistant\n💳 Plans — Free / Premium / Business\n\nUse the buttons in the menu for normal operation.",
         "favorites_title":"⭐ Cities", "no_saved_cities":"No saved cities.", "addcity_hint":"\n\nНажмите «➕ Добавить город», чтобы сохранить город.", "favorite_added":"✅ Added to favorites.", "favorite_add_failed":"❌ Could not add ({result}).", "favorite_removed":"✅ Removed.", "city_not_found":"❌ City not found.", "alerts_title":"🔔 Notifications", "alerts_hint":"\n\nChoose an alert with the buttons.", "premium_alerts":"⭐ Premium subscription required for weather notifications.", "threshold_number":"❌ Threshold must be a number.", "alert_set":"🌧 {kind}: {state}{suffix}", "premium_notifications":"⭐ Premium subscription required for notifications.", "notifications_enabled":"🔔 Notifications enabled.", "notifications_disabled":"🔕 Notifications disabled.", "notification_time":"⏰ Notification time: {time}", "notification_time_usage":"Use HH:MM, e.g. /notify_time 08:00", "premium_trip":"⭐ Premium subscription required for travel forecasts.", "trip_unavailable":"❌ Travel forecast unavailable.", "trip_title":"✈️ Trip forecast: {destination}", "premium_required":"⭐ Premium subscription required for this feature.", "referral":"👥 Referral program\n\nYour code: {code}\nInvited: {count}\n🎁 Reward: 7 days Premium\n\n{link}", "promo_applied":"🎁 Promo applied.", "promo_error":"❌ Promo error: {result}", "plans":"💰 Plans\n\n🆓 Free — current weather + basic features\n⭐ Premium — alerts, favorites, trips and AI\n💼 Business — channels, API, white-label, teams", "broadcast_usage":"Use /broadcast_segment premium|free|inactive7|lang:en|source:NAME TEXT", "broadcast_done":"📢 Broadcast: {result}", "admin_only":"⛔ Admin only.", "channel_usage":"Use /channel @channel CITY [HH:MM]", "business_channel":"💼 Business subscription required for channel auto-posting.", "channel_failed":"❌ Could not connect channel.", "channel_connected":"📢 Channel connected: {channel}\nCity: {city}\nTime: {schedule}", "no_channels":"📢 No channels. Use /channel @channel CITY 08:00", "channels_title":"📢 Channels:", "card_unavailable":"❌ Card generation unavailable.", "business_api":"💼 Business subscription required for API access.", "api_created":"🔑 API key created (store it now):\n`{api_key}`", "api_usage":"Use /apikey to generate a key.", "teams_title":"👥 Teams", "no_teams":"No teams", "team_created":"✅ Team created: {team}", "business_teams":"💼 Business subscription required for teams.", "member_added":"✅ Member added.", "member_failed":"❌ Cannot add member.", "white_label":"🏢 White-label\n{data}", "weather_alert_title":"⚠️ Weather notification", "rain_expected":"☔ Rain is expected.", "storm_possible":"⛈ Storm conditions are possible.", "strong_wind":"💨 Strong wind: {wind}.", "low_temp":"🥶 Temperature is {temp}° or lower.", "high_temp":"🔥 Heat warning: {temp}° or higher.", "heavy_rain_warning":"🌧️ Heavy rain: {rain} mm.", "frost_warning":"❄️ Frost warning: {temp}° or lower.", "notification_settings_title":"🔔 Notifications", "notification_usage":"Choose an alert with the buttons.", "daily_rain":"☔ Rain is expected.", "daily_wind":"💨 Strong wind warning."
-    },
-    "es": {
-        "trip_button":"✈️ Abre «Viaje» y elige la ciudad y la duración con botones.", "ai_button":"🤖 Abre IA y escribe tu pregunta.", "help":"🌟 WeatherTomBot\n\n⭐ Ciudades — ciudades guardadas\n🔔 Notificaciones — alertas meteorológicas\n✈️ Viaje — pronóstico de viaje\n🤖 IA — asistente del tiempo\n💳 Planes — Free / Premium / Business\n\nUsa los botones del menú para operar el bot.",
-        "favorites_title":"⭐ Ciudades", "no_saved_cities":"No hay ciudades guardadas.", "addcity_hint":"\n\nНажмите «➕ Добавить город», чтобы сохранить город.", "favorite_added":"✅ Añadida a favoritos.", "favorite_add_failed":"❌ No se pudo añadir ({result}).", "favorite_removed":"✅ Eliminada.", "city_not_found":"❌ Ciudad no encontrada.", "alerts_title":"🔔 Notificaciones", "alerts_hint":"\n\nElige una notificación con los botones.", "premium_alerts":"⭐ Las notificaciones requieren Premium.", "threshold_number":"❌ El umbral debe ser un número.", "alert_set":"🌧 {kind}: {state}{suffix}", "premium_notifications":"⭐ Las notificaciones requieren Premium.", "notifications_enabled":"🔔 Notificaciones activadas.", "notifications_disabled":"🔕 Notificaciones desactivadas.", "notification_time":"⏰ Hora de notificación: {time}", "notification_time_usage":"Usa HH:MM, por ejemplo /notify_time 08:00", "premium_trip":"⭐ Los pronósticos de viaje requieren Premium.", "trip_unavailable":"❌ Pronóstico de viaje no disponible.", "trip_title":"✈️ Pronóstico de viaje: {destination}", "premium_required":"⭐ Esta función requiere Premium.", "referral":"👥 Programa de referidos\n\nTu código: {code}\nInvitados: {count}\n🎁 Recompensa: 7 días Premium\n\n{link}", "promo_applied":"🎁 Promoción aplicada.", "promo_error":"❌ Error de promoción: {result}", "plans":"💰 Planes\n\n🆓 Free — tiempo actual + funciones básicas\n⭐ Premium — alertas, favoritos, viajes e IA\n💼 Business — canales, API, white-label y equipos", "broadcast_usage":"Usa /broadcast_segment premium|free|inactive7|lang:en|source:NAME TEXT", "broadcast_done":"📢 Difusión: {result}", "admin_only":"⛔ Solo para administradores.", "channel_usage":"Usa /channel @channel CITY [HH:MM]", "business_channel":"💼 Se requiere Business para publicar automáticamente en canales.", "channel_failed":"❌ No se pudo conectar el canal.", "channel_connected":"📢 Canal conectado: {channel}\nCiudad: {city}\nHora: {schedule}", "no_channels":"📢 No hay canales. Usa /channel @channel CITY 08:00", "channels_title":"📢 Canales:", "card_unavailable":"❌ Generación de tarjeta no disponible.", "business_api":"💼 Se requiere Business para acceder a la API.", "api_created":"🔑 Clave API creada (guárdala ahora):\n`{api_key}`", "api_usage":"Usa /apikey para generar una clave.", "teams_title":"👥 Equipos", "no_teams":"No hay equipos", "team_created":"✅ Equipo creado: {team}", "business_teams":"💼 Se requiere Business para los equipos.", "member_added":"✅ Miembro añadido.", "member_failed":"❌ No se pudo añadir al miembro.", "white_label":"🏢 White-label\n{data}", "weather_alert_title":"⚠️ Notificación meteorológica", "rain_expected":"☔ Se espera lluvia.", "storm_possible":"⛈ Posibles tormentas.", "strong_wind":"💨 Viento fuerte: {wind}.", "low_temp":"🥶 Aviso de frío: {temp}° o menos.", "high_temp":"🔥 Aviso de calor: {temp}° o más.", "heavy_rain_warning":"🌧️ Lluvia intensa: {rain} mm.", "frost_warning":"❄️ Helada: {temp}° o menos.", "notification_settings_title":"🔔 Notificaciones", "notification_usage":"Elige una notificación con los botones.", "daily_rain":"☔ Se espera lluvia.", "daily_wind":"💨 Aviso de viento fuerte."
-    },
-    "zh": {
-        "trip_button":"✈️ 打开「旅行」，使用按钮选择城市和天数。", "ai_button":"🤖 打开 AI 并输入您的问题。", "help":"🌟 WeatherTomBot\n\n⭐ 城市 — 已保存城市\n🔔 通知 — 天气提醒\n✈️ 旅行 — 旅行预报\n🤖 AI — 天气助手\n💳 套餐 — Free / Premium / Business\n\n请使用菜单按钮操作。",
-        "favorites_title":"⭐ 城市", "no_saved_cities":"暂无保存的城市。", "addcity_hint":"\n\nНажмите «➕ Добавить город», чтобы сохранить город.", "favorite_added":"✅ 已添加到收藏。", "favorite_add_failed":"❌ 添加失败（{result}）。", "favorite_removed":"✅ 已删除。", "city_not_found":"❌ 未找到城市。", "alerts_title":"🔔 通知", "alerts_hint":"\n\n请使用下方按钮选择通知。", "premium_alerts":"⭐ 天气通知需要 Premium。", "threshold_number":"❌ 阈值必须是数字。", "alert_set":"🌧 {kind}：{state}{suffix}", "premium_notifications":"⭐ 通知功能需要 Premium。", "notifications_enabled":"🔔 通知已开启。", "notifications_disabled":"🔕 通知已关闭。", "notification_time":"⏰ 通知时间：{time}", "notification_time_usage":"使用 HH:MM，例如 /notify_time 08:00", "premium_trip":"⭐ 旅行预报需要 Premium。", "trip_unavailable":"❌ 旅行预报不可用。", "trip_title":"✈️ 旅行预报：{destination}", "premium_required":"⭐ 此功能需要 Premium。", "referral":"👥 推荐计划\n\n您的代码：{code}\n邀请人数：{count}\n🎁 奖励：7 天 Premium\n\n{link}", "promo_applied":"🎁 优惠码已使用。", "promo_error":"❌ 优惠码错误：{result}", "plans":"💰 套餐\n\n🆓 Free — 当前天气 + 基础功能\n⭐ Premium — 警报、收藏、旅行和 AI\n💼 Business — 频道、API、白标和团队", "broadcast_usage":"使用 /broadcast_segment premium|free|inactive7|lang:en|source:NAME TEXT", "broadcast_done":"📢 群发：{result}", "admin_only":"⛔ 仅管理员可用。", "channel_usage":"使用 /channel @channel CITY [HH:MM]", "business_channel":"💼 频道自动发布需要 Business。", "channel_failed":"❌ 无法连接频道。", "channel_connected":"📢 频道已连接：{channel}\n城市：{city}\n时间：{schedule}", "no_channels":"📢 暂无频道。使用 /channel @channel CITY 08:00", "channels_title":"📢 频道：", "card_unavailable":"❌ 无法生成天气卡片。", "business_api":"💼 API 访问需要 Business。", "api_created":"🔑 API 密钥已创建（请立即保存）：\n`{api_key}`", "api_usage":"使用 /apikey 创建密钥。", "teams_title":"👥 团队", "no_teams":"暂无团队", "team_created":"✅ 团队已创建：{team}", "business_teams":"💼 团队功能需要 Business。", "member_added":"✅ 成员已添加。", "member_failed":"❌ 无法添加成员。", "white_label":"🏢 白标\n{data}", "weather_alert_title":"⚠️ 天气通知", "rain_expected":"☔ 预计有雨。", "storm_possible":"⛈ 可能出现雷暴。", "strong_wind":"💨 强风：{wind}。", "low_temp":"🥶 温度为 {temp}° 或更低。", "high_temp":"🔥 高温警告：{temp}° 或更高。", "heavy_rain_warning":"🌧️ 强降雨：{rain} 毫米。", "frost_warning":"❄️ 霜冻警告：{temp}° 或更低。", "notification_settings_title":"🔔 通知", "notification_usage":"请使用下方按钮选择通知。", "daily_rain":"☔ 预计有雨。", "daily_wind":"💨 强风警告。"
     }
 }
 
 
 FEATURE_TEXTS["ru"]["analytics"] = "📊 Аналитика\nДоход: {revenue:.2f}\nMRR: {mrr:.2f}\nARPU: {arpu:.2f}\nПлатежи: {payments}\nПлатящие пользователи: {paying_users}\n\nВоронка: {funnel}\nУдержание: {retention}\nИсточники: {sources}"
 FEATURE_TEXTS["en"]["analytics"] = "📊 Analytics\nRevenue: {revenue:.2f}\nMRR: {mrr:.2f}\nARPU: {arpu:.2f}\nPayments: {payments}\nPaying users: {paying_users}\n\nFunnel: {funnel}\nRetention: {retention}\nSources: {sources}"
-FEATURE_TEXTS["es"]["analytics"] = "📊 Analítica\nIngresos: {revenue:.2f}\nMRR: {mrr:.2f}\nARPU: {arpu:.2f}\nPagos: {payments}\nUsuarios de pago: {paying_users}\n\nEmbudo: {funnel}\nRetención: {retention}\nFuentes: {sources}"
-FEATURE_TEXTS["zh"]["analytics"] = "📊 分析\n收入：{revenue:.2f}\nMRR：{mrr:.2f}\nARPU：{arpu:.2f}\n支付次数：{payments}\n付费用户：{paying_users}\n\n漏斗：{funnel}\n留存：{retention}\n来源：{sources}"
 
 
 FEATURE_TEXTS["ru"]["api_menu"] = "🔑 *API Управление*\n\nВыберите действие:"
@@ -1080,8 +1091,6 @@ def _FT(uid, key, **kwargs):
 FEATURE_BUTTONS = {
     "ru": {"favorites":"⭐ Города", "alerts":"🔔 Уведомления", "trip":"✈️ Поездка", "ai":"🤖 AI", "plans":"💰 Тарифы"},
     "en": {"favorites":"⭐ Cities", "alerts":"🔔 Notifications", "trip":"✈️ Trip", "ai":"🤖 AI", "plans":"💰 Plans"},
-    "es": {"favorites":"⭐ Ciudades", "alerts":"🔔 Notificaciones", "trip":"✈️ Viaje", "ai":"🤖 IA", "plans":"💰 Planes"},
-    "zh": {"favorites":"⭐ 城市", "alerts":"🔔 通知", "trip":"✈️ 旅行", "ai":"🤖 AI", "plans":"💰 套餐"},
 }
 def feature_button_action(uid, text):
     lang = _lang(uid)
