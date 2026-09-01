@@ -2867,7 +2867,19 @@ def webhook():
                 _paywall(chat_id, "premium")
             elif advanced_features:
                 answer, err = advanced_features.ai_answer(chat_id, question)
-                send_message(chat_id, f"🤖 {answer}" if answer else f"❌ {err}", keyboard)
+                text_to_send = f"🤖 {answer}" if answer else f"❌ {err}"
+                # Безопасная отправка AI ответа (ответ может содержать спецсимволы)
+                result = send_message(chat_id, text_to_send, keyboard)
+                # Если Markdown сломался, отправляем как обычный текст
+                if not result or result.get("ok") == False:
+                    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+                    payload = {"chat_id": chat_id, "text": text_to_send}
+                    if keyboard:
+                        payload["reply_markup"] = keyboard
+                    try:
+                        requests.post(url, json=payload, timeout=30)
+                    except Exception:
+                        pass
             return "ok", 200
         if state.get("mode") == "trip_city":
             destination = text.strip()

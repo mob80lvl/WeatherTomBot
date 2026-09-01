@@ -26,8 +26,32 @@ except Exception as e:
 FEATURE_FILE = os.getenv("FEATURES_FILE", "features.json")
 API_KEY_FILE = os.getenv("API_KEYS_FILE", "api_keys.json")
 MEDIA_DIR = os.getenv("MEDIA_DIR", "generated_media")
+# AI провайдеры (приоритет: Cloudflare > Cerebras > Groq > Gemini > OpenAI)
+CLOUDFLARE_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
+CLOUDFLARE_ACCOUNT_ID = os.getenv("CLOUDFLARE_ACCOUNT_ID", "")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "")
+HF_API_KEY = os.getenv("HF_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 AI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 AI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+def _get_ai_provider():
+    """Возвращает (provider, api_key, model, base_url) для AI."""
+    if CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID:
+        return ("cloudflare", CLOUDFLARE_API_TOKEN, os.getenv("CLOUDFLARE_MODEL", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"), f"https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/ai/v1/chat/completions")
+    if CEREBRAS_API_KEY:
+        return ("cerebras", CEREBRAS_API_KEY, os.getenv("CEREBRAS_MODEL", "gemma-4-31b"), "https://api.cerebras.ai/v1/chat/completions")
+    if HF_API_KEY:
+        return ("huggingface", HF_API_KEY, os.getenv("HF_MODEL", "Qwen/Qwen2.5-72B-Instruct"), "https://api-inference.huggingface.co/models")
+    if GROQ_API_KEY:
+        return ("groq", GROQ_API_KEY, os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"), "https://api.groq.com/openai/v1/chat/completions")
+    if GEMINI_API_KEY:
+        return ("gemini", GEMINI_API_KEY, os.getenv("GEMINI_MODEL", "gemini-2.0-flash-exp"), "https://generativelanguage.googleapis.com/v1beta/models")
+    if AI_API_KEY:
+        return ("openai", AI_API_KEY, AI_MODEL, "https://api.openai.com/v1/chat/completions")
+    return (None, None, None, None)
 FEATURE_LOCK = threading.RLock()
 
 CFG = {}
@@ -394,41 +418,225 @@ def trip_forecast(uid, destination, days=5):
         return {"error": str(exc)}
 
 def ai_answer(uid, question):
+    """AI помощник с поддержкой нескольких бесплатных провайдеров."""
     if not _premium(uid):
         return None, "Premium subscription required."
-    if not AI_API_KEY:
-        return None, "AI is not configured. Set OPENAI_API_KEY and OPENAI_MODEL in .env."
-    city = _city(uid) or "the user's location"
+    provider, api_key, model, base_url = _get_ai_provider()
+    if not provider:
+        return None, "AI is not configured. Set OPENROUTER_API_KEY, GEMINI_API_KEY, GROQ_API_KEY, or OPENAI_API_KEY in .env."
+    
+    # Извлекаем город из вопроса пользователя
+    lang = _lang(uid)
+    city = _city(uid) or "Tomsk"
+    
+    # Попытка извлечь город из вопроса с помощью AI
+    try:
+        import requests
+        extract_prompt = f"Extract the city name from this question. Answer with ONLY the city name, nothing else. If no city is mentioned, answer 'NONE'. Question: {question}"
+        
+        if provider == "cloudflare":
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": extract_prompt}],
+                    "temperature": 0.1,
+                    "max_tokens": 50
+                },
+                timeout=15
+            )
+            if r.status_code == 200:
+                extracted = r.json()["choices"][0]["message"]["content"].strip()
+                if extracted and extracted.upper() != "NONE":
+                    city = extracted
+        elif provider in ["cerebras", "groq", "openrouter", "openai"]:
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": extract_prompt}],
+                    "temperature": 0.1,
+                    "max_tokens": 50
+                },
+                timeout=15
+            )
+            if r.status_code == 200:
+                extracted = r.json()["choices"][0]["message"]["content"].strip()
+                if extracted and extracted.upper() != "NONE":
+                    city = extracted
+    except Exception:
+        pass  # Если не удалось извлечь, используем город по умолчанию
+    
+    # Получаем погоду для извлечённого города
     weather_fn = CFG.get("get_weather_aggregated")
     context = ""
     if weather_fn:
         try:
-            w = weather_fn(city, _lang(uid))
+            w = weather_fn(city, lang)
             if isinstance(w, dict) and "error" not in w:
                 context = json.dumps(w, ensure_ascii=False)
         except Exception:
             pass
-    prompt = (
-        "You are WeatherTomBot's weather assistant. Answer concisely and safely. "
-        "Do not invent weather data. If current data is supplied, use it. "
-        f"User city: {city}. Current weather data: {context}. "
-        f"Question: {question}"
+    
+    # Промпт с явным указанием языка ответа
+    lang_instruction = "Answer in Russian." if lang == "ru" else "Answer in English."
+    system_prompt = f"You are a helpful weather assistant. {lang_instruction} Be concise and friendly. Use the provided weather data. Do not invent data."
+    user_prompt = (
+        f"City: {city}. Weather data: {context}. "
+        f"User question: {question}"
     )
     try:
-        r = __import__("requests").post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {AI_API_KEY}", "Content-Type": "application/json"},
-            json={"model": AI_MODEL, "messages":[
-                {"role":"system","content":"You are a helpful multilingual weather assistant."},
-                {"role":"user","content":prompt}
-            ], "temperature":0.2, "max_tokens":500},
-            timeout=30
-        )
-        body = r.json()
-        if r.status_code >= 400:
-            return None, body.get("error", {}).get("message", "AI request failed")
-        answer = body["choices"][0]["message"]["content"].strip()
-        track(uid, "ai_question")
+        import requests
+        # Cloudflare Workers AI (полностью бесплатный, OpenAI-совместимый)
+        if provider == "cloudflare":
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                },
+                timeout=60
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                err_msg = body.get("error", {}).get("message", "") if isinstance(body.get("error"), dict) else str(body.get("error", ""))
+                return None, f"Cloudflare error {r.status_code}: {err_msg or 'unknown error'}"
+            answer = body["choices"][0]["message"]["content"].strip()
+        # Cerebras AI
+        elif provider == "cerebras":
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                },
+                timeout=30
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                err_msg = body.get("error", {}).get("message", "") if isinstance(body.get("error"), dict) else str(body.get("error", ""))
+                return None, f"Cerebras error {r.status_code}: {err_msg or 'unknown error'}"
+            answer = body["choices"][0]["message"]["content"].strip()
+        # Hugging Face Inference API
+        elif provider == "huggingface":
+            url = f"{base_url}/{model}"
+            # Отключаем прокси для Hugging Face (проблема PythonAnywhere)
+            session = requests.Session()
+            session.trust_env = False
+            r = session.post(
+                url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "inputs": user_prompt,
+                    "parameters": {
+                        "max_new_tokens": 500,
+                        "temperature": 0.2,
+                        "return_full_text": False
+                    }
+                },
+                timeout=60
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                return None, body.get("error", "Hugging Face request failed")
+            # Hugging Face возвращает список с одним элементом
+            if isinstance(body, list) and len(body) > 0:
+                answer = body[0].get("generated_text", "").strip()
+            else:
+                return None, "Unexpected Hugging Face response format"
+        # OpenRouter API
+        elif provider == "openrouter":
+            r = requests.post(
+                base_url,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://github.com/mob80lvl/WeatherTomBot",
+                    "X-Title": "WeatherTomBot"
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                },
+                timeout=30
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                return None, body.get("error", {}).get("message", "OpenRouter request failed")
+            answer = body["choices"][0]["message"]["content"].strip()
+        # Gemini API
+        elif provider == "gemini":
+            url = f"{base_url}/{model}:generateContent?key={api_key}"
+            payload = {
+                "contents": [{"parts": [{"text": user_prompt}]}],
+                "systemInstruction": {"parts": [{"text": system_prompt}]},
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 500}
+            }
+            r = requests.post(url, json=payload, timeout=30)
+            body = r.json()
+            if r.status_code >= 400:
+                return None, body.get("error", {}).get("message", "Gemini request failed")
+            answer = body["candidates"][0]["content"]["parts"][0]["text"].strip()
+        # Groq API (OpenAI-compatible)
+        elif provider == "groq":
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                },
+                timeout=30
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                return None, body.get("error", {}).get("message", "Groq request failed")
+            answer = body["choices"][0]["message"]["content"].strip()
+        # OpenAI API
+        else:  # openai
+            r = requests.post(
+                base_url,
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                },
+                timeout=30
+            )
+            body = r.json()
+            if r.status_code >= 400:
+                return None, body.get("error", {}).get("message", "OpenAI request failed")
+            answer = body["choices"][0]["message"]["content"].strip()
+        track(uid, "ai_question", {"provider": provider})
         return answer, None
     except Exception as exc:
         return None, str(exc)
@@ -1819,7 +2027,7 @@ def register_routes(app):
         if not item or not _admin(item["owner"]):
             return jsonify({"ok":False,"error":"forbidden"}), 403
         return jsonify({"ok":True,"features":"retention+monetization+marketing+b2b",
-                        "ai_configured":bool(AI_API_KEY),
+                        "ai_configured":bool(OPENROUTER_API_KEY or GEMINI_API_KEY or GROQ_API_KEY or AI_API_KEY),
                         "api":"v1","generated_media":MEDIA_DIR})
 
 def on_successful_payment(uid, payload, amount, currency="XTR"):
