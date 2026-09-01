@@ -899,13 +899,18 @@ for _lang_code in LANGUAGES:
         "favorites_menu": "⭐ *Мои города*\n\nВыберите действие:" if _lang_code == "ru" else "⭐ *My cities*\n\nChoose an action:",
         "favorite_add_prompt": "➕ Напишите название города для добавления." if _lang_code == "ru" else "➕ Send the city name to add.",
         "favorite_remove_prompt": "➖ Напишите название города для удаления." if _lang_code == "ru" else "➖ Send the city name to remove.",
-        "card_ready": "🖼 Карточка готова." if _lang_code == "ru" else "🖼 Card is ready.",
+        "card_ready": "🖼 Карточка готова.",
+        "card_prompt_city": "🖼 Отправьте название города для генерации карточки." if _lang_code == "ru" else "🖼 Card is ready.",
         "card_prompt": "🖼 Погодная карточка для текущего города." if _lang_code == "ru" else "🖼 Weather card for the current city.",
         "wl_menu_working": "🏢 *White-label*\n\nНастройте название, цвет и логотип вашего бренда." if _lang_code == "ru" else "🏢 *White-label*\n\nConfigure your brand name, color and logo.",
         "wl_name_prompt": "✏️ Напишите новое название бренда." if _lang_code == "ru" else "✏️ Send the new brand name.",
         "wl_color_prompt": "🎨 Напишите цвет в HEX, например #2563EB." if _lang_code == "ru" else "🎨 Send a HEX color, e.g. #2563EB.",
         "wl_logo_prompt": "🖼 Отправьте изображение логотипа следующим сообщением." if _lang_code == "ru" else "🖼 Send the logo image as the next message.",
-        "wl_saved": "✅ Настройки White-label сохранены." if _lang_code == "ru" else "✅ White-label settings saved.",
+        "wl_saved": "✅ Настройки White-label сохранены.",
+        "wl_status_none": "📭 Настройки бренда пусты.",
+        "wl_status_name": "✏️ Название: *{val}*",
+        "wl_status_color": "🎨 Цвет: `{val}`",
+        "wl_status_logo": "🖼 Логотип: `{val}`" if _lang_code == "ru" else "✅ White-label settings saved.",
         "invalid_action": "❌ Используйте кнопки меню или команду." if _lang_code == "ru" else "❌ Use the menu buttons or a command.",
         "city_input_only": "🏙️ Сейчас бот ожидает название города. Используйте кнопку «Сменить город» или отмените действие." if _lang_code == "ru" else "🏙️ The bot is waiting for a city name. Use Change city or cancel.",
     })
@@ -2336,6 +2341,7 @@ def get_white_label_keyboard(chat_id):
         "keyboard": [
             [T(lang, "btn_wl_name"), T(lang, "btn_wl_color")],
             [T(lang, "btn_wl_logo")],
+            [T(lang, "btn_card")],
             [T(lang, "btn_back")]
         ],
         "resize_keyboard": True
@@ -2804,6 +2810,34 @@ def webhook():
             send_message(chat_id, T(lang, "city_removed") if ok else T(lang, "city_not_found"), get_city_keyboard(chat_id))
             return "ok", 200
 
+        if state.get("mode") == "card_city":
+            city_name = text.strip()
+            if city_name.startswith("/"):
+                _clear_user_state(chat_id)
+                send_message(chat_id, T(lang, "invalid_action"), get_keyboard(chat_id))
+                return "ok", 200
+            logger.info(f"CARD_CITY: user={chat_id}, city={city_name}")
+            if advanced_features:
+                try:
+                    weather = get_weather_aggregated(city_name, lang)
+                    if "error" in weather:
+                        send_message(chat_id, T(lang, "city_not_found"), get_keyboard(chat_id))
+                        _clear_user_state(chat_id)
+                        return "ok", 200
+                    brand = advanced_features._db().get("white_labels", {}).get(str(chat_id), {}) if get_current_plan(chat_id) == "business" else {}
+                    path = advanced_features.generate_weather_card(weather, city_name, brand=brand)
+                    if path:
+                        send_photo(chat_id, path, T(lang, "card_ready"))
+                    else:
+                        send_message(chat_id, T(lang, "card_error"), get_keyboard(chat_id))
+                except Exception as e:
+                    logger.error(f"CARD_CITY: Ошибка: {e}", exc_info=True)
+                    send_message(chat_id, T(lang, "card_error_generic", err=str(e)[:100]), get_keyboard(chat_id))
+            else:
+                logger.error("CARD_CITY: advanced_features не загружен")
+            _clear_user_state(chat_id)
+            return "ok", 200
+
         if state.get("mode") == "wl_name":
             if text.strip().startswith("/"):
                 _clear_user_state(chat_id)
@@ -2955,38 +2989,6 @@ def webhook():
         if text == T(lang,"notification_back"):
             _clear_user_state(chat_id); send_message(chat_id,T(lang,"btn_back"),get_main_keyboard(chat_id)); return "ok",200
 
-        if text == T(lang, "btn_card"):
-            logger.info(f"CARD: user={chat_id}, plan={get_current_plan(chat_id)}, city={current_city}")
-            if get_current_plan(chat_id) == "free":
-                logger.info(f"CARD: показываем paywall")
-                _paywall(chat_id, "premium")
-                return "ok", 200
-            if advanced_features:
-                try:
-                    logger.info(f"CARD: получаем погоду для {current_city}")
-                    weather = get_weather_aggregated(current_city, lang)
-                    logger.info(f"CARD: погода получена: {weather.get('temp', 'error')}")
-                    brand = advanced_features._db().get("white_labels", {}).get(str(chat_id), {})
-                    logger.info(f"CARD: генерируем карточку")
-                    path = advanced_features.generate_weather_card(weather, current_city, brand=brand)
-                    logger.info(f"CARD: карточка создана: {path}")
-                    if path:
-                        send_photo(chat_id, path, T(lang, "card_ready"))
-                    else:
-                        send_message(chat_id, T(lang, "card_error"))
-                except Exception as e:
-                    logger.error(f"CARD: Ошибка: {e}", exc_info=True)
-                    send_message(chat_id, T(lang, "card_error_generic", err=str(e)[:100]))
-            else:
-                logger.error("CARD: advanced_features не загружен")
-            return "ok", 200
-        if text == T(lang, "btn_whitelabel"):
-            if get_current_plan(chat_id) != "business":
-                _paywall(chat_id, "business")
-                return "ok", 200
-            wl = advanced_features._db().get("white_labels", {}).get(str(chat_id), {}) if advanced_features else {}
-            send_message(chat_id, T(lang, "wl_menu_working") + "\n\n" + json.dumps(wl, ensure_ascii=False), get_white_label_keyboard(chat_id))
-            return "ok", 200
 
         if text == T(lang, "btn_wl_name"):
             _set_user_state(chat_id, "wl_name")
@@ -3085,10 +3087,12 @@ def webhook():
             return "ok", 200
 
         elif action == "card":
-            if get_current_plan(chat_id) != "business":
-                _paywall(chat_id, "business")
+            if get_current_plan(chat_id) == "free":
+                _paywall(chat_id, "premium")
             else:
-                send_message(chat_id, T(lang, "card_menu"), keyboard)
+                _set_user_state(chat_id, "card_city")
+                kb = get_white_label_keyboard(chat_id) if get_current_plan(chat_id) == "business" else get_keyboard(chat_id)
+                send_message(chat_id, T(lang, "card_prompt_city"), kb)
             return "ok", 200
 
         elif action == "api":
@@ -3109,7 +3113,19 @@ def webhook():
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")
             else:
-                send_message(chat_id, T(lang, "whitelabel_menu"), keyboard)
+                wl = advanced_features._db().get("white_labels", {}).get(str(chat_id), {}) if advanced_features else {}
+                text = T(lang, "wl_menu_working") + "\n\n"
+                if not wl or not any(wl.get(k) for k in ("name", "primary", "logo")):
+                    text += T(lang, "wl_status_none")
+                else:
+                    if wl.get("name"):
+                        text += T(lang, "wl_status_name", val=wl["name"]) + "\n"
+                    if wl.get("primary"):
+                        text += T(lang, "wl_status_color", val=wl["primary"]) + "\n"
+                    if wl.get("logo"):
+                        logo_short = os.path.basename(str(wl["logo"]))
+                        text += T(lang, "wl_status_logo", val=logo_short) + "\n"
+                send_message(chat_id, text, get_white_label_keyboard(chat_id))
             return "ok", 200
 
         elif action == "analytics":
