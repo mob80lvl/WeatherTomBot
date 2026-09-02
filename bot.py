@@ -2764,6 +2764,10 @@ def webhook():
 
         # ===== STATEFUL FLOWS =====
         state = _get_user_state(chat_id)
+        # Кнопка «Назад» в любом режиме ввода: выходим без сохранения
+        if state and state.get("mode") and text.strip() in (T(lang, "btn_back"), T(lang, "back"), "🔙 Назад", "⬅️ Назад"):
+            _clear_user_state(chat_id)
+            state = {}
         if state.get("mode") == "notification_time":
             import re
             value=text.strip()
