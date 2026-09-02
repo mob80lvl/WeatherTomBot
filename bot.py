@@ -76,12 +76,38 @@ LANGUAGES = ["ru", "en"]
 #  ТЕКСТЫ НА ВСЕХ ЯЗЫКАХ
 # ============================================================
 
-TEXTS = {'ru': {'welcome': '🌤 *Добро пожаловать в МетеоБот!*\n'
-                   '\n'
-                   '🏙️ *Для начала работы укажите ваш населённый пункт.*\n'
-                   '\n'
-                   'Напишите название города в ответном сообщении.',
-        'start_with_city': '🌤 *Добро пожаловать в МетеоБот!*\n\n📍 Текущий город: *{city}*\n\n',
+TEXTS = {'ru': {'welcome': '🌤 *Привет! Я — твой персональный метеоролог в Telegram.*\n\n'
+                   'Знаешь ли ты, какая погода будет завтра? А через 10 дней? А во время твоей поездки в Сочи?\n\n'
+                   '*Я знаю всё.*\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '✨ *Что я умею:*\n\n'
+                   '🌤 Точная погода прямо сейчас\n'
+                   '📅 Прогнозы на 3, 5 и 10 дней\n'
+                   '🌧️ Скажу, будет ли дождь\n'
+                   '👕 Подскажу, что надеть\n'
+                   '🌙 Покажу фазы Луны\n'
+                   '🔔 Предупрежу о заморозках и жаре\n'
+                   '✈️ Подготовлю прогноз для поездки\n'
+                   '🤖 Отвечу на любой вопрос о погоде (AI)\n'
+                   '📢 Буду публиковать погоду в твоём Telegram-канале\n'
+                   '🎨 Сделаю красивые карточки с твоим дизайном\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '🏙️ *Давай начнём!*\n'
+                   'Напиши мне название твоего города — и я сразу покажу, какая там погода сейчас 🌍\n\n'
+                   '_Например: Москва, Санкт-Петербург, Новосибирск_',
+        'start_with_city': '👋 *С возвращением!*\n\n'
+                   '📍 Твой город: *{city}*\n\n'
+                   'Я снова готов помочь тебе с погодой 🌤\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '🔥 *Быстрые действия:*\n\n'
+                   '• 🌤 Узнать погоду сейчас\n'
+                   '• 📅 Посмотреть прогноз на 5 дней\n'
+                   '• 🌧️ Проверить, будет ли дождь\n'
+                   '• 👕 Решить, что надеть\n'
+                   '• 🔔 Настроить уведомления\n\n'
+                   'Используй кнопки ниже — всё под рукой!\n\n'
+                   '💡 *Совет:* нажми «❓ Помощь» — там полный справочник по всем функциям.\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n',
         'free_mode': '🔒 *Бесплатный режим*\n'
                      'Доступны: Погода сейчас, Смена города, Статус подписки, Помощь, Смена языка\n'
                      '\n',
@@ -337,12 +363,38 @@ TEXTS = {'ru': {'welcome': '🌤 *Добро пожаловать в Метео�
         'construction_rec_rain': '🌧️ Отложите бетонные работы',
         'construction_rec_frost': '❄️ Бетон замерзает — используйте добавки',
         'construction_rec_heat': '☀️ Жарко — работайте в тени'},
- 'en': {'welcome': '🌤 *Welcome to WeatherBot!*\n'
-                   '\n'
-                   '🏙️ *To get started, enter your city.*\n'
-                   '\n'
-                   'Send the city name in reply.',
-        'start_with_city': '🌤 *Welcome to WeatherBot!*\n\n📍 Current city: *{city}*\n\n',
+ 'en': {'welcome': '🌤 *Hey! I\'m your personal meteorologist in Telegram.*\n\n'
+                   'Do you know what the weather will be tomorrow? In 10 days? During your trip to Paris?\n\n'
+                   '*I know everything.*\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '✨ *What I can do:*\n\n'
+                   '🌤 Accurate weather right now\n'
+                   '📅 3, 5 and 10-day forecasts\n'
+                   '🌧️ Tell you if it will rain\n'
+                   '👕 Suggest what to wear\n'
+                   '🌙 Show moon phases\n'
+                   '🔔 Alert you about frost and heat\n'
+                   '✈️ Prepare forecast for your trip\n'
+                   '🤖 Answer any weather question (AI)\n'
+                   '📢 Publish weather to your Telegram channel\n'
+                   '🎨 Create beautiful cards with your design\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '🏙️ *Let\'s get started!*\n'
+                   'Send me your city name — and I\'ll show you the current weather instantly 🌍\n\n'
+                   '_For example: London, New York, Tokyo_',
+        'start_with_city': '👋 *Welcome back!*\n\n'
+                   '📍 Your city: *{city}*\n\n'
+                   'I\'m ready to help you with the weather again 🌤\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n\n'
+                   '🔥 *Quick actions:*\n\n'
+                   '• 🌤 Get current weather\n'
+                   '• 📅 See 5-day forecast\n'
+                   '• 🌧️ Check if it will rain\n'
+                   '• 👕 Decide what to wear\n'
+                   '• 🔔 Set up notifications\n\n'
+                   'Use the buttons below — everything at hand!\n\n'
+                   '💡 *Tip:* tap "❓ Help" — there\'s a complete guide to all features.\n\n'
+                   '━━━━━━━━━━━━━━━━━━━━\n',
         'free_mode': '🔒 *Free mode*\n'
                      'Available: Current weather, Change city, Subscription status, Help, Change language\n'
                      '\n',
@@ -3240,7 +3292,7 @@ def webhook():
         if text == '/start':
             if not current_city:
                 _set_user_state(chat_id, "initial_city")
-                send_message(chat_id, T(lang, "welcome"), keyboard)
+                send_long_text(chat_id, T(lang, "welcome"), keyboard)
             else:
                 msg = T(lang, "start_with_city", city=current_city)
                 if not is_subscribed:
