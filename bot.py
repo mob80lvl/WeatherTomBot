@@ -2708,7 +2708,8 @@ def get_main_keyboard(chat_id):
             [T(lang, "btn_autopost"), T(lang, "btn_card")],
             [T(lang, "btn_api"), T(lang, "btn_team"), T(lang, "btn_whitelabel")],
             [T(lang, "btn_analytics")],
-            [T(lang, "btn_subscription"), T(lang, "btn_change_city")],
+            [T(lang, "btn_subscription"), T(lang, "btn_buy")],
+            [T(lang, "btn_change_city")],
             [T(lang, "btn_change_lang"), T(lang, "btn_help")]
         ],
         "resize_keyboard": True
