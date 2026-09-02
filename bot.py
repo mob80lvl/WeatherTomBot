@@ -3293,6 +3293,7 @@ def webhook():
             if not current_city:
                 _set_user_state(chat_id, "initial_city")
                 send_long_text(chat_id, T(lang, "welcome"), keyboard)
+                send_message(chat_id, T(lang, "enter_city"), keyboard)
             else:
                 msg = T(lang, "start_with_city", city=current_city)
                 if not is_subscribed:
@@ -3315,6 +3316,7 @@ def webhook():
                             days_left = (expiry - datetime.now()).days
                         msg += T(lang, "subscription_active", days=days_left)
                 send_message(chat_id, msg, keyboard)
+            return "ok", 200
         # === КОМАНДА РАССЫЛКИ ДЛЯ АДМИНА ===
         if text.startswith("/broadcast"):
             if chat_id not in ADMIN_IDS:
@@ -3436,7 +3438,50 @@ def webhook():
                 _clear_user_state(chat_id)
                 send_message(chat_id, T(lang, "invalid_action"), get_main_keyboard(chat_id))
                 return "ok", 200
-            city_name = text.strip()
+            
+            # Список всех названий кнопок (на обоих языках)
+            button_names = [
+                "🌤 Погода", "🌤 Weather",
+                "📅 Погода на завтра", "📅 Tomorrow Weather",
+                "🌅 Восход", "🌅 Sunrise",
+                "📅 3 дня", "📅 3 days",
+                "📅 5 дней", "📅 5 days",
+                "📅 10 дней", "📅 10 days",
+                "🌧️ Дождь", "🌧️ Rain",
+                "🌙 Луна", "🌙 Moon",
+                "👕 Что надеть", "👕 What to wear",
+                "📊 Статистика", "📊 Statistics",
+                "✈️ Поездка", "✈️ Trip",
+                "🔔 Уведомления", "🔔 Notifications",
+                "🤖 AI-помощник", "🤖 AI Assistant",
+                "⭐ Города", "⭐ Cities",
+                "🌾 Агро", "🌾 Agriculture",
+                "🏗️ Стройка", "🏗️ Construction",
+                "🏖️ Туризм", "🏖️ Tourism",
+                "📢 Автопостинг", "📢 Auto-posting",
+                "🖼 Погодная карточка", "🖼 Weather Card",
+                "🔑 API",
+                "👥 Команда", "👥 Team",
+                "🏷 White-label",
+                "📊 Аналитика", "📊 Analytics",
+                "🔑 Статус подписки", "🔑 Subscription status",
+                "⚙️ Сменить город", "⚙️ Change city",
+                "🌐 Сменить язык", "🌐 Change language",
+                "❓ Помощь", "❓ Help",
+                "➕ Добавить город", "➕ Add city",
+                "➖ Удалить город", "➖ Remove city",
+                "🔙 Назад", "🔙 Back",
+                "✏️ Название", "✏️ Name",
+                "🎨 Цвет", "🎨 Color",
+                "🖼 Логотип", "🖼 Logo"
+            ]
+            
+            text_stripped = text.strip()
+            if text_stripped in button_names:
+                send_message(chat_id, T(lang, "enter_city"), get_main_keyboard(chat_id))
+                return "ok", 200
+            
+            city_name = text_stripped
             if not city_name:
                 send_message(chat_id, T(lang, "enter_city"), get_main_keyboard(chat_id))
                 return "ok", 200
