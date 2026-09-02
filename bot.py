@@ -23,6 +23,7 @@ ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
+ADMIN_IDS = [int(x.strip()) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip().isdigit()]
 LOG_FILE = os.getenv("LOG_FILE", "bot.log")
 
 PRICE_PERSONAL = 100
@@ -663,6 +664,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+# ============================================================
+#  ФОНОВЫЙ ПЛАНИРОВЩИК (автопостинг каналов и уведомления)
+# ============================================================
+import threading as _threading
+import time as _time
+
+def _scheduler_loop():
+    """Каждую минуту вызывает scheduled_job() для автопостинга и уведомлений."""
+    while True:
+        try:
+            now = datetime.now()
+            sleep_sec = 60 - now.second - now.microsecond / 1e6
+            _time.sleep(max(sleep_sec, 1) + 0.5)
+            if advanced_features:
+                result = advanced_features.scheduled_job()
+                if result and (result.get("notifications") or result.get("channels")):
+                    logger.info(f"SCHEDULER: {result}")
+        except Exception as e:
+            logger.error(f"SCHEDULER ошибка: {e}")
+            _time.sleep(30)
+
+_scheduler_thread = _threading.Thread(target=_scheduler_loop, daemon=True, name="weather-scheduler")
+_scheduler_thread.start()
+logger.info("✅ Фоновый планировщик запущен")
+
 app.secret_key = SECRET_KEY
 
 # ============================================================
@@ -2683,6 +2709,57 @@ def webhook():
                             days_left = (expiry - datetime.now()).days
                         msg += T(lang, "subscription_active", days=days_left)
                 send_message(chat_id, msg, keyboard)
+        # === КОМАНДА РАССЫЛКИ ДЛЯ АДМИНА ===
+        if text.startswith("/broadcast"):
+            if chat_id not in ADMIN_IDS:
+                send_message(chat_id, "⛔ Только администратор может использовать эту команду.")
+                return "ok", 200
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2 or not parts[1].strip():
+                send_message(chat_id, "📢 Использование: /broadcast <текст сообщения>")
+                return "ok", 200
+            message_text = parts[1].strip()
+            # Получаем список всех пользователей из features.json и users_city.json
+            all_users = set()
+            try:
+                feat_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "features.json")
+                if os.path.exists(feat_path):
+                    with open(feat_path, 'r', encoding='utf-8') as f:
+                        feat_data = json.load(f)
+                        all_users.update(str(uid) for uid in feat_data.get("users", {}).keys())
+            except Exception as e:
+                logger.error(f"BROADCAST: ошибка чтения features.json: {e}")
+            try:
+                city_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users_city.json")
+                if os.path.exists(city_path):
+                    with open(city_path, 'r', encoding='utf-8') as f:
+                        city_data = json.load(f)
+                        all_users.update(str(uid) for uid in city_data.keys())
+            except Exception as e:
+                logger.error(f"BROADCAST: ошибка чтения users_city.json: {e}")
+            if not all_users:
+                send_message(chat_id, "❌ Список пользователей пуст.")
+                return "ok", 200
+            all_users.discard(str(chat_id))  # Не отправляем самому себе
+            total = len(all_users)
+            send_message(chat_id, f"📨 Начинаю рассылку {total} пользователям...")
+            success = 0
+            failed = 0
+            for uid_str in all_users:
+                try:
+                    uid = int(uid_str)
+                    result = send_message(uid, message_text)
+                    if result and result.get("ok"):
+                        success += 1
+                    else:
+                        failed += 1
+                except Exception as e:
+                    failed += 1
+                    logger.error(f"BROADCAST: ошибка отправки {uid_str}: {e}")
+                import time
+                time.sleep(0.05)  # Защита от лимитов Telegram API
+            send_message(chat_id, f"✅ Рассылка завершена!\n\n📤 Всего: {total}\n✅ Успешно: {success}\n❌ Ошибок: {failed}")
+            return "ok", 200
             return "ok", 200
 
         # ===== STATEFUL FLOWS =====

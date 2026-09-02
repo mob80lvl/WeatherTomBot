@@ -1193,9 +1193,15 @@ def daily_notification_job():
 
 def process_due_channels():
     db = _db()
-    current_hm = datetime.utcnow().strftime("%H:%M")
+    tz_name = os.getenv("DEFAULT_TIMEZONE", "UTC").strip() or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        local_now = datetime.now(ZoneInfo(tz_name))
+    except Exception:
+        local_now = datetime.utcnow()
+    current_hm = local_now.strftime("%H:%M")
     posted = 0
-    today = datetime.utcnow().strftime("%Y-%m-%d")
+    today = local_now.strftime("%Y-%m-%d")
     for cid, ch in db.get("channels", {}).items():
         if not ch.get("enabled") or ch.get("schedule", "08:00") != current_hm:
             continue
