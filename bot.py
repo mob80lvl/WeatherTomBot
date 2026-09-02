@@ -712,7 +712,7 @@ _NEW_TEXTS = {
         "notification_menu":"🔔 *Уведомления*\n\nНажмите ещё раз, чтобы включить или выключить погодные уведомления.",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Аналитика*\n\nBusiness: статистика подключённых каналов и публикаций.",
-        "autopost_menu":"📢 *Автопостинг*\n\nBusiness позволяет автоматически публиковать погоду в Telegram-канале.\n\nКоманды:\n/channel @channel CITY 08:00 — добавить канал\n/channels — мои каналы",
+        "autopost_menu":"📢 *Автопостинг*\n\nBusiness позволяет автоматически публиковать погоду в Telegram-канале.\n\nКоманды:\n/channel @channel CITY 08:00 — добавить канал\n/channels — мои каналы\n/postnow — отправить пост сейчас\n/cardstyle — настройка стиля карточки",
         "card_menu":"🖼 Погодная карточка\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — создать API-ключ.",
         'api_btn_create': '🔑 Создать API-ключ',
@@ -775,7 +775,7 @@ _NEW_TEXTS = {
         "business_required":"🔒 *This feature is available in Business.*\n\nBusiness includes all Premium features plus auto-posting, cards, API, teams, analytics and white-label.",
         "trip_city":"✈️ *Trip*\n\nSend the destination city.","trip_days":"📅 How many days? Choose a number from 1 to 10.",
         "trip_result":"✈️ *Trip forecast: {city}*\n\n{result}","ai_button":"🤖 *AI Assistant*\n\nSend a question about the weather, your trip, or what to do today.",
-        "autopost_menu":"📢 *Auto-posting*\n\nBusiness can automatically publish weather to Telegram channels.\n\nCommands:\n/channel @channel CITY 08:00 — add a channel\n/channels — my channels",
+        "autopost_menu":"📢 *Auto-posting*\n\nBusiness can automatically publish weather to Telegram channels.\n\nCommands:\n/channel @channel CITY 08:00 — add a channel\n/channels — my channels\n/postnow — send post now\n/cardstyle — card style settings",
         "card_menu":"🖼 Weather Card\n\nBusiness: /generate_card CITY",
         "api_menu":"🔑 *API*\n\nBusiness: /apikey — create an API key.",
         'api_btn_create': '🔑 Create API Key',
@@ -2594,6 +2594,105 @@ def webhook():
                         send_message(chat_id, stats_text)
                 return "ok", 200
             
+            elif data_str == "autopost_add":
+                send_message(chat_id, "➕ Используйте команду:\n`/channel @канал Город ЧЧ:ММ`\n\nНапример:\n`/channel @my_channel Томск 08:00`", get_main_keyboard(chat_id))
+                return "ok", 200
+            
+            elif data_str == "autopost_list":
+                if advanced_features:
+                    advanced_features.handle(chat_id, "/channels")
+                return "ok", 200
+            
+            elif data_str == "autopost_send":
+                if advanced_features:
+                    advanced_features.handle(chat_id, "/postnow")
+                return "ok", 200
+            
+            elif data_str == "autopost_remove":
+                send_message(chat_id, "🗑 Чтобы удалить канал, напишите:\n`/channel_remove @канал`", get_main_keyboard(chat_id))
+                return "ok", 200
+            
+            elif data_str == "autopost_style":
+                if advanced_features:
+                    advanced_features.handle(chat_id, "/cardstyle")
+                return "ok", 200
+            
+            elif data_str == "card_bg":
+                _set_user_state(chat_id, "card_bg_input")
+                send_message(chat_id, "🎨 Пришлите цвет фона в HEX (например #1a2a3a):")
+                return "ok", 200
+            
+            elif data_str == "card_text":
+                _set_user_state(chat_id, "card_text_input")
+                send_message(chat_id, "📝 Пришлите цвет текста в HEX (например #ffffff):")
+                return "ok", 200
+            
+            elif data_str == "card_accent":
+                _set_user_state(chat_id, "card_accent_input")
+                send_message(chat_id, "🌡 Пришлите цвет акцента (температуры) в HEX (например #ffd700):")
+                return "ok", 200
+            
+            elif data_str == "card_bg_image":
+                _set_user_state(chat_id, "card_bg_image")
+                send_message(chat_id, "📸 Отправьте фото для фона карточки:")
+                return "ok", 200
+            
+            elif data_str == "card_reset":
+                if advanced_features:
+                    with advanced_features.FEATURE_LOCK:
+                        db = advanced_features._db()
+                        db.get("card_settings", {}).pop(str(chat_id), None)
+                        advanced_features._save_db(db)
+                    advanced_features.handle(chat_id, "/cardstyle")
+                return "ok", 200
+            
+            elif data_str == "card_back":
+                if advanced_features:
+                    send_message(chat_id, T(lang, "autopost_menu"), advanced_features.get_autopost_inline_keyboard(lang))
+                return "ok", 200
+            
+            elif data_str == "card_back_main":
+                send_message(chat_id, T(lang, "start_with_city", city=get_user_city(chat_id) or "—"), get_main_keyboard(chat_id))
+                return "ok", 200
+            
+            elif data_str == "card_generate":
+                _set_user_state(chat_id, "card_city")
+                send_message(chat_id, T(lang, "card_prompt_city"))
+                return "ok", 200
+            
+            elif data_str == "card_style":
+                if advanced_features:
+                    advanced_features.handle(chat_id, "/cardstyle")
+                return "ok", 200
+            
+            elif data_str == "wl_name_btn":
+                _set_user_state(chat_id, "wl_name")
+                send_message(chat_id, T(lang, "wl_name_prompt"))
+                return "ok", 200
+            
+            elif data_str == "wl_color_btn":
+                _set_user_state(chat_id, "wl_color")
+                send_message(chat_id, T(lang, "wl_color_prompt"))
+                return "ok", 200
+            
+            elif data_str == "wl_logo_btn":
+                _set_user_state(chat_id, "wl_logo")
+                send_message(chat_id, T(lang, "wl_logo_prompt"))
+                return "ok", 200
+            
+            elif data_str == "wl_card":
+                _set_user_state(chat_id, "card_city")
+                send_message(chat_id, T(lang, "card_prompt_city"))
+                return "ok", 200
+            
+            elif data_str == "wl_back":
+                send_message(chat_id, T(lang, "start_with_city", city=get_user_city(chat_id) or "—"), get_main_keyboard(chat_id))
+                return "ok", 200
+            
+            elif data_str == "autopost_back":
+                send_message(chat_id, T(lang, "welcome", city=get_user_city(chat_id) or ""), get_main_keyboard(chat_id))
+                return "ok", 200
+            
             elif data_str == "api_delete_all":
                 if advanced_features:
                     with advanced_features.FEATURE_LOCK:
@@ -2646,6 +2745,46 @@ def webhook():
         if not chat_id:
             return "ok", 200
 
+        # Card background image upload
+        state_photo = _get_user_state(chat_id)
+        if message.get("photo") and state_photo and state_photo.get("mode") == "card_bg_image":
+            if advanced_features:
+                # Берём фото с наибольшим разрешением
+                photo = message.get("photo")[-1]
+                file_id = photo.get("file_id")
+                # Скачиваем фото
+                token = os.getenv("TELEGRAM_TOKEN", "")
+                url = f"https://api.telegram.org/bot{token}/getFile"
+                try:
+                    r = requests.get(url, params={"file_id": file_id}, timeout=30)
+                    if r.status_code == 200:
+                        file_path = r.json().get("result", {}).get("file_path")
+                        if file_path:
+                            os.makedirs("media", exist_ok=True)
+                            local_path = f"media/card_bg_{chat_id}.jpg"
+                            download_url = f"https://api.telegram.org/file/bot{token}/{file_path}"
+                            r2 = requests.get(download_url, timeout=30)
+                            if r2.status_code == 200:
+                                with open(local_path, "wb") as f:
+                                    f.write(r2.content)
+                                # Сохраняем путь в card_settings
+                                with advanced_features.FEATURE_LOCK:
+                                    db = advanced_features._db()
+                                    if "card_settings" not in db:
+                                        db["card_settings"] = {}
+                                    if str(chat_id) not in db["card_settings"]:
+                                        db["card_settings"][str(chat_id)] = {}
+                                    db["card_settings"][str(chat_id)]["bg_image"] = local_path
+                                    advanced_features._save_db(db)
+                                _clear_user_state(chat_id)
+                                send_message(chat_id, "✅ Фоновая картинка установлена!\n\nИспользуйте /postnow для проверки.", get_main_keyboard(chat_id))
+                                return "ok", 200
+                except Exception as e:
+                    logger.error(f"Card bg image error: {e}")
+                _clear_user_state(chat_id)
+                send_message(chat_id, "❌ Ошибка загрузки картинки", get_main_keyboard(chat_id))
+                return "ok", 200
+        
         # White-label logo upload.
         if message.get("photo"):
             state_photo = _get_user_state(chat_id)
@@ -2906,7 +3045,8 @@ def webhook():
                         _clear_user_state(chat_id)
                         return "ok", 200
                     brand = advanced_features._db().get("white_labels", {}).get(str(chat_id), {}) if get_current_plan(chat_id) == "business" else {}
-                    path = advanced_features.generate_weather_card(weather, city_name, brand=brand)
+                    card_settings = advanced_features._db().get("card_settings", {}).get(str(chat_id), {})
+                    path = advanced_features.generate_weather_card(weather, city_name, brand=brand, card_settings=card_settings)
                     if path:
                         send_photo(chat_id, path, T(lang, "card_ready"))
                     else:
@@ -2919,6 +3059,24 @@ def webhook():
             _clear_user_state(chat_id)
             return "ok", 200
 
+        if state.get("mode") in ("card_bg_input", "card_text_input", "card_accent_input"):
+            value = text.strip()
+            if not value.startswith("#"):
+                value = "#" + value
+            if len(value) != 7:
+                send_message(chat_id, "❌ Формат HEX: #RRGGBB (например #1a2a3a)")
+                return "ok", 200
+            key_map = {"card_bg_input": "bg_color", "card_text_input": "text_color", "card_accent_input": "accent_color"}
+            name_map = {"bg_color": "фона", "text_color": "текста", "accent_color": "акцента"}
+            key = key_map[state.get("mode")]
+            if advanced_features:
+                with advanced_features.FEATURE_LOCK:
+                    db = advanced_features._db()
+                    db.setdefault("card_settings", {}).setdefault(str(chat_id), {})[key] = value
+                    advanced_features._save_db(db)
+            _clear_user_state(chat_id)
+            send_message(chat_id, f"✅ Цвет {name_map[key]} изменён на `{value}`", advanced_features.get_card_style_keyboard(lang) if advanced_features else None)
+            return "ok", 200
         if state.get("mode") == "wl_name":
             if text.strip().startswith("/"):
                 _clear_user_state(chat_id)
@@ -2926,7 +3084,7 @@ def webhook():
                 return "ok", 200
             result = advanced_features.set_white_label(chat_id, name=text.strip()) if advanced_features else {"error":"unavailable"}
             _clear_user_state(chat_id)
-            send_message(chat_id, T(lang, "wl_saved") + "\n" + json.dumps(result, ensure_ascii=False), get_white_label_keyboard(chat_id))
+            send_message(chat_id, T(lang, "wl_saved"), advanced_features.get_white_label_inline_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         if state.get("mode") == "wl_color":
@@ -2936,7 +3094,7 @@ def webhook():
                 return "ok", 200
             result = advanced_features.set_white_label(chat_id, primary=value) if advanced_features else {"error":"unavailable"}
             _clear_user_state(chat_id)
-            send_message(chat_id, T(lang, "wl_saved"), get_white_label_keyboard(chat_id))
+            send_message(chat_id, T(lang, "wl_saved"), advanced_features.get_white_label_inline_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         # Logo upload is handled separately below when Telegram sends a photo.
@@ -3176,16 +3334,15 @@ def webhook():
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")
             else:
-                send_message(chat_id, T(lang, "autopost_menu"), keyboard)
+                send_message(chat_id, T(lang, "autopost_menu"), advanced_features.get_autopost_inline_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         elif action == "card":
             if get_current_plan(chat_id) == "free":
                 _paywall(chat_id, "premium")
             else:
-                _set_user_state(chat_id, "card_city")
-                kb = get_white_label_keyboard(chat_id) if get_current_plan(chat_id) == "business" else get_keyboard(chat_id)
-                send_message(chat_id, T(lang, "card_prompt_city"), kb)
+                menu_text = "🖼 *Погодная карточка*\n\nВыберите действие:" if lang == "ru" else "🖼 *Weather card*\n\nChoose an action:"
+                send_message(chat_id, menu_text, advanced_features.get_card_menu_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         elif action == "api":
@@ -3218,7 +3375,7 @@ def webhook():
                     if wl.get("logo"):
                         logo_short = os.path.basename(str(wl["logo"]))
                         text += T(lang, "wl_status_logo", val=logo_short) + "\n"
-                send_message(chat_id, text, get_white_label_keyboard(chat_id))
+                send_message(chat_id, text, advanced_features.get_white_label_inline_keyboard(lang) if advanced_features else None)
             return "ok", 200
 
         elif action == "analytics":

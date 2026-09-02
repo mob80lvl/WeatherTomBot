@@ -327,6 +327,76 @@ def get_api_inline_keyboard(lang="ru"):
             ]
         ]
     }
+def get_autopost_inline_keyboard(lang="ru"):
+    """Создает inline-клавиатуру для управления автопостингом."""
+    from bot import T
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "➕ Добавить канал" if lang == "ru" else "➕ Add channel", "callback_data": "autopost_add"},
+            ],
+            [
+                {"text": "📋 Мои каналы" if lang == "ru" else "📋 My channels", "callback_data": "autopost_list"},
+            ],
+            [
+                {"text": "📤 Отправить сейчас" if lang == "ru" else "📤 Send now", "callback_data": "autopost_send"},
+            ],
+            [
+                {"text": "🗑 Удалить канал" if lang == "ru" else "🗑 Remove channel", "callback_data": "autopost_remove"},
+            ],
+            [
+                {"text": "🎨 Стиль карточки" if lang == "ru" else "🎨 Card style", "callback_data": "autopost_style"},
+            ],
+            [
+                {"text": "🔙 Назад" if lang == "ru" else "🔙 Back", "callback_data": "autopost_back"},
+            ],
+        ]
+    }
+
+def get_card_style_keyboard(lang="ru"):
+    """Inline-клавиатура настройки стиля карточки."""
+    ru = lang == "ru"
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "🎨 Цвет фона" if ru else "🎨 Background", "callback_data": "card_bg"},
+                {"text": "📝 Цвет текста" if ru else "📝 Text color", "callback_data": "card_text"},
+            ],
+            [
+                {"text": "🌡 Цвет акцента" if ru else "🌡 Accent color", "callback_data": "card_accent"},
+                {"text": "🖼 Фоновая картинка" if ru else "🖼 Background image", "callback_data": "card_bg_image"},
+            ],
+            [{"text": "🔄 Сбросить" if ru else "🔄 Reset", "callback_data": "card_reset"}],
+            [{"text": "🔙 Назад" if ru else "🔙 Back", "callback_data": "card_back"}],
+        ]
+    }
+
+def get_card_menu_keyboard(lang="ru"):
+    """Inline-клавиатура раздела «Погодная карточка»."""
+    ru = lang == "ru"
+    return {
+        "inline_keyboard": [
+            [{"text": "🖼 Сгенерировать карточку" if ru else "🖼 Generate card", "callback_data": "card_generate"}],
+            [{"text": "🎨 Стиль карточки" if ru else "🎨 Card style", "callback_data": "card_style"}],
+            [{"text": "🔙 Назад" if ru else "🔙 Back", "callback_data": "card_back_main"}],
+        ]
+    }
+
+def get_white_label_inline_keyboard(lang="ru"):
+    """Inline-клавиатура White-Label."""
+    ru = lang == "ru"
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "✏️ Название" if ru else "✏️ Name", "callback_data": "wl_name_btn"},
+                {"text": "🎨 Цвет" if ru else "🎨 Color", "callback_data": "wl_color_btn"},
+            ],
+            [{"text": "🖼 Логотип" if ru else "🖼 Logo", "callback_data": "wl_logo_btn"}],
+            [{"text": "🖼 Погодная карточка" if ru else "🖼 Weather card", "callback_data": "wl_card"}],
+            [{"text": "🔙 Назад" if ru else "🔙 Back", "callback_data": "wl_back"}],
+        ]
+    }
+
 def add_favorite(uid, city):
     city = (city or "").strip()
     if not city:
@@ -808,20 +878,29 @@ def post_weather_card(channel_id, city, caption=None):
     w = weather_fn(city, lang)
     if not isinstance(w, dict) or "error" in w:
         return {"ok": False, "description": "weather error"}
-    image_path = generate_weather_card(w, city, brand=brand)
+    
+    # Получаем настройки карточки владельца канала (фон, цвета)
+    card_settings = _db().get("card_settings", {}).get(str(owner), {}) if owner else {}
+    
+    image_path = generate_weather_card(w, city, brand=brand, card_settings=card_settings)
     if image_path and os.path.exists(image_path):
         token = os.getenv("TELEGRAM_TOKEN", "")
         url = f"https://api.telegram.org/bot{token}/sendPhoto"
         try:
             with open(image_path, "rb") as f:
-                r = __import__("requests").post(url, data={"chat_id": channel_id,
-                    "caption": caption or f"🌤 {city}"}, files={"photo": f}, timeout=60)
+                r = __import__("requests").post(url, data={
+                    "chat_id": channel_id,
+                    "caption": caption or ""
+                }, files={"photo": f}, timeout=60)
             result = r.json()
         except Exception as exc:
             result = {"ok": False, "description": str(exc)}
     else:
-        result = _telegram("sendMessage", {"chat_id": channel_id,
-            "text": caption or f"🌤 {city}"})
+        result = _telegram("sendMessage", {
+            "chat_id": channel_id,
+            "text": caption or f"🌤 {city}",
+            "parse_mode": "Markdown"
+        })
     if result.get("ok"):
         db = _db()
         if str(channel_id) in db["channels"]:
@@ -829,8 +908,8 @@ def post_weather_card(channel_id, city, caption=None):
             _save_db(db)
     return result
 
-def generate_weather_card(weather, city, brand=None):
-    logger.info(f"generate_weather_card: START city={city!r}, brand={brand}")
+def generate_weather_card(weather, city, brand=None, card_settings=None):
+    logger.info(f"generate_weather_card: START city={city!r}, brand={brand}, card_settings={card_settings}")
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
         logger.info(f"generate_weather_card: MEDIA_DIR created: {MEDIA_DIR}")
@@ -843,8 +922,39 @@ def generate_weather_card(weather, city, brand=None):
             return None
         
         logger.info("generate_weather_card: creating image...")
-        img = Image.new("RGB", (1200, 630), (22, 30, 55))
+        
+        # Получаем настройки карточки
+        card_settings = card_settings if isinstance(card_settings, dict) else {}
+        
+        # Цвет фона (по умолчанию тёмно-синий)
+        bg_color_hex = card_settings.get("bg_color", "#161e37")
+        bg_color = (22, 30, 55)  # default
+        try:
+            bg_hex = str(bg_color_hex).lstrip("#")
+            if len(bg_hex) == 6:
+                bg_color = tuple(int(bg_hex[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, AttributeError):
+            pass
+        
+        # Создаём изображение
+        img = Image.new("RGB", (1200, 630), bg_color)
         draw = ImageDraw.Draw(img)
+        
+        # Если есть фоновая картинка, накладываем её
+        bg_image = card_settings.get("bg_image")
+        if bg_image and os.path.exists(str(bg_image)):
+            try:
+                bg_img = Image.open(str(bg_image)).convert("RGB")
+                bg_img = bg_img.resize((1200, 630), Image.Resampling.LANCZOS)
+                img = bg_img
+                draw = ImageDraw.Draw(img)
+                # Добавляем полупрозрачный тёмный оверлей для читаемости текста
+                overlay = Image.new("RGBA", (1200, 630), (0, 0, 0, 140))
+                img = img.convert("RGBA")
+                img = Image.alpha_composite(img, overlay).convert("RGB")
+                draw = ImageDraw.Draw(img)
+            except Exception as e:
+                logger.warning(f"generate_weather_card: bg_image error: {e}")
         
         try:
             font_big = ImageFont.truetype("DejaVuSans.ttf", 92)
@@ -861,13 +971,36 @@ def generate_weather_card(weather, city, brand=None):
         logger.info(f"generate_weather_card: drawing text temp={temp}, desc={desc}, wind={wind}")
         
         brand = brand if isinstance(brand, dict) else {}
-        accent = (255, 215, 0)
-        primary = str(brand.get("primary") or "").lstrip("#")
-        if len(primary) == 6:
-            try:
-                accent = tuple(int(primary[i:i+2], 16) for i in (0, 2, 4))
-            except ValueError:
-                pass
+        
+        # Цвет акцента (температура) - из brand или card_settings
+        accent = (255, 215, 0)  # default gold
+        accent_hex = card_settings.get("accent_color") or brand.get("primary") or "#ffd700"
+        try:
+            accent_str = str(accent_hex).lstrip("#")
+            if len(accent_str) == 6:
+                accent = tuple(int(accent_str[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, AttributeError):
+            pass
+        
+        # Цвет основного текста
+        text_color = (255, 255, 255)  # default white
+        text_color_hex = card_settings.get("text_color", "#ffffff")
+        try:
+            text_str = str(text_color_hex).lstrip("#")
+            if len(text_str) == 6:
+                text_color = tuple(int(text_str[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, AttributeError):
+            pass
+        
+        # Цвет второстепенного текста
+        secondary_color = (220, 230, 240)  # default light gray
+        secondary_hex = card_settings.get("secondary_color", "#dce6f0")
+        try:
+            sec_str = str(secondary_hex).lstrip("#")
+            if len(sec_str) == 6:
+                secondary_color = tuple(int(sec_str[i:i+2], 16) for i in (0, 2, 4))
+        except (ValueError, AttributeError):
+            pass
         
         # Обрезаем длинное название города
         city_display = str(city)
@@ -883,14 +1016,14 @@ def generate_weather_card(weather, city, brand=None):
         from datetime import datetime
         date_str = datetime.now().strftime("%d.%m.%Y %H:%M")
         
-        # Отрисовка полного прогноза
-        draw.text((60, 40), city_display, font=font, fill=(255,255,255))
+        # Отрисовка полного прогноза с настраиваемыми цветами
+        draw.text((60, 40), city_display, font=font, fill=text_color)
         draw.text((60, 110), f"{temp}°", font=font_big, fill=accent)
-        draw.text((70, 230), str(desc), font=font, fill=(255,255,255))
-        draw.text((70, 290), f"Ощущается как: {feels}°", font=small, fill=(220,230,240))
-        draw.text((70, 330), f"Влажность: {humidity}%", font=small, fill=(220,230,240))
-        draw.text((70, 370), f"Ветер: {wind} м/с", font=small, fill=(220,230,240))
-        draw.text((70, 410), f"Давление: {pressure} мм рт.ст.", font=small, fill=(220,230,240))
+        draw.text((70, 230), str(desc), font=font, fill=text_color)
+        draw.text((70, 290), f"Ощущается как: {feels}°", font=small, fill=secondary_color)
+        draw.text((70, 330), f"Влажность: {humidity}%", font=small, fill=secondary_color)
+        draw.text((70, 370), f"Ветер: {wind} м/с", font=small, fill=secondary_color)
+        draw.text((70, 410), f"Давление: {pressure} мм рт.ст.", font=small, fill=secondary_color)
         draw.text((70, 460), date_str, font=small, fill=(150,160,180))
         
         brand_name = brand.get("name") or "WeatherTomBot"
@@ -1559,6 +1692,96 @@ def handle(uid, text):
         mine = {k:v for k,v in db["channels"].items() if str(v.get("owner")) == str(uid)}
         if not mine: _send(uid, _FT(uid, "no_channels"))
         else: _send(uid, _FT(uid, "channels_title") + "\n" + "\n".join(f"{k} — {v.get('city')} @ {v.get('schedule')}" for k,v in mine.items()))
+        return True
+    if low == "/postnow":
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        db = _db()
+        mine = {k:v for k,v in db["channels"].items() if str(v.get("owner")) == str(uid) and v.get("enabled")}
+        if not mine:
+            _send(uid, "❌ Нет активных каналов. Используйте /channel для добавления."); return True
+        # Берём первый канал
+        channel_id = list(mine.keys())[0]
+        city = mine[channel_id].get("city")
+        _send(uid, f"📤 Отправляю пост в канал {channel_id}...")
+        result = post_weather_card(channel_id, city)
+        if result.get("ok"):
+            _send(uid, f"✅ Пост успешно отправлен в канал {channel_id}!")
+        else:
+            error = result.get("description", "unknown error")
+            _send(uid, f"❌ Ошибка отправки: {error}")
+        return True
+    # === НАСТРОЙКА СТИЛЯ КАРТОЧКИ ===
+    if low == "/cardstyle":
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        db = _db()
+        settings = db.get("card_settings", {}).get(str(uid), {})
+        bg = settings.get("bg_color", "#161e37")
+        text = settings.get("text_color", "#ffffff")
+        accent = settings.get("accent_color", "#ffd700")
+        bg_img = "Да" if settings.get("bg_image") else "Нет"
+        msg = f"🎨 *Настройки карточки*\n\n"
+        msg += f"🖼 Фон: `{bg}`\n"
+        msg += f"📝 Текст: `{text}`\n"
+        msg += f"🌡 Акцент: `{accent}`\n"
+        msg += f"🖼️ Фоновая картинка: {bg_img}\n\n"
+        msg += "\n*Настройка кнопками ниже:*"
+        _send(uid, msg, get_card_style_keyboard(_lang(uid)))
+        return True
+    if low.startswith("/card_bg "):
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        color = raw.split(maxsplit=1)[1].strip()
+        db = _db()
+        if "card_settings" not in db:
+            db["card_settings"] = {}
+        if str(uid) not in db["card_settings"]:
+            db["card_settings"][str(uid)] = {}
+        db["card_settings"][str(uid)]["bg_color"] = color
+        _save_db(db)
+        _send(uid, f"✅ Цвет фона изменён на `{color}`")
+        return True
+    if low.startswith("/card_text "):
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        color = raw.split(maxsplit=1)[1].strip()
+        db = _db()
+        if "card_settings" not in db:
+            db["card_settings"] = {}
+        if str(uid) not in db["card_settings"]:
+            db["card_settings"][str(uid)] = {}
+        db["card_settings"][str(uid)]["text_color"] = color
+        _save_db(db)
+        _send(uid, f"✅ Цвет текста изменён на `{color}`")
+        return True
+    if low.startswith("/card_accent "):
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        color = raw.split(maxsplit=1)[1].strip()
+        db = _db()
+        if "card_settings" not in db:
+            db["card_settings"] = {}
+        if str(uid) not in db["card_settings"]:
+            db["card_settings"][str(uid)] = {}
+        db["card_settings"][str(uid)]["accent_color"] = color
+        _save_db(db)
+        _send(uid, f"✅ Цвет акцента изменён на `{color}`")
+        return True
+    if low == "/card_bg_image":
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        _set_user_state(uid, "card_bg_image")
+        _send(uid, "📸 Отправьте картинку для фона карточки (фото)")
+        return True
+    if low == "/card_reset":
+        if not _business(uid):
+            _send(uid, _FT(uid, "business_channel")); return True
+        db = _db()
+        if "card_settings" in db and str(uid) in db["card_settings"]:
+            del db["card_settings"][str(uid)]
+            _save_db(db)
+        _send(uid, "✅ Настройки карточки сброшены")
         return True
 
     if low.startswith("/generate_card "):
