@@ -1054,6 +1054,38 @@ def _clear_b2b_entitlement(chat_id):
     except Exception:
         pass
 
+def _team_plan(chat_id):
+    """План через команду: admin/editor бизнес-команды -> business, иначе premium."""
+    try:
+        if not advanced_features:
+            return None
+        db = advanced_features._db()
+        data = _load_json_file(SUBSCRIPTIONS_FILE, {})
+        found_premium = None
+        for t in db.get("teams", {}).values():
+            members = t.get("members", {})
+            if str(chat_id) in members and str(t.get("owner")) != str(chat_id):
+                owner = str(t.get("owner"))
+                role = members[str(chat_id)]
+                osub = data.get(owner)
+                if not isinstance(osub, dict):
+                    continue
+                oexp = osub.get("expiry")
+                try:
+                    oexpiry = datetime.fromisoformat(oexp) if oexp else None
+                except (TypeError, ValueError):
+                    oexpiry = None
+                if not oexpiry or oexpiry <= datetime.now():
+                    continue
+                if role in ("admin", "editor") and (osub.get("plan") == "business" or osub.get("b2b_type") == "business"):
+                    return "business"
+                if osub.get("plan") in ("premium", "business") or osub.get("b2b_type"):
+                    found_premium = "premium"
+        return found_premium
+    except Exception as e:
+        logger.error(f"TEAM_PLAN: ошибка: {e}")
+        return None
+
 def get_current_plan(chat_id):
     """Return exactly one active plan: free, premium or business.
     Expired subscriptions are automatically downgraded to free.
@@ -1062,7 +1094,7 @@ def get_current_plan(chat_id):
     data = _load_json_file(SUBSCRIPTIONS_FILE, {})
     sub = data.get(key)
     if not isinstance(sub, dict):
-        return "free"
+        return _team_plan(chat_id) or "free"
     raw_expiry = sub.get("expiry")
     try:
         expiry = datetime.fromisoformat(raw_expiry) if raw_expiry else None
@@ -1080,7 +1112,7 @@ def get_current_plan(chat_id):
             data[key] = sub
             _save_json_file(SUBSCRIPTIONS_FILE, data)
         _clear_b2b_entitlement(chat_id)
-        return "free"
+        return _team_plan(chat_id) or "free"
 
     plan = sub.get("plan")
     if plan in ("premium", "business"):
@@ -1088,6 +1120,7 @@ def get_current_plan(chat_id):
     # Backward compatibility with old data.
     if sub.get("b2b_type") == "business":
         return "business"
+    return _team_plan(chat_id) or "free"
     if sub.get("b2b_type"):
         return "business"
     return "premium"

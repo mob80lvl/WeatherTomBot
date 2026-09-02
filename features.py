@@ -110,15 +110,38 @@ def _send(uid, text, keyboard=None):
     fn = CFG.get("send_message")
     return fn(uid, text, keyboard) if fn else None
 
-def _premium(uid):
+def _own_subscribed(uid):
     fn = CFG.get("is_user_subscribed")
     return bool(fn(uid)) if fn else False
 
+def _team_role_info(uid):
+    """Возвращает (owner_id, role), если пользователь — участник чужой команды."""
+    try:
+        db = _db()
+        for t in db.get("teams", {}).values():
+            members = t.get("members", {})
+            if str(uid) in members and str(t.get("owner")) != str(uid):
+                return t.get("owner"), members[str(uid)]
+    except Exception:
+        pass
+    return None, None
+
+def _premium(uid):
+    if _own_subscribed(uid):
+        return True
+    owner, _r = _team_role_info(uid)
+    return bool(owner) and _own_subscribed(owner)
+
 def _business(uid):
-    if not _premium(uid):
+    if _own_subscribed(uid):
+        fn = CFG.get("get_user_b2b_type")
+        if bool(fn and fn(uid) == "business"):
+            return True
+    owner, role = _team_role_info(uid)
+    if not owner or role not in ("admin", "editor"):
         return False
     fn = CFG.get("get_user_b2b_type")
-    return bool(fn and fn(uid) == "business")
+    return bool(_own_subscribed(owner) and fn and fn(owner) == "business")
 
 def _b2b_type(uid):
     if not _premium(uid):
@@ -1828,6 +1851,12 @@ def handle(uid, text):
             x = parts[2].split()
             if len(x) >= 2 and add_team_member(uid, x[0], x[1], x[2] if len(x)>2 else "viewer"):
                 _send(uid, _FT(uid, "member_added"))
+                try:
+                    mem_lang = _lang(x[1])
+                    role = x[2] if len(x) > 2 else "viewer"
+                    _send(int(x[1]), ("👥 Вас добавили в команду! Роль: " + role + ". Бизнес-функции бота теперь доступны." if mem_lang == "ru" else "👥 You were added to a team! Role: " + role + ". Business features are now available."))
+                except Exception:
+                    pass
             else: _send(uid, _FT(uid, "member_failed"))
         return True
 
