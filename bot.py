@@ -1647,9 +1647,22 @@ def get_tomorrow_detailed_forecast(city_name, lang="en"):
         
         # Получаем прогноз от Open-Meteo (есть все нужные данные)
         om_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days=2"
-        om_resp = requests.get(om_url, timeout=15)
+        om_resp = None
+        for _attempt in range(2):
+            try:
+                om_resp = requests.get(om_url, timeout=30)
+                if om_resp.status_code == 200:
+                    break
+            except requests.exceptions.Timeout:
+                if _attempt == 0:
+                    import time as _time
+                    _time.sleep(1)
+                    continue
+                return {"error": "Превышено время ожидания прогноза"}
+            except requests.exceptions.RequestException as e:
+                return {"error": f"Ошибка сети: {e}"}
         
-        if om_resp.status_code != 200:
+        if om_resp is None or om_resp.status_code != 200:
             return {"error": "Не удалось получить прогноз"}
         
         data = om_resp.json()
