@@ -327,7 +327,10 @@ def get_tomorrow_detailed_forecast(city_name, lang="en"):
         if geo_resp.status_code != 200:
             return {"error": "Не удалось получить координаты города"}
         
-        geo = geo_resp.json()
+        try:
+            geo = geo_resp.json()
+        except Exception:
+            return {"error": "Не удалось получить координаты города"}
         lat, lon = geo['coord']['lat'], geo['coord']['lon']
         country = geo.get('sys', {}).get('country', '')
         
@@ -351,7 +354,10 @@ def get_tomorrow_detailed_forecast(city_name, lang="en"):
         if om_resp is None or om_resp.status_code != 200:
             return {"error": "Не удалось получить прогноз"}
         
-        data = om_resp.json()
+        try:
+            data = om_resp.json()
+        except Exception:
+            return {"error": "Не удалось получить прогноз"}
         
         # Берём данные на завтра (индекс 1, т.к. 0 - сегодня)
         if 'daily' not in data or len(data['daily']['time']) < 2:
