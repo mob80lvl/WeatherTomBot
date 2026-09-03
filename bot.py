@@ -814,7 +814,40 @@ _NEW_TEXTS = {
         'card_error_generic': '❌ Ошибка: {err}',
         'logo_save_error': '❌ Не удалось сохранить логотип.',
 
-        "team_menu":"👥 *Команда*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
+        "team_menu":"👥 *Команды*\n\nУправляйте доступом к боту для вашей команды.\n\n*Роли:*\n"
+                   "👑 owner — владелец команды\n"
+                   "🛠 admin — полный доступ Business\n"
+                   "✏️ editor — полный доступ Business\n"
+                   "👁 viewer — только Premium-функции\n\n"
+                   "Одна подписка Business — вся команда пользуется!",
+        "team_list_title":"👥 *Ваши команды*\n\n",
+        "team_list_empty":"У вас пока нет созданных команд.\n\nНажмите «➕ Создать команду», чтобы начать.",
+        "team_create_prompt":"✏️ *Создание команды*\n\nВведите название команды (например: Моя Компания).",
+        "team_create_success":"✅ Команда *«{name}»* создана!\n\nID команды: `{tid}`\n\nТеперь вы можете добавить участников.",
+        "team_create_failed":"❌ Не удалось создать команду. Проверьте наличие подписки Business.",
+        "team_add_prompt":"➕ *Добавление участника*\n\nВыберите команду:",
+        "team_add_user_prompt":"👤 *Добавление в команду «{name}»*\n\nВведите Telegram ID пользователя в формате:\n`ID роль`\n\nПримеры:\n`123456789 admin`\n`987654321 editor`\n`555555555 viewer`\n\n💡 Узнать свой ID: @userinfobot",
+        "team_add_success":"✅ Пользователь добавлен в команду *«{name}»* с ролью *{role}*!",
+        "team_add_failed":"❌ Не удалось добавить участника. Проверьте данные.",
+        "team_info_title":"👥 *Команда «{name}»*\n\n"
+                          "🆔 ID: `{tid}`\n"
+                          "📅 Создана: {created}\n\n"
+                          "👥 *Участники ({count}):*\n{members}",
+        "team_role_changed":"✅ Роль пользователя изменена на *{role}*.",
+        "team_role_failed":"❌ Не удалось изменить роль.",
+        "team_member_removed":"✅ Участник удалён из команды.",
+        "team_remove_failed":"❌ Не удалось удалить участника.",
+        "team_deleted":"✅ Команда удалена.",
+        "team_delete_confirm":"⚠️ *Удалить команду «{name}»?*\n\nВсе участники потеряют доступ. Это действие нельзя отменить.",
+        "team_member":"• {icon} `{uid}` — {role}",
+        "team_back":"🔙 К командам",
+        "team_btn_create":"➕ Создать команду",
+        "team_btn_list":"📋 Мои команды",
+        "team_btn_add":"➕ Добавить участника",
+        "team_btn_remove":"➖ Удалить участника",
+        "team_btn_delete":"🗑 Удалить команду",
+        "team_btn_change_role":"🔄 Изменить роль",
+        "team_btn_back":"🔙 Назад",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Аналитика*\n\nBusiness: статистика подключённых каналов и публикаций."
     },
@@ -877,7 +910,40 @@ _NEW_TEXTS = {
         'card_error_generic': '❌ Error: {err}',
         'logo_save_error': '❌ Failed to save logo.',
 
-        "team_menu":"👥 *Team*\n\nBusiness: /team create NAME\n/team add TEAM_ID USER_ID [ROLE]",
+        "team_menu":"👥 *Teams*\n\nManage access to the bot for your team.\n\n*Roles:*\n"
+                   "👑 owner — team owner\n"
+                   "🛠 admin — full Business access\n"
+                   "✏️ editor — full Business access\n"
+                   "👁 viewer — Premium features only\n\n"
+                   "One Business subscription — whole team uses it!",
+        "team_list_title":"👥 *Your teams*\n\n",
+        "team_list_empty":"You have no teams yet.\n\nTap '➕ Create team' to get started.",
+        "team_create_prompt":"✏️ *Create a team*\n\nEnter the team name (e.g. My Company).",
+        "team_create_success":"✅ Team *«{name}»* created!\n\nTeam ID: `{tid}`\n\nYou can now add members.",
+        "team_create_failed":"❌ Could not create team. Check your Business subscription.",
+        "team_add_prompt":"➕ *Add member*\n\nChoose a team:",
+        "team_add_user_prompt":"👤 *Adding to team «{name}»*\n\nEnter Telegram user ID in format:\n`ID role`\n\nExamples:\n`123456789 admin`\n`987654321 editor`\n`555555555 viewer`\n\n💡 Find your ID: @userinfobot",
+        "team_add_success":"✅ User added to team *«{name}»* with role *{role}*!",
+        "team_add_failed":"❌ Could not add member. Check the data.",
+        "team_info_title":"👥 *Team «{name}»*\n\n"
+                          "🆔 ID: `{tid}`\n"
+                          "📅 Created: {created}\n\n"
+                          "👥 *Members ({count}):*\n{members}",
+        "team_role_changed":"✅ User role changed to *{role}*.",
+        "team_role_failed":"❌ Could not change role.",
+        "team_member_removed":"✅ Member removed from team.",
+        "team_remove_failed":"❌ Could not remove member.",
+        "team_deleted":"✅ Team deleted.",
+        "team_delete_confirm":"⚠️ *Delete team «{name}»?*\n\nAll members will lose access. This action cannot be undone.",
+        "team_member":"• {icon} `{uid}` — {role}",
+        "team_back":"🔙 To teams",
+        "team_btn_create":"➕ Create team",
+        "team_btn_list":"📋 My teams",
+        "team_btn_add":"➕ Add member",
+        "team_btn_remove":"➖ Remove member",
+        "team_btn_delete":"🗑 Delete team",
+        "team_btn_change_role":"🔄 Change role",
+        "team_btn_back":"🔙 Back",
         "whitelabel_menu":"🏷 *White-label*\n\nBusiness: /white_label NAME",
         "analytics_menu":"📊 *Analytics*\n\nBusiness: connected-channel and posting statistics."
     },
@@ -2726,6 +2792,14 @@ def get_payment_keyboard(chat_id):
         "resize_keyboard": True
     }
 
+ROLE_ICONS = {"owner": "👑", "admin": "🛠", "editor": "✏️", "viewer": "👁"}
+def get_team_main_keyboard(lang):
+    return {"inline_keyboard": [
+        [{"text": T(lang, "team_btn_list"), "callback_data": "team_list"}],
+        [{"text": T(lang, "team_btn_create"), "callback_data": "team_create"}],
+        [{"text": T(lang, "team_btn_back"), "callback_data": "team_main_back"}]
+    ]}
+
 def get_language_keyboard(chat_id=None):
     lang = get_user_lang(chat_id) if chat_id is not None else "en"
     return {
@@ -2988,6 +3062,98 @@ def webhook():
             # Ответ на callback чтобы убрать "часики"
             answer_callback_query(callback_id)
             
+            # ===== КОМАНДЫ (inline-кнопки) =====
+            if data_str == "team_list":
+                if get_current_plan(chat_id) != "business":
+                    _paywall(chat_id, "business")
+                else:
+                    teams = advanced_features.owned_teams(chat_id) if advanced_features else {}
+                    if not teams:
+                        kb = {"inline_keyboard": [
+                            [{"text": T(lang, "team_btn_create"), "callback_data": "team_create"}],
+                            [{"text": T(lang, "team_btn_back"), "callback_data": "team_menu_open"}]]}
+                        send_message(chat_id, T(lang, "team_list_empty"), kb)
+                    else:
+                        rows = [[{"text": f"👥 {t.get('name', tid)} ({len(t.get('members', {}))})", "callback_data": f"team_view_{tid}"}] for tid, t in teams.items()]
+                        rows.append([{"text": T(lang, "team_btn_create"), "callback_data": "team_create"}])
+                        rows.append([{"text": T(lang, "team_btn_back"), "callback_data": "team_menu_open"}])
+                        send_message(chat_id, T(lang, "team_list_title"), {"inline_keyboard": rows})
+                return "ok", 200
+            elif data_str == "team_menu_open":
+                if get_current_plan(chat_id) != "business":
+                    _paywall(chat_id, "business")
+                else:
+                    send_message(chat_id, T(lang, "team_menu"), get_team_main_keyboard(lang))
+                return "ok", 200
+            elif data_str == "team_create":
+                if get_current_plan(chat_id) != "business":
+                    _paywall(chat_id, "business")
+                else:
+                    _set_user_state(chat_id, "team_create")
+                    send_message(chat_id, T(lang, "team_create_prompt"))
+                return "ok", 200
+            elif data_str == "team_main_back":
+                send_message(chat_id, T(lang, "back_main"), get_main_keyboard(chat_id))
+                return "ok", 200
+            elif data_str.startswith("team_view_"):
+                tid = data_str[len("team_view_"):]
+                t = advanced_features.get_team(tid) if advanced_features else None
+                if not t or str(t.get("owner")) != str(chat_id):
+                    send_message(chat_id, T(lang, "team_list_empty"))
+                else:
+                    lines = [T(lang, "team_member", icon=ROLE_ICONS.get(r, "👤"), uid=mid, role=r) for mid, r in t.get("members", {}).items()]
+                    text = T(lang, "team_info_title", name=t.get("name"), tid=tid, created=str(t.get("created_at", "-"))[:10], count=len(t.get("members", {})), members="\n".join(lines))
+                    kb = {"inline_keyboard": [
+                        [{"text": T(lang, "team_btn_add"), "callback_data": f"team_add_{tid}"}],
+                        [{"text": T(lang, "team_btn_remove"), "callback_data": f"team_rm_{tid}"}],
+                        [{"text": T(lang, "team_btn_delete"), "callback_data": f"team_del_{tid}"}],
+                        [{"text": T(lang, "team_back"), "callback_data": "team_list"}]]}
+                    send_message(chat_id, text, kb)
+                return "ok", 200
+            elif data_str.startswith("team_add_"):
+                tid = data_str[len("team_add_"):]
+                t = advanced_features.get_team(tid) if advanced_features else None
+                if not t or str(t.get("owner")) != str(chat_id):
+                    send_message(chat_id, T(lang, "team_list_empty"))
+                else:
+                    _set_user_state(chat_id, "team_add_member", team_id=tid)
+                    send_message(chat_id, T(lang, "team_add_user_prompt", name=t.get("name")))
+                return "ok", 200
+            elif data_str.startswith("team_rm_"):
+                rest = data_str[len("team_rm_"):]
+                if "_" in rest:
+                    tid, mid = rest.split("_", 1)
+                    ok = advanced_features.remove_team_member(chat_id, tid, mid) if advanced_features else False
+                    kb = {"inline_keyboard": [[{"text": T(lang, "team_back"), "callback_data": f"team_view_{tid}"}]]}
+                    send_message(chat_id, T(lang, "team_member_removed") if ok else T(lang, "team_remove_failed"), kb)
+                else:
+                    tid = rest
+                    t = advanced_features.get_team(tid) if advanced_features else None
+                    rows = [[{"text": f"{ROLE_ICONS.get(r, '👤')} {mid}", "callback_data": f"team_rm_{tid}_{mid}"}] for mid, r in (t.get("members", {}) if t else {}).items() if mid != str(chat_id)]
+                    if not rows:
+                        send_message(chat_id, T(lang, "team_remove_failed"))
+                    else:
+                        rows.append([{"text": T(lang, "team_back"), "callback_data": f"team_view_{tid}"}])
+                        send_message(chat_id, T(lang, "team_btn_remove"), {"inline_keyboard": rows})
+                return "ok", 200
+            elif data_str.startswith("team_del_"):
+                rest = data_str[len("team_del_"):]
+                if rest.startswith("yes_"):
+                    tid = rest[len("yes_"):]
+                    ok = advanced_features.delete_team(chat_id, tid) if advanced_features else False
+                    send_message(chat_id, T(lang, "team_deleted") if ok else T(lang, "team_remove_failed"))
+                else:
+                    tid = rest
+                    t = advanced_features.get_team(tid) if advanced_features else None
+                    if t:
+                        yes_txt = "✅ Да, удалить" if lang == "ru" else "✅ Yes, delete"
+                        no_txt = "❌ Отмена" if lang == "ru" else "❌ Cancel"
+                        kb = {"inline_keyboard": [
+                            [{"text": yes_txt, "callback_data": f"team_del_yes_{tid}"}],
+                            [{"text": no_txt, "callback_data": f"team_view_{tid}"}]]}
+                        send_message(chat_id, T(lang, "team_delete_confirm", name=t.get("name")), kb)
+                return "ok", 200
+
             # Обработка API кнопок
             if data_str == "api_create_key":
                 if advanced_features:
@@ -3434,6 +3600,45 @@ def webhook():
             _clear_user_state(chat_id); send_message(chat_id,T(lang,"notification_city_saved",city=city_name),get_notification_keyboard(chat_id)); return "ok",200
 
         # City may be changed ONLY after an explicit city-input action.
+        if state.get("mode") == "team_create":
+            name = text.strip()
+            _clear_user_state(chat_id)
+            if not name or name.startswith("/"):
+                send_message(chat_id, T(lang, "invalid_action"), get_main_keyboard(chat_id))
+                return "ok", 200
+            tid = advanced_features.create_team(chat_id, name) if advanced_features else None
+            if tid:
+                kb = {"inline_keyboard": [
+                    [{"text": T(lang, "team_btn_add"), "callback_data": f"team_add_{tid}"}],
+                    [{"text": T(lang, "team_back"), "callback_data": "team_list"}]]}
+                send_message(chat_id, T(lang, "team_create_success", name=name, tid=tid), kb)
+            else:
+                send_message(chat_id, T(lang, "team_create_failed"), get_main_keyboard(chat_id))
+            return "ok", 200
+
+        if state.get("mode") == "team_add_member":
+            tid = state.get("team_id")
+            _clear_user_state(chat_id)
+            if text.strip().startswith("/"):
+                send_message(chat_id, T(lang, "invalid_action"), get_main_keyboard(chat_id))
+                return "ok", 200
+            parts = text.strip().split()
+            member_id = parts[0]
+            role = parts[1] if len(parts) > 1 else "viewer"
+            ok = advanced_features.add_team_member(chat_id, tid, member_id, role) if advanced_features else False
+            if ok:
+                t = advanced_features.get_team(tid) if advanced_features else None
+                kb = {"inline_keyboard": [[{"text": "👥 " + (T(lang, "team_back")), "callback_data": f"team_view_{tid}"}]]}
+                send_message(chat_id, T(lang, "team_add_success", name=t.get("name") if t else tid, role=role), kb)
+                try:
+                    mem_lang = get_user_lang(int(member_id))
+                    send_message(int(member_id), ("👥 Вас добавили в команду! Роль: " + role + "." if mem_lang == "ru" else "👥 You were added to a team! Role: " + role + "."))
+                except Exception:
+                    pass
+            else:
+                send_message(chat_id, T(lang, "team_add_failed"), get_main_keyboard(chat_id))
+            return "ok", 200
+
         if state.get("mode") in ("initial_city", "change_city"):
             if text.strip().startswith("/"):
                 _clear_user_state(chat_id)
@@ -3869,7 +4074,7 @@ def webhook():
             if get_current_plan(chat_id) != "business":
                 _paywall(chat_id, "business")
             else:
-                send_message(chat_id, T(lang, "team_menu"), keyboard)
+                send_message(chat_id, T(lang, "team_menu"), get_team_main_keyboard(lang))
             return "ok", 200
 
         elif action == "whitelabel":

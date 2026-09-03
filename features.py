@@ -1205,6 +1205,46 @@ def add_team_member(uid, team_id, member_id, role="viewer"):
     t.setdefault("members", {})[str(member_id)] = role
     _save_db(db)
     return True
+def get_team(team_id):
+    db = _db()
+    return db["teams"].get(team_id)
+def owned_teams(uid):
+    """Команды, владельцем которых является пользователь."""
+    db = _db()
+    return {tid: t for tid, t in db.get("teams", {}).items()
+            if str(t.get("owner")) == str(uid)}
+def remove_team_member(uid, team_id, member_id):
+    db = _db()
+    t = db["teams"].get(team_id)
+    if not t or str(t.get("owner")) != str(uid):
+        return False
+    members = t.get("members", {})
+    if str(member_id) not in members or str(member_id) == str(uid):
+        return False
+    del members[str(member_id)]
+    _save_db(db)
+    return True
+def change_team_member_role(uid, team_id, member_id, new_role):
+    db = _db()
+    t = db["teams"].get(team_id)
+    if not t or str(t.get("owner")) != str(uid):
+        return False
+    if new_role not in ("admin", "editor", "viewer"):
+        return False
+    members = t.get("members", {})
+    if str(member_id) not in members or str(member_id) == str(uid):
+        return False
+    members[str(member_id)] = new_role
+    _save_db(db)
+    return True
+def delete_team(uid, team_id):
+    db = _db()
+    t = db["teams"].get(team_id)
+    if not t or str(t.get("owner")) != str(uid):
+        return False
+    del db["teams"][team_id]
+    _save_db(db)
+    return True
 
 def set_white_label(uid, name=None, logo=None, primary=None):
     if not _business(uid):
