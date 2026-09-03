@@ -2,7 +2,7 @@
   "users": {
     "8684148229": {
       "first_seen": "2026-08-09T07:52:42Z",
-      "last_seen": "2026-08-17T06:00:12Z",
+      "last_seen": "2026-09-03T04:06:59Z",
       "source": "organic",
       "started": true,
       "notifications": {
@@ -18,40 +18,76 @@
           },
           "wind": {
             "enabled": true,
-            "threshold": 15
+            "threshold": 10.0
           },
           "heat": {
             "enabled": true,
-            "threshold": 30
+            "threshold": 30.0
           },
           "frost": {
             "enabled": true,
-            "threshold": 0
+            "threshold": 0.0
           },
           "heavy_rain": {
             "enabled": true,
-            "threshold": 10
+            "threshold": 10.0
           }
         },
         "wind": true,
-        "heat": true
+        "heat": true,
+        "frequency": "daily",
+        "time": "09:00",
+        "rain": true,
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "fired_alerts": [
+          "2026-09-02:wind"
+        ],
+        "last_sent_date": "2026-09-02"
       },
       "favorites": [
         "Томск",
-        "Аркадьево, Кожевниковский район, Томская область"
-      ]
+        "Аркадьево, Кожевниковский район, Томская область",
+        "London",
+        "Москва"
+      ],
+      "api_default_city": "London"
     },
     "8501495129": {
       "first_seen": "2026-08-09T07:59:48Z",
-      "last_seen": "2026-08-09T12:52:54Z",
+      "last_seen": "2026-09-03T04:09:47Z",
       "source": "organic",
-      "started": true
+      "started": true,
+      "favorites": [
+        "Новосибирск"
+      ],
+      "referral_code": "mg5qmru"
     },
     "1030398779": {
       "first_seen": "2026-08-13T07:30:37Z",
-      "last_seen": "2026-08-13T07:40:21Z",
+      "last_seen": "2026-09-02T07:00:38Z",
       "source": "organic",
-      "started": true
+      "started": true,
+      "notifications": {
+        "enabled": true,
+        "rain": true,
+        "wind": true,
+        "frost": true,
+        "heat": true,
+        "time": "07:00",
+        "frequency": "daily",
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          }
+        },
+        "last_sent_date": "2026-09-03"
+      }
+    },
+    "9999999999": {
+      "first_seen": "2026-09-02T04:06:00Z",
+      "last_seen": "2026-09-02T04:06:00Z",
+      "source": "legacy"
     }
   },
   "events": [
@@ -4708,22 +4744,4460 @@
       "props": {
         "source": "organic"
       }
+    },
+    {
+      "id": "2465c73dbde741e1a9ad60f27d07c493",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T08:29:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7770e34753fb4b75b700dcda46b55881",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T08:30:42Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "06aa323d2b0c4b8aaf30d130d014c21d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T08:30:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7d5f322a178246afa7753f020c5884dd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T09:42:41Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c953551467ad475ab5b34d7654590fdf",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:20:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6e5f7ba851284046ad42a59ac40c7658",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:22:21Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "42ac7a8617df436794ed387777034efa",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:22:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2e6d67eff63d4b77ac1bd43b8fa6e96a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:22:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "717699b5632742deb2e861083ba1d6bc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:22:41Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b805721e04094d7e8235ead6fbd5c34c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:26:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0a9be2e07c2c4347bc0f348de6640549",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:27:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "066b12983cf34aaeb87f955dd15fdffd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:27:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "356ca36049874912a601ef8c83d9ac75",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:27:44Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2d39ef8238d4488f9767f1b5d5cbfc8c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:27:49Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "836732cc0bd34aee97f0df07a818f77c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:27:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "95639027fc4449d29d719029523c508d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "357a965345214b93a423b0231d71d7e1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c973019777d14b8abc8c8317b16ba745",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1e9cdcac17d6430f886661f1b2942018",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "12be1625865e4730969b5fdaa9883f45",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6c758e848b50469cbe5753169d36aad1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8d7ae084d1aa4d10a1d99380c4f12341",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "560d9f59d423464481adf79e89dfbf43",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c3077795355a4816a5d30f0133284f6b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0107005188b84d32bbe12f76a828c554",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:37Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2d2f3eb6a2064ded9373290fa9d1187c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-21T10:28:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "19c48223ade143299bd21354a5b80ad8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2f2f5cd98cfc4f429e25000dc6588439",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:35Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6c7212c2bb8d469bb3c9e957634e8d75",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "343fbd5a486d46b98302a717f455ad7a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3b67e02d368a47cc804458bde4ca2337",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2074472d078540adb138b62b9f24f625",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5c88a0b991bf4bce92df83f6d0b66227",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:53Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3ef22bbd9904415b8ff7fb6a25ec8dad",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:12:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "187864d630864f3bb030fdee6b16f33d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:18:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "de364295a945470aaebec1682fa54519",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:19:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f7c45bb6b2bb4ec38ae307c7ed5949ef",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:19:03Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3b5cf608add54566a1ca3dbc81b31caf",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:22:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9c30be0109294827867afff2bba27075",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:22:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d7f7495f68154a2197046d3a731715f6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:22:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c678df520ef8422885720ed6d1957434",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:34:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2c5b5cf3b9dd48e89dae08f7395096f5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:34:53Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "230b90b8ffab401e89ed05a70d2d581d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:34:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8116ef5fe3a147f0a609cda7c724cac8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:35:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e4d926b2f9244ed4ac8ad2663f745fb5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:35:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "98cb120d72ea477eba8f1058ed2b9473",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:35:08Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6e05d718df02490c8887c312ade2739c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:35:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f13ac4ff8736482d8025c0f906e62e49",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:35:13Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c57b364be16d4242a573c996347e12b6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:38:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "abafb1c27c4a4479b39a1aa44222e9cb",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:38:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ac39b1cd6c2b44998161423e75a31455",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:38:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a089c23ef7b142a5b3d7ff95c2740da1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T03:38:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "03e58ba6bf3447ba8e1fa809347b0966",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:00:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b6841dd68ab84f33a3b650d75f2e5a40",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:00:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9db52ee35900440b85ddcd24c371e999",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:00:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c943f44a48e3470db8361141dcce1842",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:00:33Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d9402a9b547744c2a956aceee58a0863",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:00:39Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0db4f1381bb54066bdf15704d5c0c72c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "27ef9173b1b64a15b51159bf43197643",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "15e850563b4240f79ddeb9e902e3988a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9fafaf61d81148259f4522658b69b6e3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:33Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8050fe2a1ec54e868a83fa140891e0d3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bdac7766e0604bee9c9e71d5d9cf7cfe",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:41Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "28c827c0c54b4a2fa590d9152754a9a5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d886cd5c9e0b4bfcaa2b1b5fbe1b8677",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "eeb5b0686521482d8bf68ecabcd3515d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:52Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "406cfb0b58784925bb856d1c0fe9895b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:22:56Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "30f1d48ebd6e41b99d28c0a1f832611e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:23:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6fb07dedb0684ca8b439f878299b780e",
+      "user_id": "8684148229",
+      "event": "trip_forecast",
+      "ts": "2026-08-22T04:23:11Z",
+      "props": {
+        "destination": "London",
+        "days": 5
+      }
+    },
+    {
+      "id": "1fa4d24f94bb4dec8871634cd3f72841",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:23:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "99792cc522754eae81f12b31766eb6dd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f4f24522ea3b4a6dac71b5115cf7e535",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "677d09ca10644a7f8a19b30c03e55723",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fabac8f1bcbc469ca8a50df276c0474d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "97e0a5e0e2734137aee9af6f24af3f6f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b2d2ac9fbf5c40639d7f420a65e60046",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "230f5c2537cd4ed1ac21f1346840d898",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T04:24:47Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a67db6630aa84f21a2db0744a8e5c355",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T05:50:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ae8569ff485549dca92ab7a355c72e99",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T05:50:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ee69e09e860f41b582c01ca14154720e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T05:50:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a87f1827813449a3a6b5b775f7f4603c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T05:51:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7659bc818ef2495ea5ceaeee154c50c8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:01:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "25fcb4f20e2749e8ba220814755c4017",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:01:28Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cdb2aa43b8294fc1b26448ea65a80e64",
+      "user_id": "8684148229",
+      "event": "favorite_added",
+      "ts": "2026-08-22T06:02:18Z",
+      "props": {
+        "city": "London"
+      }
+    },
+    {
+      "id": "1947d741c620466abc5fc00888cdf0a6",
+      "user_id": "8684148229",
+      "event": "favorite_added",
+      "ts": "2026-08-22T06:05:23Z",
+      "props": {
+        "city": "🔙 Back"
+      }
+    },
+    {
+      "id": "cdf4c5b0126044279d131a6f9c298782",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:08:37Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b8fd8518433941199383d19a3f5cfd42",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:08:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "60e4889a94cc44019b03bb0602b2b37d",
+      "user_id": "8684148229",
+      "event": "favorite_added",
+      "ts": "2026-08-22T06:11:00Z",
+      "props": {
+        "city": "Москва"
+      }
+    },
+    {
+      "id": "4a1f4666dc21448a9a2b140b6a470a1c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:11:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0b19f1af509b4dadb590690c9e25793a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:11:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "628ebc2316504139bcab11ee70753938",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T06:11:33Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1b6d7049741446ea9ae5404fed16e98d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:15:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3a22dfa6fd3b462ba71803ac78a215ed",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:15:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fee657a7e61548349c9d71660f7b380c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "22637ee1dbb54c7dad10886d4760a2c4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "60abe8f437ee4485bc2315b850d2e857",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:15Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "920c9b2b044a43b69b9ba8998f3d0a27",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:16Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5a3017bd35ff41e0a3728a5889f61c87",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fd517c385c2c41fcb52300589ab26824",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:21Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "99197df9581042cb998fcb9c848bdeea",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6b13dbab0943470f8de13b2f3dd63905",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cf9571f9704d4b40841d023498ab30b7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e34621044c2f4ae8b53a0042f5782db6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:16:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a07154773fca4480b044dedb16f9bbdd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "36cdce55621944689f2ced5229ab865d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "394a7d76ce394e1293768c86b9b035b9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "150e39ebd09946d792225d64b3209cc6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:46Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e03761986baa422abbbc0817e221b4f4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "abb262e772eb4d83950d02496b7c15ae",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:54Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d0e21ed0b762452688a4c32e8643f965",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1f62314022fa48e6994c39ff529572a9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:17:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ef8e512d576b42409646b14562547e75",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2af6cc2f329644f09594710e9a70cb02",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "32029f8c732d4dbda8946b240794578e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "74fa83aea9ef4567900d45a514f7b8f8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8b9b37267b7e4f7db32b17d1a1d20d33",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:12Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "190904710ef6435db37676c54f5a4fff",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ab94f7328bbc42329416c61323ea73b6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e96b488c8dbd4e7ea9296d0ecd62acbb",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:18:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d01b63fb627948a8837dc69f91bc54e0",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c6d58ce435f345aca7e2f3500e03018b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9810988f6dba4e7cbc4c0893a15dc577",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e0053c26d91945d4badc328488335bb1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "25e5601078f54a2b87b688148248ceba",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "edb5d60e48604f95a7e1f9d03a1a8234",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a448756b6cf348a29a4e802b076cea07",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5f4093dedab542e195013d9d99abfb6e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:18Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "82692045e39f4bd280f196c529d6ae9c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:19:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3371be62677a4f69856d460a5ba8e169",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:20:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "89f99cf315d046bead50aa166efd39e3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:23:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6b2a1ed7f1dc4cff829efc0ea3824a4c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:23:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9c2a373ad2d2447ea688540785a50138",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:13Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "370a00352d6a47689fdfe4f9e90231d7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:16Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bfab2229c0d8404bac886e7baf7499aa",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0d2752821df349acb19d368f6f543c47",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c7cc904a5d4044938bd1afa4acc9824c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e0cfea5d800148f19475c72697ab4b20",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:34Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b741002f6ae1427caa284450e1a85b52",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c6915a534ddb4fd1b7c20d1a5883a72b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:39Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6b72751a84a34d7c92db434a4f3c8d28",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:25:47Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5bd397cbc1af4bbaa93cc17a07f540a5",
+      "user_id": "8684148229",
+      "event": "trip_forecast",
+      "ts": "2026-08-22T09:25:58Z",
+      "props": {
+        "destination": "Сочи",
+        "days": 10
+      }
+    },
+    {
+      "id": "5614dc43d3374ea0866a5abcdbaf6a84",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T09:26:03Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "73e5048c2c6743f99df317aa6e869dc9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-22T16:58:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7db550cf64e646f182f75e5186ae4962",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T06:43:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "26450dcfb510436a95eaf043132fa94d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T06:43:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3739744089b44da886c56417011bedf1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T06:43:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2c0647b9255147bc85897022fa5a6694",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T06:44:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a07ff544c9034c5b92bc9bb3d8dd690e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:00:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bfe9d3fc90d54b84ba8de8393e36d2e2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:01:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "513232edf39645508c910933e3454404",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:01:08Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fcacc8b9762344d080f4fe38310daf3d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:01:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "40d801da604e4aeba2a4e68cff81a4f8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:01:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "91b4b1ee2bac41dd89078bc3e612f9c6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-24T15:01:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bc46868795a44fae82613983b677eac7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T02:42:16Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cc9a09c9f6604ef9be662b2b4b9745e2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T02:56:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "830d1130c17c4abca5f7369522299d8e",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T02:56:55Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "2cf1018eb9b846b09eff6c577fee4217",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:11:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "80588f411fde4a00bcee95cf811bd04a",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:12:08Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "8524a28904884d14b4f7ad12d2090fee",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:19:48Z",
+      "props": {
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "9854e8f1e0964b01a91cc9927b582ec4",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:19:55Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "c67392855f1c46ae9fc89cfedd0b71fc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:20:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "84e0862a03e147fd910e0dccd508e664",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:20:15Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "8e03332593e743b5b730d0670c8ff451",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:21:57Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "b333e6f51be6477c9d0349ff441f337a",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:28:43Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "d50cd362d92b4cde8327dc83c344d32e",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:30:11Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "513d5d962eab415f816cb2798a53bfe7",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:32:52Z",
+      "props": {
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "95f957e091f2487fa22e5394cd75762e",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:32:55Z",
+      "props": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "b408ebd40a434d07b37e58fa7c906262",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:32:59Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "9276edcebade4358a56876ee69c7afa5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:34:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "489db2e557604e18b8678a3de594e2a1",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:34:30Z",
+      "props": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "f71bba8345564746b8c0781b4b04b61c",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:34:33Z",
+      "props": {
+        "rain": false
+      }
+    },
+    {
+      "id": "41ca5b01a0cb439eb40041d037991b18",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:34:35Z",
+      "props": {
+        "rain": true
+      }
+    },
+    {
+      "id": "7367907a0f4f4f80b73f68999adb058e",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:34:55Z",
+      "props": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "59708ec682c746cda64017ceec3d337e",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:34:59Z",
+      "props": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "d65d98336f8b4a8da0386fa01c808428",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:36:47Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fd8ce8b65a3d4afcb005eb26aee05e44",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:36:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b073c7a137b94eefb2c52a8644b73a13",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:37:03Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "5217180118a44ee18adbecf436695d98",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:37:12Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f092787a355e49899248a35214074042",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:40:32Z",
+      "props": {
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "d7d917ef367a4fa0878285b3706a36a4",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:40:39Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "3f896e2dac9e44cfb5facdb19b44fdf2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:40:53Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e07c1d700bef4511ba35b6c3f7204bb9",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T03:41:02Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "03:00"
+      }
+    },
+    {
+      "id": "ec58c5eb5ce046308922051c079a122a",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:41:22Z",
+      "props": {
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "e87d0366d84f4a78bc250b5e06e65f59",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:51:01Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 15
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "3faafb1c25c04dfb93cb42751aee4d13",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:51:31Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 15
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0.0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "9098e32618f34f5a8585f34f0d4e0d32",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:51:44Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 15
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0.0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "09740661adb446f68944f1db8cb25434",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:51:55Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 10.0
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0.0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10
+          }
+        }
+      }
+    },
+    {
+      "id": "01df7b9fe28e41c68fb304feecf8a3f6",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:52:10Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 10.0
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0.0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10.0
+          }
+        }
+      }
+    },
+    {
+      "id": "32a20ca0ef944c4f941f95acfe9e858b",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-25T03:52:51Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область"
+      }
+    },
+    {
+      "id": "16b5fc6b7f384debb98b4104be2e596a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:53:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "17945ad23816466a9b3556d7aab1d268",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T03:56:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "42db8f988eb943549af3482bc07bedd8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T05:07:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5beb00a65cbe48d48d9d13625bb6c023",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-25T08:00:33Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "edc6fbd0a971409096260360d9129a58",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-25T16:11:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "da7645e73d9245dd918a15b2d7e2dae8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T01:50:46Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c1676fc591904a9cbedb78fb00d90e6e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T01:51:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d611f611399a4aa7a1d934eb87f313aa",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:23:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "91bda728a3164474a7d068552f4e3dd9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:24:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7a8a49137d4e46f1a7c27464b35b9c01",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:24:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d32ad1265767408084e3ba77296dfdd2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:25:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6b0c0b40f2614d1b94df429d5dd6be34",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:26:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "4457c78d5da9494f8c825f3c91dab012",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:45:51Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cfacea42abd44cb0b29f0a4565347164",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:48:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1d990d1631e241ec8a6830e0d490e1a1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T02:56:39Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c0b02faf83d84dbf9d1e227b7453f75a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:01:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "eee0dedb4ade49ee863eedaf3c4d559b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:04:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d62172346b5240f0b987d3a87fb7b03a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:07:42Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "67ff831038754d41955cdb1cdb05515e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:07:54Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5e2f298d566f4bb88846c6429a961b76",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:08:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "316d10af64994aeeb376ba024d4596dc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:11:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b28b961e88d04456a3afb29d17dc76a1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:21:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5304de0dc7e740329ecdc765e85182bc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:23:13Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "69ba2477d20745ca9f4b8009e2407700",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-26T03:31:37Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          },
+          "storm": {
+            "enabled": true,
+            "threshold": null
+          },
+          "wind": {
+            "enabled": true,
+            "threshold": 10.0
+          },
+          "heat": {
+            "enabled": true,
+            "threshold": 30.0
+          },
+          "frost": {
+            "enabled": true,
+            "threshold": 0.0
+          },
+          "heavy_rain": {
+            "enabled": true,
+            "threshold": 10.0
+          }
+        }
+      }
+    },
+    {
+      "id": "b26e059c3b4e49e78da00663c0f65936",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:31:49Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "651ae00a5b4d471eb8e37a83ffbd98ff",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:31:51Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "45e59dc3d5bd4a679878e5e1eba47008",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:31:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "be74651020e34f6fbe2c0ff6d35fe054",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:32:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c490329027774dd68062efe708c03765",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:32:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7ff3c8caa92b43cd84a937563160bc2b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T03:56:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "456bb8aeddda445bbc947ddccbb64edb",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T07:02:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e12316e79d1e43fc8c771ff3dc93cf0e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T07:02:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9045e0549a384764b9b7c83a3cdef3a1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T07:03:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fbd90e7e082840d493a662ead1578852",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-26T07:03:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e0652cb170c54472af82429c49a7999a",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-08-26T07:08:23Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "318c8cbd57364eb385ea36b533bf847b",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-26T08:00:35Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "f1723c0c0c9a49099984281713ec895d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-27T05:47:39Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "af873f5eb20e44cfb9d4ca2d5bfb5c8a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-27T05:47:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6997bc72e807413c8dd52dfdc99466d0",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-27T05:47:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5e280f74083742138eabbc52b9f21ef6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-27T05:48:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c7a6535383114512bec3ce92411683b6",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-27T08:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "a668d89d212348819504eb6c24f8fb9c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-28T04:22:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f407844bcc7247edba246874dff10597",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-28T08:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "900f7deb59ea42aeb07753ada334dcda",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-29T00:36:28Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a82aa8208f6d4e6b94005e5aaf59ff8c",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-29T08:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "563109f68b88493da0c17e1de960229e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-29T15:44:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b675ae6202d84359a37ee2a5c6bd357b",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-30T08:00:39Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "979c9860e4ce476eb65d770189e94726",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-08-31T08:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "08:00"
+      }
+    },
+    {
+      "id": "6affb588a00e491aa711379531049723",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-08-31T14:41:16Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3e7cc84f2aaa4da3b0306c4ad84703a2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:49:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0155e2873bfb4b738f4dae5c40265206",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:49:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "61b42b40171944638656dc495002b261",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:49:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2f3658cbffe142718caa4d561c5e633f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:49:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0f848d2d605949cf98610feeb2a1406a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:52:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "98168d1376c74424a01b9621e055be16",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T02:53:35Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a22cb3be6bb0481aae8862dfe7747ac0",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:08:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "042febb40318479f96f4e9c268aa06fc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:32:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3b3757a9f5d348f0840bf6f19e3b3ee2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:36:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f6fd1f2277104ff09b71187574deb718",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:36:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "72655131abf545f288b92a6c2a726318",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:37:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1e8648c2e2ac42fbb0b7ced39ec8eab1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T03:37:03Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "51a53fab9db14a5e9bd5983f555df088",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:42:28Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fe19054fc50c4848bced09cdbe96c4c2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:42:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "03caca9e69404dc281cae41d45c9633b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:45:19Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "57152ed564d54e9a8f534efafec34fef",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:45:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a7db8aaf5b3b4a48a681d5dd79f3ac15",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:45:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7bf97a07ec3844bcb043329c23591825",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:45:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f48c1429d7b9435698c0dcd3da82b82f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:50:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c4987d42976e4ad0b67fd8066c2a329d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:50:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9b421b0cbb9f45d18d338a610f96f56d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:50:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "06c2f65a662749e09775736ab1b45c68",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:55:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2cc27cc034de4a3a9f52e636e89784da",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:55:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bd5398ecdabe4dfd9d320e4fae5329b4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:56:56Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7fdbba9b7b2f44599fe8623982984310",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T04:58:54Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c85d773f9a7a44daa819176472969650",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:01:34Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a56ff1e494b845d5adac38b75a9e4ead",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:09:47Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3939909c4cb34e71baeaed439bd5901a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:09:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "809bd4c9f89343d18a4992485234e678",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:10:21Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3be96add6d5642b2b3c49d063403665e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:10:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1209c30040d642a18ec7fd41bd9d1361",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:14:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6c48863fe6634670ab86ee8bdfd9516e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:14:28Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b35fb328e7814403970c34d14af5f381",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:14:37Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "1dfc86e2e0e045399713912195bd327d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:18:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "57e9d2733ce4421fbfc894a5dc554b52",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:19:01Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "72ef2bb54f7c4e14ad1bb5cc88073219",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:19:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "325b7c44c51f4d52898fe3ca66d16fd0",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:19:19Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5e9146a634134f5e9786402f52d16e57",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:19:32Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "e7e252b35d8b4eaf8c9168d68acb6718",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:20:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "88614e6bebe04bceabb100b1ad14002e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:20:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3bb227ab509046cbb32c53eb78927dbd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:20:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e5c6fc94b2da4130bbb5213d9ae8007f",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:20:32Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "1de4c3f8b274430bb7f4dbdaccc7d21d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:20:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b57b524dab454ba08e1de479312e0518",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:20:46Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3a6faf2e3d9844f8b2d6c5c0f2dcb239",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:21:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "03890014b76f44aea9efec418a474b55",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:21:11Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "0e1a2629cf4f4b1dbf2b6d5eaf2a85e9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T05:29:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ffe307206ad843249b08b23ff29b1ad1",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:44:56Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "847ac2acad044584844c1cac02043583",
+      "user_id": "1030398779",
+      "event": "ai_question",
+      "ts": "2026-09-01T05:45:18Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "d4e2ad31364945d6938e4312e5d556d0",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:45:46Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f9009dbf41364fc89addebf3ab8928d0",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:48:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5e954dd7892c44269f3f4a0cabaf0768",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:48:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9d367c3c0a3c411696d12132e18f8960",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:48:44Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b3ca44b055264b3793d704c3ef1c706a",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:18Z",
+      "props": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "e1d047ca317c41e7a952315a167b2e98",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:29Z",
+      "props": {
+        "rain": false
+      }
+    },
+    {
+      "id": "643591b2bc45426b95e3e458e560b42a",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:34Z",
+      "props": {
+        "wind": false
+      }
+    },
+    {
+      "id": "c0316043af0f42f1b26845f35bbd7b33",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:40Z",
+      "props": {
+        "frost": false
+      }
+    },
+    {
+      "id": "0ba274398ef74e7a8c7a4490dba8ee7f",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:40Z",
+      "props": {
+        "heat": false
+      }
+    },
+    {
+      "id": "2099347d78334b94968a10d1477579a2",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:48Z",
+      "props": {
+        "heat": true
+      }
+    },
+    {
+      "id": "2692564ba52148608aaff5762f7e0584",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:51Z",
+      "props": {
+        "frost": true
+      }
+    },
+    {
+      "id": "1adfdd1d6a444968ad5972fdac4c44b3",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:56Z",
+      "props": {
+        "wind": true
+      }
+    },
+    {
+      "id": "16ce48a3b85f476aae050fff2d281432",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:50:57Z",
+      "props": {
+        "rain": true
+      }
+    },
+    {
+      "id": "63448b15675f4e6887e3cb40a110a8f6",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:55:12Z",
+      "props": {
+        "time": "12:55"
+      }
+    },
+    {
+      "id": "4b15b50bad474b58a864f22ea3a047e6",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:55:17Z",
+      "props": {
+        "rain": false
+      }
+    },
+    {
+      "id": "bbd18a7b67d84216920cdd7f60086888",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:55:21Z",
+      "props": {
+        "rain": true
+      }
+    },
+    {
+      "id": "70d8ed0cfc124872931bc3d537526331",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:55:31Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "29f1469f7dd645e7b135b08f74522fe0",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:56:12Z",
+      "props": {
+        "time": "07:00"
+      }
+    },
+    {
+      "id": "7250091086754d8cbd6ecf4763aa6922",
+      "user_id": "1030398779",
+      "event": "notification_settings",
+      "ts": "2026-09-01T05:57:36Z",
+      "props": {
+        "alerts": {
+          "rain": {
+            "enabled": true,
+            "threshold": 0.1
+          }
+        }
+      }
+    },
+    {
+      "id": "7f831557932543a2aee7962302f4733c",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:58:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c3697d2e7e8346d2a1dbabdeffd49eaa",
+      "user_id": "1030398779",
+      "event": "start",
+      "ts": "2026-09-01T05:58:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a7d46d7550724dd5b781e81cfe298a27",
+      "user_id": "1030398779",
+      "event": "notification_sent",
+      "ts": "2026-09-01T07:00:37Z",
+      "props": {
+        "city": "Томск",
+        "time": "07:00"
+      }
+    },
+    {
+      "id": "9f971e8875d9488faec7aad358c23d92",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-09-01T07:12:22Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "a4a4fa195b9c4601aefed873411293eb",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-09-01T07:12:32Z",
+      "props": {
+        "enabled": false
+      }
+    },
+    {
+      "id": "09264b7cd4ea43249f0c4de140b0f825",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-09-01T07:12:34Z",
+      "props": {
+        "enabled": true
+      }
+    },
+    {
+      "id": "ed7b4293cc844cd6a5f0da37af393750",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-09-01T07:12:51Z",
+      "props": {
+        "time": "09:00"
+      }
+    },
+    {
+      "id": "24e509f3a856432aa1af29398570213b",
+      "user_id": "8684148229",
+      "event": "notification_settings",
+      "ts": "2026-09-01T08:09:11Z",
+      "props": {
+        "frequency": "daily"
+      }
+    },
+    {
+      "id": "cac1fdb9202b42eb89bfe99f6e69558d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:09:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2607ba20b99849f0941afc46c4598bb2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:09:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "41aaba1eb26849809a9f5fee626976b7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:09:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2ed9fde2f4704b3f9b438aafdfd8b80c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:10:51Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b1287d39c76046e79af26b9bc4b3a250",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:10:51Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "4399f3ab017b4a9d81dd79f121dec3d9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "894c19a19cfc468ab2528176de132a2b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6338cdf3d95c439195c033459b768f00",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:31Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "748587580ed448a689f5290743df68e1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9805c7234b2d4fbca13f01d7f25173ec",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b3758e849a7f4b17bc0c6b5dc21c19c2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:11:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b8192b7dc32949ce899ae1d8831a7146",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:11:55Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "5775e39fe5f040c99576fbf715328ad3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:12:06Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "dbafdd182e9a468bb26c58e0188e4939",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:13:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "78fd28e2ebd14c5bbbc429156a740abe",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:13:20Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c79e71cda8c0479496fa2816e8485d52",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:13:20Z",
+      "props": {
+        "channel_id": "@weathertom"
+      }
+    },
+    {
+      "id": "87bc306c5e3b43319e2cf51715f557ab",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:13:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "372bf5b247d74a828fb7a768a3a133c4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:15:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "428ed31a3f274c4eb34314b100732cb9",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:15:43Z",
+      "props": {
+        "channel_id": "@weathertom"
+      }
+    },
+    {
+      "id": "ae08ecfb559d442583ed9e072c280142",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:15:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1d7072caded14a399f4c8f092c3a6415",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:16:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0c133b973f1a4db9bacb4f20ff9a17b4",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:16:01Z",
+      "props": {
+        "channel_id": "@weathertom"
+      }
+    },
+    {
+      "id": "0f0423b0fe91470298fb4e36176cfd67",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:16:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "608a763a4f9f4e4ea94a216af2d3b087",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T08:16:24Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "30afd686593d4a328c8ee5ce5305e1d5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:16:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e2e50792cb9947119b82f45ed8bdcf88",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:16:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "004ab2d0297d4b569656be551c098169",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T08:17:08Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "daa5cabfc6b54e499b80d31207fb0fac",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-09-01T09:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "09:00"
+      }
+    },
+    {
+      "id": "040d7e8a67734c90a1afa574a40e6a60",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:22:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "599907204a8f47eb930d68a0e0739a90",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:22:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0308791a2161444c85e3abb11cefd621",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T10:22:58Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "06a2df15f239410ba547fe0019b97905",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:23:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9136a0f615f7454b98391f57dc886d6e",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T10:23:17Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "372bb6719e3a4adea908504cd62c64e7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:23:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "85438edc2ed9493ea85ada4cb61ad8e5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:23:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "26d244e9336f499bbe97f433cf52ac14",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:23:35Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bc55e48dd4fb4810b786c9c22a57ef9e",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T10:23:35Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "c7126e451a6147a89db10e0b146baa73",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T10:45:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "336c0d2b602a4b0c8f6ea3acb7ad99dd",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:06:35Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c19ecdc161644a37bcfae6cf89621003",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T15:06:46Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "c2526fbf32f745f19f10c6980832694b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:07:16Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b615cced67754d4097e824d2bb0ca66a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:07:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "12a832a98b8945d2a3fefb07371b2e7e",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T15:07:29Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "b7aa9e833fc648c6bfeccf351dffcf02",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:07:56Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "673b050e64dc4c5b96a57ecaf00d4e93",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-01T15:08:03Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "7a2ce4209eb944faafa6bc5ec9c747bf",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:16:33Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5633e81a612b428193747cb324395042",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:16:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cfd5caec9d524421bdf7a84455b950aa",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T15:16:57Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "b3ee59dfc8e648db9f7466783e022f35",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:32:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a3dcee88c00d479aa50ea5f8733b276d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:32:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a38e4a2e57224bbb9853776738abd211",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:32:27Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "96a986d417f7494b97406141230f5c20",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:32:34Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b1b4774b108642749f41d8388304b8e7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:34:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "10270e7326464da0b7ca347fc04d0301",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T15:34:08Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "40e8d19fc5fd47db8a767a6c88ed1624",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:34:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7e24e34250d94b5c97db07df4dacf2de",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:34:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b4b6308f8f454b9788572d3463f99143",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-01T15:34:14Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9994128ee36446b3b92613df20e1d9a2",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-01T15:34:15Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "6469f99ba41b45309ca43cfe306637e6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:00:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d88decce61da4844a1e009750bd3790c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:01:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "cc6800d0b7544ebe9d2a2ef4cc6d4aa5",
+      "user_id": "8684148229",
+      "event": "channel_added",
+      "ts": "2026-09-02T01:01:07Z",
+      "props": {
+        "channel_id": "@weathertom1"
+      }
+    },
+    {
+      "id": "8d30dbf0f9b94385b63cf2834ea48f9a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:01:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "91579e4264c5434b86bef7de2d94ac51",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:01:42Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ef995885862e44f9818b952d1ed680a1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:02:08Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "79371546689541019c6a95e83d3f6b1f",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-02T01:02:39Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "061d58e719364387a471d0133fe63a9c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T01:03:51Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1ac97c544d6a4faf9d4ec527615f2b41",
+      "user_id": "8684148229",
+      "event": "favorite_added",
+      "ts": "2026-09-02T02:01:47Z",
+      "props": {
+        "city": "🔙 Назад"
+      }
+    },
+    {
+      "id": "8d60d212e6864d3dbc92f688a778c776",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:06:18Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "bc79900cf56f4e83bd47b20865bff677",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:06:47Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "18de421a07174ef795d1b51eac68c6d5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:07:52Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "da3337d2759443448cb67bc08d428db8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:08:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e5dd6f40d5ce4469a0f81aac6d0d07ab",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:08:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "82bba38363874b89a877e819045bdcf1",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:11:25Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "80c76775cace441a91ee05654f13b04c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:11:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "19e8af34d58548edb6ad621b30f3c7d6",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:13:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2eba92671d664b1ea33f4316ce72847b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:14:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3f18ef4bf933450ba9e5dd48bea6912b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:16:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7b17022dcd1845759b65d8521e03157b",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:16:26Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0c3d872565124267bbeaf7e824673009",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:16:29Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e933e8aea6164a79880376bd90a0ba23",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:19:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e71ba57f83f241efbff521c629302c70",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:30:40Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b876930606a74c1cb71faf0918e1f180",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:30:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b19875f4ac8043c1a5ad3f2ccecb0e3d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:31:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "293bb6263e2245879c00f6e66d489ef5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:46:49Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7b84c63bd65d4c9cb2fe28626c02ceff",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:46:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a9370a50bf6942a7886ff30a71fb4892",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:47:04Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "af7b2c1eae3a43589aff6eab5e32414e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:47:18Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f8fb6d2085184a33bc8a573c9c98cfa8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T02:47:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c4f70943cb1247e59de5d3914f0ac7cc",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:02:11Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "134b0552f3b4465a9368ff8e9ccb3c13",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:02:18Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6a4037376381473e9a47b57bc582abed",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:02:37Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3cae59f8af8e440198600d3ac6149c30",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:02:39Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "13d08e6eaa814931acf2abed1b9f92d0",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:02:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "04f099c4d0704bf19c8d6d55026e6d05",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:04:07Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f95ad85996014f48b8b0bdc0a4a51e9c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:04:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "36c08162512f4640a1172a028e5bd16f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:04:34Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "12dbdc8d749445e69155f7137f48d542",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:05:35Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "fe8ad189ea7a41669cf3a59a0c76e27e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:16:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "b086cccefe4b410588ceb39d0d1d92b2",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:16:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1699aed5624b40618c9e9e89f3c799f7",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:17:15Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "76f8f9be5b144438a4f8af36243f1721",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:17:18Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7f65da6cf08e4027962a85e8ab068a94",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:17:49Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a60f42408c034d7aa6732471ff34bcc5",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:34:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "022347c08bd940789c80c4ea5cfcc806",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:41:21Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "578484606d1b4ff687f7c66324c166fe",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:46:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2b00915a4f7e4e68829ec076750a7a70",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:46:52Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3f869d36af4d4ad0849a94f5857c5eeb",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:47:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "49db4edf67404e338afec3f525498174",
+      "user_id": "8684148229",
+      "event": "team_created",
+      "ts": "2026-09-02T03:47:10Z",
+      "props": {
+        "team_id": "8338ea277c"
+      }
+    },
+    {
+      "id": "7e83e6137bf5410791a194a23c386566",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:55:33Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3827804242834331ba7e4e293ab9436d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:55:44Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "1507c6d1a0bd4d1abe1c5e1087674cb4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:55:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8f42bd2852704ca3b16179b2ee1fc53f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:55:54Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7cbada148d824cdab8aed750c0c02301",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:56:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5df0a42c363b4b4bbaa4ced3c1f77fe3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:58:30Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "4c12c957be4d45fea67cc01ff36e08c3",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:59:12Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "796f5dbdd30549d2a98a95502403b412",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:59:13Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f150dd1c47194a2ab363e659bac14e34",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:59:15Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6fb9505a7cd54d1cae15a3afe756d38a",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:59:22Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "9510aaf2158a40dea523cfefdfb29c30",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T03:59:23Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8a51a5468aa042a4a7ba571639bf53da",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:01:44Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "20a5ac6a4bed41f49a2ebcf6a7a988f2",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:01:52Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5fde3577939c4a3e826d551e358e61a8",
+      "user_id": "8501495129",
+      "event": "favorite_added",
+      "ts": "2026-09-02T04:02:09Z",
+      "props": {
+        "city": "Новосибирск"
+      }
+    },
+    {
+      "id": "8b2b9599f85e404bb78505972ca5bd11",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:05:41Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "3959e3b12ebd4c3aab9103853ed4f4d6",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:06:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "a3d0682cb5f641a1a02dc20f874546c7",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:34:50Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6e2a02ce00f24e31ac7c7951bc2a9f1e",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T04:35:02Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2c6639f40cc54f648da14ae18af6cfcd",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:13:03Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "7050546c185d443fb776b06cfb26ab92",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:13:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "62840b1353a343a7bfd248057ae30c70",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:13:24Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f6767744ed90481181e061d1e7acf1fc",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:13:45Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "ea9faf755e3f49a69a0dd258e947ac20",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:13:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "31fb624fb1434105819e96e41a93ca06",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:14:12Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "334ab5b6bd2746cda15f1768c7cf9fc9",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:27:54Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8ecc44a2ee414f19ac83354ad3baaa84",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:27:59Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "52a7a4806f9b456997c1502bf5b0bd4c",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:28:01Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6239318191cc4d46a267ab8757204188",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:28:10Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "0c4f03907b9d4ee298af31c434d3682a",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-02T05:28:12Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6d7b6b82a1b34bc88c5b9af14cb08249",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T05:29:44Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "2f65857f507e459b8d0ec8b7d32d30b4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T05:29:58Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5253f4dfe4054d218bf7bf3fdfd3b808",
+      "user_id": "1030398779",
+      "event": "notification_sent",
+      "ts": "2026-09-02T07:00:38Z",
+      "props": {
+        "city": "Томск",
+        "time": "07:00"
+      }
+    },
+    {
+      "id": "a40bfbe7a15e4cb382bea9fb5af9a9a3",
+      "user_id": "8684148229",
+      "event": "notification_sent",
+      "ts": "2026-09-02T09:00:36Z",
+      "props": {
+        "city": "Аркадьево, Кожевниковский район, Томская область",
+        "time": "09:00"
+      }
+    },
+    {
+      "id": "f8d6fcfb64ac4d9687561d3face57e19",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T16:28:00Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "df0e1fee10dd4c2896c1a0075c4a5c46",
+      "user_id": "8684148229",
+      "event": "ai_question",
+      "ts": "2026-09-02T16:28:45Z",
+      "props": {
+        "provider": "cloudflare"
+      }
+    },
+    {
+      "id": "98d46517279e48ac9d6f676cbbbef2ea",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-02T16:29:09Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "e4f45bd145024b01961fc354bb086e45",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-03T03:57:03Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "13bda1e406d3459ca6ab2bc195ee7c31",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-03T03:57:17Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "dc42c5891dce42d4afbfddc3136bcb7d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-03T04:02:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "afa56dc2217a407da8d2907529a9e54d",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-03T04:02:41Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "38bf0486e0a648e7b5a0c23457f39e4c",
+      "user_id": "8684148229",
+      "event": "team_created",
+      "ts": "2026-09-03T04:02:59Z",
+      "props": {
+        "team_id": "e360e3f10b"
+      }
+    },
+    {
+      "id": "5d0755b872a0453f81500be8768656c9",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-03T04:04:28Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "715835bbda234355a886c38e44362339",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-03T04:04:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "f9da764931a94ebca2fde07cf1e6eab4",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-03T04:06:48Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "c84463f0a2df4bc1a3404942e2b9a00c",
+      "user_id": "8684148229",
+      "event": "team_created",
+      "ts": "2026-09-03T04:06:59Z",
+      "props": {
+        "team_id": "916ad6ecc5"
+      }
+    },
+    {
+      "id": "159444fc8f2c407b8edd742dcab1bfb3",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-03T04:08:05Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "4e2e100c714c43f59fed96beec055b87",
+      "user_id": "8501495129",
+      "event": "start",
+      "ts": "2026-09-03T04:09:47Z",
+      "props": {
+        "source": "organic"
+      }
     }
   ],
   "promos": {},
   "payments": {},
-  "referrals": {},
-  "channels": {},
-  "teams": {},
+  "referrals": {
+    "mg5qmru": {
+      "owner": "8501495129",
+      "users": [],
+      "rewarded": []
+    }
+  },
+  "channels": {
+    "@weathertom1": {
+      "owner": "8684148229",
+      "title": "@weathertom1",
+      "city": "Томск",
+      "schedule": "04:00",
+      "enabled": true,
+      "created_at": "2026-09-02T01:01:07Z",
+      "last_post": "2026-09-03T01:00:07Z"
+    },
+    "@weathertom": {
+      "owner": "8684148229",
+      "title": "@weathertom",
+      "city": "Томск",
+      "schedule": "15:20",
+      "enabled": true,
+      "created_at": "2026-09-01T08:16:01Z",
+      "last_post": null
+    }
+  },
+  "teams": {
+    "916ad6ecc5": {
+      "name": "Test1",
+      "owner": "8684148229",
+      "members": {
+        "8684148229": "owner",
+        "8501495129": "viewer"
+      },
+      "created_at": "2026-09-03T04:06:59Z"
+    }
+  },
   "white_labels": {
     "8684148229": {
-      "name": "🔙 Назад",
-      "updated_at": "2026-08-12T22:38:04Z"
+      "name": "Ололошка",
+      "updated_at": "2026-09-01T02:53:32Z",
+      "primary": "#008000",
+      "logo": "white_label_media/8684148229.jpg"
     }
   },
   "settings": {
     "free_favorites": 2,
     "premium_favorites": 10,
     "business_favorites": 50
+  },
+  "card_settings": {
+    "8684148229": {
+      "bg_image": "media/card_bg_8684148229.jpg"
+    }
   }
 }

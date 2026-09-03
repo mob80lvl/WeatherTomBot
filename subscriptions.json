@@ -1,16 +1,16 @@
 {
   "8684148229": {
     "plan": "business",
-    "expiry": "2026-09-11T22:08:38.743293",
+    "expiry": "2026-10-11T22:08:38.743293",
     "activated_by": "payment_b2b",
-    "activated_at": "2026-08-12T22:08:38.743293",
+    "activated_at": "2026-08-25T03:55:55.759972",
     "b2b_type": "business"
   },
   "1030398779": {
     "plan": "business",
-    "expiry": "2026-09-12T07:31:14.789843",
+    "expiry": "2026-10-12T07:31:14.789843",
     "activated_by": "payment_b2b",
-    "activated_at": "2026-08-13T07:31:14.789843",
+    "activated_at": "2026-08-25T03:56:08.260685",
     "b2b_type": "business"
   }
 }
