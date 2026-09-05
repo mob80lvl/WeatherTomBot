@@ -1,3 +1,4 @@
+from config import B2B_TYPES
 LANGUAGES = ["ru", "en"]
 TEXTS = {'ru': {'welcome': '🌤 *Привет! Я — твой персональный метеоролог в Telegram.*\n\n'
                    'Знаешь ли ты, какая погода будет завтра? А через 10 дней? А во время твоей поездки в Сочи?\n\n'
@@ -972,3 +973,19 @@ WEATHER_DESC_TEXTS = {
 }
 for _lk, _items in WEATHER_DESC_TEXTS.items():
     TEXTS.setdefault(_lk, {}).update(_items)
+
+
+def b2b_name(lang, b2b_type):
+    info = B2B_TYPES.get(b2b_type, {})
+    return T(lang, info.get("name_key", "b2b_business_name"))
+
+def b2b_features(lang, b2b_type):
+    info = B2B_TYPES.get(b2b_type, {})
+    return T(lang, info.get("features_key", "b2b_business_features")).split("\n")
+
+def api_language(lang):
+    return {
+        "ru": "ru", "en": "en",
+        "fr": "fr", "de": "de", "ja": "ja", "ko": "kr",
+        "it": "it", "hi": "hi", "ar": "ar"
+    }.get(lang, "en")
