@@ -45,20 +45,7 @@ import admin
 import threading as _threading
 import time as _time
 
-def _scheduler_loop():
-    """Каждую минуту вызывает scheduled_job() для автопостинга и уведомлений."""
-    while True:
-        try:
-            now = datetime.now()
-            sleep_sec = 60 - now.second - now.microsecond / 1e6
-            _time.sleep(max(sleep_sec, 1) + 0.5)
-            if advanced_features:
-                result = advanced_features.scheduled_job()
-                if result and (result.get("notifications") or result.get("channels")):
-                    logger.info(f"SCHEDULER: {result}")
-        except Exception as e:
-            logger.error(f"SCHEDULER ошибка: {e}")
-            _time.sleep(30)
+from cron import _scheduler_loop, cron_notifications
 
 _scheduler_thread = _threading.Thread(target=_scheduler_loop, daemon=True, name="weather-scheduler")
 _scheduler_thread.start()
@@ -1574,17 +1561,6 @@ def webhook():
 # ============================================================
 
 
-@app.route('/api/cron_notifications', methods=['GET'])
-def cron_notifications():
-    """Веб-хук для отправки уведомлений (cron-job.org вызывает каждый час)."""
-    try:
-        import sys, os
-        sys.path.insert(0, '/home/mob100500lvl/WeatherTomBot/WeatherTomBot')
-        from send_notifications import main as send_main
-        send_main()
-        return "OK", 200
-    except Exception as e:
-        return f"Error: {str(e)[:200]}", 500
 
 
 
@@ -1605,51 +1581,10 @@ def cron_notifications():
 #  ОСНОВНЫЕ МАРШРУТЫ
 # ============================================================
 
-@app.route('/')
-def index():
-    total_users = 0
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, 'r', encoding='utf-8') as f:
-            total_users = len(json.load(f))
-
-    return f'''<!DOCTYPE html><html><head><title>MeteoBot</title>
-    <style>*{{margin:0;padding:0;box-sizing:border-box}}body{{font-family:Arial;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}}.container{{text-align:center;max-width:600px}}h1{{font-size:3em;color:#ffd200;margin-bottom:20px}}.status{{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;margin:20px 0}}.status-item{{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}}.status-item:last-child{{border-bottom:none}}.label{{opacity:0.7}}.value{{font-weight:bold;color:#ffd200}}.btn{{display:inline-block;padding:12px 30px;background:linear-gradient(90deg,#f7971e,#ffd200);color:#000;text-decoration:none;border-radius:10px;font-weight:bold;margin-top:20px}}.btn:hover{{transform:scale(1.05)}}.version{{opacity:0.5;font-size:12px;margin-top:20px}}</style>
-    </head><body><div class="container"><h1>🌤 MeteoBot</h1><p>Smart weather bot with subscription</p>
-    <div class="status"><div class="status-item"><span class="label">Status:</span> <span class="value">🟢 Running</span></div>
-    <div class="status-item"><span class="label">Version:</span> <span class="value">3.0 (B2B + Multi-language)</span></div>
-    <div class="status-item"><span class="label">Users:</span> <span class="value">{total_users}</span></div>
-    <div class="status-item"><span class="label">Time:</span> <span class="value" id="dt"></span></div></div>
-    <a href="/admin" class="btn">🔐 Admin Panel</a>
-    <div class="version">Running on PythonAnywhere</div></div>
-    <script>document.getElementById('dt').textContent = new Date().toLocaleString('ru-RU');</script></body></html>'''
-
-@app.route('/set_webhook', methods=['GET'])
-@app.route('/set_webhook', methods=['GET'])
-def set_webhook():
-    """Устанавливает webhook с защитой секретным токеном."""
-    webhook_url = WEBHOOK_URL or request.host_url.rstrip("/") + "/webhook"
-    webhook_secret = os.getenv("WEBHOOK_SECRET", "")
-    if webhook_secret:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}&secret_token={webhook_secret}"
-        logger.info("Устанавливаем webhook с секретным токеном")
-    else:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}"
-        logger.warning("WEBHOOK_SECRET не задан! Webhook не защищен.")
-    try:
-        response = requests.get(url, timeout=30)
-        return response.text
-    except Exception as e:
-        logger.error(f"Ошибка установки webhook: {e}", exc_info=True)
-        return f"Error: {e}"
+from webhooks import index, set_webhook, webhook_info
 
 
-def webhook_info():
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getWebhookInfo"
-    try:
-        response = requests.get(url, timeout=30)
-        return response.json()
-    except Exception as e:
-        return {'error': str(e)}
+
 
 
 # Wire the advanced feature module to the legacy bot functions.
@@ -1672,108 +1607,10 @@ if advanced_features:
     except Exception as e:
         logger.error(f"Ошибка инициализации advanced_features: {e}", exc_info=True)
 
-def migrate_subscriptions_to_new_plans():
-    """One-time safe migration: Personal -> Premium, all legacy B2B -> Business.
-    Existing expiry dates and active periods are preserved.
-    """
-    try:
-        data = _load_json_file(SUBSCRIPTIONS_FILE, {})
-        b2b_data = _load_json_file(B2B_FILE, {})
-        changed = False
-        for uid, sub in list(data.items()):
-            if not isinstance(sub, dict):
-                continue
-            old = str(sub.get("plan") or "").casefold()
-            b2b = str(sub.get("b2b_type") or "").casefold()
-            if old in ("personal", "premium", "") and not b2b:
-                new_plan = "premium" if old != "free" else "free"
-                if sub.get("plan") != new_plan:
-                    sub["plan"] = new_plan
-                    sub["b2b_type"] = None
-                    changed = True
-            elif old in ("agriculture", "construction", "tourism", "business") or b2b in ("agriculture", "construction", "tourism", "business"):
-                if sub.get("plan") != "business" or sub.get("b2b_type") != "business":
-                    sub["plan"] = "business"
-                    sub["b2b_type"] = "business"
-                    changed = True
-            elif old not in ("premium", "business", "free"):
-                sub["plan"] = "business" if b2b else "premium"
-                sub["b2b_type"] = "business" if b2b else None
-                changed = True
-
-            if sub.get("plan") == "business":
-                b2b_data[str(uid)] = {
-                    "type": "business",
-                    "activated_at": b2b_data.get(str(uid), {}).get("activated_at", sub.get("activated_at", datetime.now().isoformat())),
-                    "expiry": sub.get("expiry"),
-                    "source": b2b_data.get(str(uid), {}).get("source", "migration"),
-                }
-            else:
-                b2b_data.pop(str(uid), None)
-            data[uid] = sub
-
-        if changed:
-            _save_json_file(SUBSCRIPTIONS_FILE, data)
-        _save_json_file(B2B_FILE, b2b_data)
-
-        # Repair the known class of city corruption caused by treating commands as cities.
-        users = _load_json_file(USERS_FILE, {})
-        repaired = False
-        if isinstance(users, dict):
-            for uid, city in list(users.items()):
-                if isinstance(city, str) and city.strip().startswith("/"):
-                    users[uid] = None
-                    repaired = True
-        if repaired:
-            _save_json_file(USERS_FILE, users)
-
-        # Normalize legacy B2B registry entries too.
-        for uid, info in list(b2b_data.items()):
-            if not isinstance(info, dict):
-                b2b_data.pop(uid, None)
-                continue
-            sub = data.get(str(uid), {})
-            if sub.get("plan") == "business":
-                info["type"] = "business"
-                info["expiry"] = sub.get("expiry")
-                b2b_data[str(uid)] = info
-            else:
-                b2b_data.pop(uid, None)
-        _save_json_file(B2B_FILE, b2b_data)
-
-        logger.info("SUBSCRIPTION MIGRATION: completed; public plans=Premium/Business")
-    except Exception:
-        logger.exception("SUBSCRIPTION MIGRATION failed")
+from service import migrate_subscriptions_to_new_plans, validate_config
 
 migrate_subscriptions_to_new_plans()
 
 application = app
 
-def validate_config():
-    """Проверяет наличие всех необходимых переменных окружения."""
-    required = {
-        "TELEGRAM_TOKEN": TELEGRAM_TOKEN,
-        "OPENWEATHER_API_KEY": OPENWEATHER_API_KEY,
-        "WEATHERAPI_KEY": WEATHERAPI_KEY,
-        "ADMIN_PASSWORD": ADMIN_PASSWORD,
-    }
-    missing = [name for name, value in required.items() if not value]
-    if missing:
-        error_msg = "Missing required environment variables: " + ", ".join(missing)
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
-    
-    # Проверяем SECRET_KEY
-    secret_key = os.getenv("SECRET_KEY", "")
-    if not secret_key or secret_key == "change-this-to-a-long-random-secret":
-        logger.warning("SECRET_KEY не задан или используется значение по умолчанию!")
-    
-    # Проверяем WEBHOOK_SECRET
-    webhook_secret = os.getenv("WEBHOOK_SECRET", "")
-    if not webhook_secret:
-        logger.warning("WEBHOOK_SECRET не задан! Webhook не защищен.")
-    else:
-        logger.info(f"WEBHOOK_SECRET задан (длина: {len(webhook_secret)})")
-    
-    logger.info("Конфигурация валидна")
 
