@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Форматирование: статус подписки, помощь, прогноз поездки."""
+from datetime import datetime
 from config import *
 from texts import T, b2b_name, b2b_features
 from storage import (get_user_lang, get_user_city, get_current_plan,
