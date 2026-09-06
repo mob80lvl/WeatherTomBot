@@ -2,7 +2,7 @@
   "users": {
     "8684148229": {
       "first_seen": "2026-08-09T07:52:42Z",
-      "last_seen": "2026-09-06T05:59:38Z",
+      "last_seen": "2026-09-06T08:10:03Z",
       "source": "organic",
       "started": true,
       "notifications": {
@@ -64,7 +64,7 @@
     },
     "1030398779": {
       "first_seen": "2026-08-13T07:30:37Z",
-      "last_seen": "2026-09-05T07:00:33Z",
+      "last_seen": "2026-09-06T07:00:34Z",
       "source": "organic",
       "started": true,
       "notifications": {
@@ -12285,6 +12285,88 @@
       "user_id": "8684148229",
       "event": "start",
       "ts": "2026-09-06T05:59:38Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "91788a6765ad40cb91bbd3396494b043",
+      "user_id": "1030398779",
+      "event": "notification_sent",
+      "ts": "2026-09-06T07:00:34Z",
+      "props": {
+        "city": "Томск",
+        "time": "07:00"
+      }
+    },
+    {
+      "id": "efd32aa173194de782a787a27a80034e",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:32Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "d2a6eba50c83413b9d0371fab9bc078c",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:36Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "8ff3ba930c0d4f619750dd736ac9520f",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:43Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "4662d643b00c4aa28ed6c82c919a9a21",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:46Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "5daa20a19a164d11b258dd3e5c6c4e04",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:51Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "327f2ec9044940948d8e13e781c1e1b8",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:55Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "6a6d026005c049f99973d6d12c48aac9",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:09:57Z",
+      "props": {
+        "source": "organic"
+      }
+    },
+    {
+      "id": "da73ca141d1a4e5e99c6c4243830dfed",
+      "user_id": "8684148229",
+      "event": "start",
+      "ts": "2026-09-06T08:10:03Z",
       "props": {
         "source": "organic"
       }

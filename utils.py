@@ -91,3 +91,37 @@ def _paywall(chat_id, required_plan="premium"):
         keyboard = {"keyboard": [[T(lang, "btn_personal"), T(lang, "btn_business_sub")], [T(lang, "btn_back")]], "resize_keyboard": True}
     send_message(chat_id, text, keyboard)
 
+
+def create_invoice(chat_id, price, b2b_type=None, plan=None):
+    lang = get_user_lang(chat_id)
+    if b2b_type:
+        b2b_info = B2B_TYPES.get(b2b_type, {})
+        name = b2b_name(lang, b2b_type)
+        title = f"{b2b_info.get('icon', '🏢')} {name}"
+        description = f"{name}\n\n" + "\n".join(b2b_features(lang, b2b_type))
+        payload = f"b2b_{b2b_type}"
+        if plan is None:
+            plan = "business"
+    else:
+        title = T(lang, "invoice_title_personal")
+        description = T(lang, "invoice_description_personal")
+        payload = "subscription_premium" if plan != "business" else "subscription_business"
+
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendInvoice"
+    payload_data = {
+        "chat_id": chat_id,
+        "title": title,
+        "description": description,
+        "payload": payload,
+        "provider_token": "",
+        "currency": "XTR",
+        "prices": [{"label": T(lang, "invoice_month"), "amount": price}],
+        "start_parameter": "subscription"
+    }
+    try:
+        response = requests.post(url, json=payload_data, timeout=30)
+        return response.json()
+    except Exception as e:
+        logger.error(f"Ошибка создания счёта: {e}")
+        return None
+
