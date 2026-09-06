@@ -6,6 +6,8 @@ import time as _time
 import requests
 
 from config import *
+from texts import T
+from storage import get_user_lang
 
 logger = logging.getLogger(__name__)
 
@@ -78,3 +80,14 @@ def answer_callback_query(callback_query_id, text=None):
         requests.post(url, json=payload, timeout=10)
     except Exception as e:
         logger.error(f"Ошибка answer_callback_query: {e}")
+
+def _paywall(chat_id, required_plan="premium"):
+    lang = get_user_lang(chat_id)
+    if required_plan == "business":
+        text = T(lang, "business_required")
+        keyboard = {"keyboard": [[T(lang, "btn_business_sub")], [T(lang, "btn_back")]], "resize_keyboard": True}
+    else:
+        text = T(lang, "premium_required_paywall")
+        keyboard = {"keyboard": [[T(lang, "btn_personal"), T(lang, "btn_business_sub")], [T(lang, "btn_back")]], "resize_keyboard": True}
+    send_message(chat_id, text, keyboard)
+
