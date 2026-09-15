@@ -1,107 +1,109 @@
-# 🌤 WeatherTomBot — Умный погодный Telegram-бот
+**🇬🇧 English** | [🇷🇺 Русский](README_ru.md)
 
-Профессиональный погодный бот с подпиской, B2B-клиентами, автопостингом и white-label брендингом.
+# 🌤 WeatherTomBot — Smart Weather Telegram Bot
 
-## ✨ Возможности
+Professional weather bot with subscriptions, B2B clients, auto-posting and white-label branding.
 
-### Для пользователей
-- 🌤 **Погода сейчас** — точный прогноз для любого города мира
-- 📅 **Прогноз на 5 дней** — детальный прогноз с почасовой разбивкой
-- ⭐ **Избранное** — быстрые города (до 50 в бизнес-подписке)
-- 🖼 **Погодные карточки** — красивые изображения с погодой (4 стиля)
-- 🌍 **Мультиязычность** — русский, английский, испанский, китайский
-- 👥 **Команды** — создание команд с ролями (owner/admin/viewer)
-- 🔗 **Реферальная программа** — приглашение друзей с бонусами
+## ✨ Features
 
-### Для бизнеса (B2B)
-- 🌾 **Сельское хозяйство** — агрометеорологические данные
-- 🏗 **Строительство** — прогноз для планирования работ
-- ✈️ **Туризм** — погода для туристических маршрутов
-- 🏢 **Бизнес** — расширенная аналитика и API-доступ
+### For users
+- 🌤 **Current weather** — accurate forecast for any city worldwide
+- 📅 **5-day forecast** — detailed forecast with hourly breakdown
+- ⭐ **Favorites** — quick-access cities (up to 50 on Business plan)
+- 🖼 **Weather cards** — beautiful weather images (4 styles)
+- 🌍 **Multi-language** — Russian, English, Spanish, Chinese
+- 👥 **Teams** — create teams with roles (owner/admin/viewer)
+- 🔗 **Referral program** — invite friends and earn bonuses
 
-### Администрирование
-- 🔐 **Веб-админка** — управление пользователями, подписками, B2B
-- 📊 **Аналитика** — события, статистика использования
-- 📢 **Broadcast** — рассылка сообщений всем пользователям
-- 🏷 **White-label** — брендинг под вашу компанию
-- 📢 **Автопостинг** — публикация погоды в каналы
-- 🔔 **Уведомления** — cron-задачи для оповещений
+### For business (B2B)
+- 🌾 **Agriculture** — agrometeorological data
+- 🏗 **Construction** — forecasts for work planning
+- ✈️ **Tourism** — weather for travel routes
+- 🏢 **Business** — extended analytics and API access
 
-## 🛠 Технологии
+### Administration
+- 🔐 **Web admin panel** — manage users, subscriptions, B2B clients
+- 📊 **Analytics** — events and usage statistics
+- 📢 **Broadcast** — send messages to all users
+- 🏷 **White-label** — rebrand the bot for your company
+- 📢 **Auto-posting** — publish weather to channels automatically
+- 🔔 **Notifications** — cron tasks for regular alerts
+
+## 🛠 Tech stack
 
 - **Python 3.10+**
 - **python-telegram-bot** — Telegram API
-- **Flask** — веб-интерфейс и админка
-- **SQLite** — база данных (15 таблиц)
-- **OpenWeatherMap API** — погодные данные
+- **Flask** — web interface and admin panel
+- **SQLite** — database (15 tables)
+- **OpenWeatherMap API** — weather data
 
-## 🚀 Установка
+## 🚀 Installation
 
-### 1. Клонирование репозитория
+### 1. Clone the repository
 
     git clone https://github.com/yourusername/WeatherTomBot.git
     cd WeatherTomBot
 
-### 2. Установка зависимостей
+### 2. Install dependencies
 
     pip install -r requirements.txt
 
-### 3. Настройка окружения
+### 3. Configure environment
 
     cp .env.example .env
     nano .env
 
-**Обязательные параметры:**
-- `TELEGRAM_TOKEN` — токен от [@BotFather](https://t.me/BotFather)
-- `OPENWEATHER_API_KEY` — ключ [OpenWeatherMap](https://openweathermap.org/api)
-- `ADMIN_TELEGRAM_ID` — ваш Telegram ID ([@userinfobot](https://t.me/userinfobot))
-- `WEB_SECRET` — случайная строка для безопасности
-- `WEBHOOK_HOST` — домен вашего сервера
+**Required parameters:**
+- `TELEGRAM_TOKEN` — bot token from [@BotFather](https://t.me/BotFather)
+- `OPENWEATHER_API_KEY` — key from [OpenWeatherMap](https://openweathermap.org/api)
+- `ADMIN_TELEGRAM_ID` — your Telegram ID ([@userinfobot](https://t.me/userinfobot))
+- `WEB_SECRET` — random string for security
+- `WEBHOOK_HOST` — your server domain
 
-### 4. Запуск бота
+### 4. Run the bot
 
     python3 bot.py
 
-База `bot.db` (15 таблиц) создаётся автоматически при первом запуске.
+The `bot.db` database (15 tables) is created automatically on first run.
 
-## 📊 База данных (15 таблиц)
+## 📊 Database (15 tables)
 
-**Основные данные:**
-- `users` — города и языки пользователей
-- `subscriptions` — подписки (план, срок, активатор)
-- `b2b_users` — B2B-клиенты
-- `user_states` — состояния диалогов
-- `notifications` — уведомления
+**Core data:**
+- `users` — user cities and languages
+- `subscriptions` — subscriptions (plan, expiry, activator)
+- `b2b_users` — B2B clients
+- `user_states` — dialog states
+- `notifications` — notifications
 
-**Функции:**
-- `f_users`, `f_teams`, `f_team_members` — профили и команды
-- `f_channels` — автопостинг
-- `f_card_settings` — погодные карточки
-- `f_white_labels` — брендинг
-- `f_referrals` — рефералы
-- `f_events` — аналитика (до 50 000 событий)
-- `api_keys` — API-ключи (SHA-256 + salt)
+**Features:**
+- `f_users`, `f_teams`, `f_team_members` — profiles and teams
+- `f_channels` — auto-posting
+- `f_card_settings` — weather cards
+- `f_white_labels` — branding
+- `f_referrals` — referrals
+- `f_events` — analytics (up to 50,000 events)
+- `api_keys` — API keys (SHA-256 + salt)
 
-## 🔄 Бэкапы
+## 🔄 Backups
 
-Автоматический ежедневный бэкап в 3:00 ночи:
+Automatic daily backup at 3:00 AM:
 
-    python3 backup_db.py     # ручной запуск
-    ls -lh backups/          # просмотр (хранится 7 последних)
+    python3 backup_db.py     # manual run
+    ls -lh backups/          # view (last 7 kept)
 
-## 🌐 Развёртывание на PythonAnywhere
+## 🌐 Deploying to PythonAnywhere
 
-1. Создайте виртуальное окружение:
+1. Create a virtual environment:
 
        mkvirtualenv --python=/usr/bin/python3.10 weathertom
        pip install -r requirements.txt
 
-2. Настройте Web app:
+2. Configure the Web app:
    - Source code: `/home/username/WeatherTomBot`
    - Working directory: `/home/username/WeatherTomBot/WeatherTomBot`
    - Virtualenv: `/home/username/.virtualenvs/weathertom`
 
-3. WSGI файл:
+3. WSGI file:
 
        import sys
        path = '/home/username/WeatherTomBot/WeatherTomBot'
@@ -109,27 +111,27 @@
            sys.path.insert(0, path)
        from app import app as application
 
-4. Установите webhook:
+4. Set up the webhook:
 
        python3 -c "from bot import set_webhook; set_webhook()"
 
-## 🔐 Безопасность
+## 🔐 Security
 
-- Секреты в `.env` (не коммитится)
-- База исключена из git
-- Веб-админка защищена паролем
-- API-ключи хранятся в хеше SHA-256 + salt
+- Secrets stored in `.env` (not committed)
+- Database excluded from git
+- Admin panel password-protected
+- API keys stored as SHA-256 + salt hashes
 
-## 📈 Масштабируемость
+## 📈 Scalability
 
-Легко мигрирует на PostgreSQL:
-- Стандартизированный SQL
-- Схема переносится через `pgloader`
+Easily migrates to PostgreSQL:
+- Standardized SQL
+- Schema transfers via `pgloader`
 
-## 📄 Лицензия
+## 📄 License
 
 MIT License
 
 ---
-**Версия:** 3.0 (B2B + Multi-language)  
-**Дата:** 2026-09-15
+**Version:** 3.0 (B2B + Multi-language)  
+**Date:** 2026-09-15
