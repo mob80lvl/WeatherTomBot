@@ -1,0 +1,37 @@
+# Секреты - НИКОГДА не загружать!
+.env
+.env.*
+
+# Данные пользователей
+*.json
+!env.example
+
+# Логи
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+
+# Бэкапы
+*.backup_*
+
+# Временные файлы
+*.tmp
+generated_media/
+white_label_media/
+backups/
+# База данных и логи - НИКОГДА в git!
+bot.db
+bot.db-journal
+bot.db-wal
+bot.db-shm
+*.db
+archive/
+# Мусор и личные файлы
+*.lock
+*.before_*
+media/
+!.env.example

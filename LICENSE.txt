@@ -1,0 +1,8 @@
+PROPRIETARY SOFTWARE
+
+Copyright (c) WeatherTomBot owner.
+
+This package is supplied for evaluation, transfer, or sale only according to the
+separate agreement between the seller and buyer. No license to redistribute,
+resell, sublicense, or publish the source is granted unless the sales agreement
+explicitly says so.
