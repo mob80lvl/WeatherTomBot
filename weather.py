@@ -898,13 +898,14 @@ def wind_deg_to_direction(deg, lang="ru"):
         return "—"
     idx = round(deg / 22.5) % 16
     return directions[idx]
-def format_weather_text(chat_id, weather_data):
+def format_weather_text(chat_id, weather_data, title=None):
     lang = get_user_lang(chat_id)
     if "error" in weather_data:
         return T(lang, "weather_error")
     icon = get_weather_icon(weather_id=weather_data.get('weather_id'), description=weather_data.get('description', ''))
     wind_dir = wind_deg_to_direction(weather_data.get('wind_deg'), lang)
-    text = f"{icon} {weather_data['city']}, {weather_data['country']}\n\n"
+    prefix = f"{title}\n" if title else ""
+    text = prefix + f"{icon} {weather_data.get('city','—')}, {weather_data.get('country','—')}\n\n"
     text += T(lang, "temp", temp=weather_data['temp']) + "\n"
     text += T(lang, "feels_like", feels=weather_data['feels_like']) + "\n"
     text += T(lang, "wind_full", wind=weather_data['wind_speed'], direction=wind_dir) + "\n"

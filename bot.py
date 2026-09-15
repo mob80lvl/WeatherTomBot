@@ -760,6 +760,7 @@ if advanced_features:
             is_user_subscribed=is_user_subscribed,
             get_user_b2b_type=get_user_b2b_type,
             is_admin=lambda uid: str(uid) == str(os.getenv("ADMIN_TELEGRAM_ID", "")) and bool(os.getenv("ADMIN_TELEGRAM_ID", "")),
+            format_weather_text=format_weather_text,
         )
         advanced_features.register_routes(app)
     except Exception as e:

@@ -1424,14 +1424,15 @@ def set_white_label(uid, name=None, logo=None, primary=None):
 
 def sync_known_users():
     """Ensure users known by the main bot exist in the feature DB."""
-    users_file = CFG.get("users_file", "users_city.json")
     try:
-        if not os.path.exists(users_file):
-            return 0
-        with open(users_file, "r", encoding="utf-8") as f:
-            users = json.load(f)
-        if not isinstance(users, dict):
-            return 0
+        conn = get_conn()
+        try:
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(users)")]
+            uid_col = "chat_id" if "chat_id" in cols else ("uid" if "uid" in cols else cols[0])
+            rows = conn.execute(f"SELECT {uid_col} FROM users").fetchall()
+        finally:
+            conn.close()
+        users = [str(r[0]) for r in rows]
         db = _db()
         changed = 0
         for uid in users:
@@ -1485,11 +1486,17 @@ def daily_notification_job():
             if (prefs.get("enabled")
                     and prefs.get("time", "08:00") == current_hm
                     and prefs.get("last_sent_date") != today):
-                text = (f"🌤 *{city}*\n\n"
-                        f"🌡 Температура: *{w.get('temp','—')}°C*\n"
-                        f"☁️ {w.get('description','—')}\n"
-                        f"💧 Влажность: *{w.get('humidity','—')}%*\n"
-                        f"🌬 Ветер: *{w.get('wind_speed','—')} м/с* · *{w.get('wind_direction','—')}*")
+                lang = _lang(uid)
+                title = "☀️ *Погода на сегодня*" if lang == "ru" else "☀️ *Today's weather*"
+                fmt = CFG.get("format_weather_text")
+                if fmt:
+                    text = fmt(uid, w, title=title)
+                else:
+                    text = (f"{title}\n🌤 *{city}*\n\n"
+                            f"🌡 Температура: *{w.get('temp','—')}°C*\n"
+                            f"☁️ {w.get('description','—')}\n"
+                            f"💧 Влажность: *{w.get('humidity','—')}%*\n"
+                            f"🌬 Ветер: *{w.get('wind_speed','—')} м/с* · *{w.get('wind_direction','—')}*")
                 if prefs.get("rain") and float(w.get("rain", 0) or 0) > 0:
                     text += "\n" + _FT(uid, "daily_rain")
                 if prefs.get("wind") and float(w.get("wind_speed", 0) or 0) >= 50:
@@ -1579,9 +1586,13 @@ def segmented_broadcast(uid, segment, message):
     if not _admin(uid):
         return {"ok": False, "error": "forbidden"}
     # SQLite: users from f_users table
-    legacy = _load(users_path, {})
+    conn = get_conn()
+    try:
+        legacy = {str(r[0]): r[1] for r in conn.execute("SELECT uid, city FROM f_users")}
+    finally:
+        conn.close()
     db = _db()
-    candidate = set(str(x) for x in legacy.keys()) | set(str(x) for x in db.get("users", {}).keys())
+    candidate = set(legacy.keys()) | set(str(x) for x in db.get("users", {}).keys())
     subs_fn = CFG.get("is_user_subscribed")
     results = {"sent":0, "failed":0, "skipped":0, "total":len(candidate)}
     for target in candidate:
