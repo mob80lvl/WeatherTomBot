@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request, session, redirect, url_for, flash, render_template_string
 from functools import wraps
 from dotenv import load_dotenv
+import vk_bot
 
 load_dotenv()
 
@@ -142,12 +143,12 @@ def _show_cities(chat_id):
 def _show_notification_settings(chat_id):
     lang=get_user_lang(chat_id)
     prefs=advanced_features.notification_prefs(chat_id) if advanced_features else {"enabled":get_notification_status(chat_id),"time":"08:00","frequency":"daily","rain":True,"wind":True,"frost":True,"heat":True}
-    status=T(lang,"notification_enabled") if prefs.get("enabled") else T(lang,"notification_disabled")
-    freq=prefs.get("frequency","daily")
+    status=T(lang,"notification_enabled") if (prefs if isinstance(prefs, dict) else {}).get("enabled") else T(lang,"notification_disabled")
+    freq=(prefs if isinstance(prefs, dict) else {}).get("frequency","daily")
     freq_names={"daily":T(lang,"notification_freq_daily"),"weekly":T(lang,"notification_freq_weekly"),"weekdays":T(lang,"notification_freq_weekdays"),"weekends":T(lang,"notification_freq_weekends")}
     freq_display=freq_names.get(freq,T(lang,"notification_freq_daily"))
-    city=prefs.get("city") or get_user_city(chat_id) or "—"
-    text=T(lang,"notification_settings",status=status,rain="✅" if prefs.get("rain",True) else "❌",wind="✅" if prefs.get("wind",True) else "❌",frost="✅" if prefs.get("frost",True) else "❌",heat="✅" if prefs.get("heat",True) else "❌",time=prefs.get("time","08:00"),city=city)
+    city=(prefs if isinstance(prefs, dict) else {}).get("city") or get_user_city(chat_id) or "—"
+    text=T(lang,"notification_settings",status=status,rain="✅" if (prefs if isinstance(prefs, dict) else {}).get("rain",True) else "❌",wind="✅" if (prefs if isinstance(prefs, dict) else {}).get("wind",True) else "❌",frost="✅" if (prefs if isinstance(prefs, dict) else {}).get("frost",True) else "❌",heat="✅" if (prefs if isinstance(prefs, dict) else {}).get("heat",True) else "❌",time=(prefs if isinstance(prefs, dict) else {}).get("time","08:00"),city=city)
     send_message(chat_id,text,get_notification_keyboard(chat_id))
 
 
@@ -637,13 +638,13 @@ def webhook():
             _show_notification_settings(chat_id); return "ok",200
         if text == T(lang,"notification_toggle"):
             if advanced_features:
-                prefs=advanced_features.notification_prefs(chat_id); advanced_features.set_notification_prefs(chat_id,enabled=not bool(prefs.get("enabled")))
+                prefs=advanced_features.notification_prefs(chat_id); advanced_features.set_notification_prefs(chat_id,enabled=not bool((prefs if isinstance(prefs, dict) else {}).get("enabled")))
             else: set_notification_status(chat_id,not get_notification_status(chat_id))
             _show_notification_settings(chat_id); return "ok",200
         for key,pref in (("notification_rain","rain"),("notification_wind","wind"),("notification_frost","frost"),("notification_heat","heat")):
             if text == T(lang,key):
                 if advanced_features:
-                    prefs=advanced_features.notification_prefs(chat_id); advanced_features.set_notification_prefs(chat_id,**{pref:not bool(prefs.get(pref,True))})
+                    prefs=advanced_features.notification_prefs(chat_id); advanced_features.set_notification_prefs(chat_id,**{pref:not bool((prefs if isinstance(prefs, dict) else {}).get(pref,True))})
                 _show_notification_settings(chat_id); return "ok",200
         if text == T(lang,"notification_frequency"):
             # Показываем inline-клавиатуру с вариантами
@@ -765,6 +766,13 @@ if advanced_features:
         advanced_features.register_routes(app)
     except Exception as e:
         logger.error(f"Ошибка инициализации advanced_features: {e}", exc_info=True)
+
+# Регистрация VK webhook
+try:
+    import vk_bot
+    vk_bot.register_vk_routes(app)
+except Exception as e:
+    logger.error(f"Ошибка инициализации vk_bot: {e}", exc_info=True)
 
 from service import migrate_subscriptions_to_new_plans, validate_config
 

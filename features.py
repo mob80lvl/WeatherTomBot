@@ -563,19 +563,27 @@ def remove_favorite(uid, city):
 def notification_prefs(uid):
     db = _db()
     p = db["users"].setdefault(str(uid), {})
-    return p.setdefault("notifications", {
-        "enabled": False, "time": "08:00", "frequency": "daily",
-        "rain": True, "storm": True, "wind": True, "temp": True,
-        "heat": True, "frost": True, "heavy_rain": True,
-        "alerts": {
-            "rain": {"enabled": True, "threshold": 0.1},
-            "storm": {"enabled": True, "threshold": None},
-            "wind": {"enabled": True, "threshold": 15},
-            "heat": {"enabled": True, "threshold": 30},
-            "frost": {"enabled": True, "threshold": 0},
-            "heavy_rain": {"enabled": True, "threshold": 10}
+    prefs = p.get("notifications")
+    # Защитная проверка: если notifications не словарь (bool/int из старой схемы) — заменяем дефолтом
+    if not isinstance(prefs, dict):
+        default = {
+            "enabled": bool(prefs) if prefs is not None else False,
+            "time": "08:00", "frequency": "daily",
+            "rain": True, "storm": True, "wind": True, "temp": True,
+            "heat": True, "frost": True, "heavy_rain": True,
+            "alerts": {
+                "rain": {"enabled": True, "threshold": 0.1},
+                "storm": {"enabled": True, "threshold": None},
+                "wind": {"enabled": True, "threshold": 15},
+                "heat": {"enabled": True, "threshold": 30},
+                "frost": {"enabled": True, "threshold": 0},
+                "heavy_rain": {"enabled": True, "threshold": 10}
+            }
         }
-    })
+        p["notifications"] = default
+        _save_db(db)
+        return default
+    return prefs
 
 def set_notification_prefs(uid, **changes):
     db = _db()
