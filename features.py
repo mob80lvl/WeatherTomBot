@@ -83,6 +83,46 @@ def _save(path, obj):
         os.replace(tmp, path)
     return True
 
+def _load_notif(raw):
+    """Читает колонку notifications: JSON-словарь, legacy 0/1 или мусор."""
+    base = {
+        "enabled": False, "time": "08:00", "frequency": "daily",
+        "rain": True, "storm": True, "wind": True, "temp": True,
+        "heat": True, "frost": True, "heavy_rain": True,
+        "alerts": {
+            "rain": {"enabled": True, "threshold": 0.1},
+            "storm": {"enabled": True, "threshold": None},
+            "wind": {"enabled": True, "threshold": 15},
+            "heat": {"enabled": True, "threshold": 30},
+            "frost": {"enabled": True, "threshold": 0},
+            "heavy_rain": {"enabled": True, "threshold": 10}
+        }
+    }
+    v = None
+    if isinstance(raw, str):
+        s = raw.strip()
+        if s in ("", "0", "1"):
+            v = (s == "1") if s else None
+        else:
+            try:
+                v = json.loads(s)
+            except Exception:
+                v = None
+    elif isinstance(raw, dict):
+        v = raw
+    elif raw is not None:
+        v = bool(raw)
+    if isinstance(v, dict):
+        base.update(v)
+        return base
+    if v is not None:
+        base["enabled"] = bool(v)
+    return base
+def _dump_notif(v):
+    """Пишет колонку notifications как JSON-словарь."""
+    if isinstance(v, dict):
+        return json.dumps(v, ensure_ascii=False)
+    return json.dumps({"enabled": bool(v)}, ensure_ascii=False)
 def _db():
     """Собирает словарь из SQLite (структура идентична features.json)."""
     conn = get_conn()
@@ -96,7 +136,7 @@ def _db():
         for row in conn.execute("SELECT uid, first_seen, last_seen, source, started, notifications, favorites, api_default_city, referral_code FROM f_users"):
             db["users"][row[0]] = {
                 "first_seen": row[1], "last_seen": row[2], "source": row[3],
-                "started": bool(row[4]), "notifications": bool(row[5]),
+                "started": bool(row[4]), "notifications": _load_notif(row[5]),
                 "favorites": json.loads(row[6]) if row[6] else [],
                 "api_default_city": row[7], "referral_code": row[8],
             }
@@ -150,7 +190,7 @@ def _save_db(db):
             conn.execute(
                 "INSERT OR REPLACE INTO f_users (uid, first_seen, last_seen, source, started, notifications, favorites, api_default_city, referral_code) VALUES (?,?,?,?,?,?,?,?,?)",
                 (str(uid), u.get("first_seen"), u.get("last_seen"), u.get("source"),
-                 1 if u.get("started") else 0, 1 if u.get("notifications") else 0,
+                 1 if u.get("started") else 0, _dump_notif(u.get("notifications")),
                  json.dumps(u.get("favorites", []), ensure_ascii=False),
                  u.get("api_default_city"), u.get("referral_code")))
         conn.execute("DELETE FROM f_team_members")
