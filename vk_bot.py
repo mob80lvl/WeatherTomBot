@@ -199,11 +199,21 @@ def _notif_keyboard(uid, lang):
         [_btn(_m(lang, "back"), {"cmd": "back"})],
     ]}
 
-def _fav_keyboard(lang):
-    return {"one_time": False, "inline": False, "buttons": [
-        [_btn("➕", {"cmd": "fav_add"}), _btn("🗑", {"cmd": "fav_del"})],
-        [_btn(_m(lang, "back"), {"cmd": "back"})],
-    ]}
+def _fav_keyboard(uid, lang):
+    labels = {"ru": ("➕ Добавить", "🗑 Удалить"), "en": ("➕ Add", "🗑 Delete")}
+    la, ld = labels.get(lang, labels["ru"])
+    favs = favorites(uid)[:8]
+    rows = []
+    row = []
+    for city in favs:
+        row.append(_btn(city, {"cmd": "city_pick", "city": city}))
+        if len(row) == 2:
+            rows.append(row); row = []
+    if row:
+        rows.append(row)
+    rows.append([_btn(la, {"cmd": "fav_add"}), _btn(ld, {"cmd": "fav_del"})])
+    rows.append([_btn(_m(lang, "back"), {"cmd": "back"})])
+    return {"one_time": False, "inline": False, "buttons": rows}
 
 def _show_weather(uid, peer_id, lang):
     city = get_user_city(uid)
@@ -228,7 +238,7 @@ def _show_favorites(uid, peer_id, lang):
     favs = favorites(uid)
     listing = "\n".join(f"📍 {x}" for x in favs) if favs else vk_strip_md(_t(lang, "cities_empty", "—"))
     text = vk_strip_md(_t(lang, "cities_title", "⭐ Favorites")) + "\n\n" + listing + "\n\n" + vk_strip_md(_t(lang, "cities_choose", ""))
-    vk_send(peer_id, text, _fav_keyboard(lang))
+    vk_send(peer_id, text, _fav_keyboard(uid, lang))
 
 def _show_notifications(uid, peer_id, lang):
     p = notification_prefs(uid)
@@ -271,10 +281,10 @@ def _handle_state(uid, peer_id, lang, text):
                 vk_send(peer_id, _m(lang, "time_bad"), _notif_keyboard(uid, lang))
         elif mode == "fav_add":
             ok = add_favorite(uid, text.strip())
-            vk_send(peer_id, _m(lang, "fav_added") if ok else _m(lang, "fav_add_fail"), _fav_keyboard(lang))
+            vk_send(peer_id, _m(lang, "fav_added") if ok else _m(lang, "fav_add_fail"), _fav_keyboard(uid, lang))
         elif mode == "fav_del":
             ok = remove_favorite(uid, text.strip())
-            vk_send(peer_id, _m(lang, "fav_del_ok") if ok else _m(lang, "fav_del_fail"), _fav_keyboard(lang))
+            vk_send(peer_id, _m(lang, "fav_del_ok") if ok else _m(lang, "fav_del_fail"), _fav_keyboard(uid, lang))
         return True
     except Exception as e:
         logger.error(f"VK state error: {e}", exc_info=True)
@@ -348,6 +358,12 @@ def vk_process_event(event):
             if new in TEXTS:
                 set_user_lang(uid, new)
                 vk_send(peer_id, _m(new, "lang_set"), vk_menu_keyboard(new))
+            return
+        if cmd == "city_pick":
+            city = extra.get("city")
+            if city:
+                save_user_city(uid, city)
+                vk_send(peer_id, _m(lang, "city_saved", city=city), vk_menu_keyboard(lang))
             return
         if cmd:
             # Нажата кнопка — отменяем режим ожидания ввода
