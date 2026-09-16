@@ -1,5 +1,5 @@
-"""VK Bot адаптер для WeatherTomBot."""
-import os, json, threading, requests, logging, time
+"""VK Bot adapter for WeatherTomBot (phase 2: identical to Telegram)."""
+import os, json, threading, requests, logging, time, re
 from flask import request
 from dotenv import load_dotenv
 
@@ -11,39 +11,49 @@ VK_CONFIRM = os.getenv("VK_CONFIRM", "")
 
 logger = logging.getLogger(__name__)
 
-# Импорт функций бота
-try:
-    from storage import get_user_city, save_user_city, get_user_lang
-    from weather import get_weather_aggregated, get_forecast_aggregated, format_weather_text
-    from features import favorites, notification_prefs
-    logger.info("✅ VK bot: imports loaded")
-except Exception as e:
-    logger.error(f"VK bot: import error: {e}")
+from storage import get_user_city, save_user_city, get_user_lang, set_user_lang
+from weather import (get_weather_aggregated, get_forecast_aggregated,
+                     format_weather_text, format_forecast_text)
+from features import (favorites, add_favorite, remove_favorite,
+                      notification_prefs, set_notification_prefs)
+from texts import T
 
-# Защита от дублей
 recent_events = set()
 MAX_EVENTS = 200
+_vk_state = {}
+STATE_TTL = 300
+
+def _set_state(uid, mode):
+    _vk_state[uid] = {"mode": mode, "ts": time.time()}
+
+def _get_state(uid):
+    st = _vk_state.get(uid)
+    if not st:
+        return None
+    if time.time() - st["ts"] > STATE_TTL:
+        _vk_state.pop(uid, None)
+        return None
+    return st["mode"]
+
+def _clear_state(uid):
+    _vk_state.pop(uid, None)
 
 def vk_send(peer_id, message, keyboard=None):
-    """Отправка сообщения в VK."""
     if not VK_TOKEN:
         logger.error("VK_TOKEN not set")
         return None
-    
     params = {
         "peer_id": peer_id,
-        "message": message[:4096],  # VK лимит
+        "message": message[:4096],
         "random_id": int(time.time() * 1000) % 2147483647,
         "access_token": VK_TOKEN,
         "v": "5.199"
     }
     if keyboard:
         params["keyboard"] = json.dumps(keyboard, ensure_ascii=False)
-    
     try:
         resp = requests.get("https://api.vk.com/method/messages.send", params=params, timeout=10)
         result = resp.json()
-        print(f"[VK DEBUG] send to {peer_id}: {json.dumps(result, ensure_ascii=False)[:500]}", flush=True)
         if "error" in result:
             logger.error(f"VK send error: {result['error']}")
         return result
@@ -52,175 +62,203 @@ def vk_send(peer_id, message, keyboard=None):
         return None
 
 def vk_strip_md(text):
-    """Убирает Markdown-разметку для VK."""
     if not text:
         return ""
-    return text.replace("*", "").replace("_", "").replace("`", "")
+    return text.replace("*", "").replace("`", "")
 
-def vk_menu_keyboard():
-    """Создаёт главное меню."""
-    def btn(label, cmd):
-        return {
-            "action": {
-                "type": "text",
-                "label": label,
-                "payload": json.dumps({"cmd": cmd}, ensure_ascii=False)
-            },
-            "color": "primary"
-        }
-    return {
-        "one_time": False,
-        "inline": False,
-        "buttons": [
-            [btn("🌤 Погода сейчас", "weather"), btn("📅 Прогноз 5 дней", "forecast")],
-            [btn("⭐ Избранное", "favorites"), btn("🏙 Город", "city")],
-            [btn("🔔 Оповещения", "notifications"), btn("❓ Помощь", "help")]
-        ]
-    }
+def _btn(label, cmd, color="primary"):
+    return {"action": {"type": "text", "label": label[:40],
+                       "payload": json.dumps({"cmd": cmd}, ensure_ascii=False)},
+            "color": color}
+
+def vk_menu_keyboard(lang="ru"):
+    return {"one_time": False, "inline": False, "buttons": [
+        [_btn("🌤 Погода сейчас", "weather"), _btn("📅 Прогноз 5 дней", "forecast")],
+        [_btn("⭐ Избранное", "favorites"), _btn("🏙 Город", "city")],
+        [_btn("🔔 Оповещения", "notifications"), _btn("🌐 Язык", "lang")],
+        [_btn("❓ Помощь", "help")],
+    ]}
+
+def _notif_keyboard(uid, lang):
+    p = notification_prefs(uid)
+    if not isinstance(p, dict):
+        p = {}
+    on = lambda k: "✅" if p.get(k, True) else "❌"
+    en = "❌ Выключены" if p.get("enabled") else "✅ Включены"
+    return {"one_time": False, "inline": False, "buttons": [
+        [_btn(en, "notif_toggle"), _btn("⏰ Время", "notif_time")],
+        [_btn(f"💧 Дождь: {on('rain')}", "notif_rain"), _btn(f"💨 Ветер: {on('wind')}", "notif_wind")],
+        [_btn(f"❄️ Мороз: {on('frost')}", "notif_frost"), _btn(f"🔥 Жара: {on('heat')}", "notif_heat")],
+        [_btn("⬅ Назад", "back")],
+    ]}
+
+def _fav_keyboard():
+    return {"one_time": False, "inline": False, "buttons": [
+        [_btn("➕ Добавить", "fav_add"), _btn("🗑 Удалить", "fav_del")],
+        [_btn("⬅ Назад", "back")],
+    ]}
+
+def _show_weather(uid, peer_id, lang):
+    city = get_user_city(uid)
+    if not city:
+        vk_send(peer_id, vk_strip_md(T(lang, "cities_empty")) + "\nНажмите '🏙 Город' и введите название.", vk_menu_keyboard(lang))
+        return
+    w = get_weather_aggregated(city, lang)
+    if not w or "error" in w:
+        vk_send(peer_id, vk_strip_md(T(lang, "weather_error")), vk_menu_keyboard(lang))
+        return
+    vk_send(peer_id, vk_strip_md(format_weather_text(uid, w)), vk_menu_keyboard(lang))
+
+def _show_forecast(uid, peer_id, lang):
+    city = get_user_city(uid)
+    if not city:
+        vk_send(peer_id, vk_strip_md(T(lang, "cities_empty")) + "\nНажмите '🏙 Город'.", vk_menu_keyboard(lang))
+        return
+    f = get_forecast_aggregated(city, 5, lang)
+    vk_send(peer_id, vk_strip_md(format_forecast_text(uid, f, city, 5)), vk_menu_keyboard(lang))
+
+def _show_favorites(uid, peer_id, lang):
+    favs = favorites(uid)
+    listing = "\n".join(f"📍 {x}" for x in favs) if favs else vk_strip_md(T(lang, "cities_empty"))
+    text = vk_strip_md(T(lang, "cities_title")) + "\n\n" + listing + "\n\n" + vk_strip_md(T(lang, "cities_choose"))
+    vk_send(peer_id, text, _fav_keyboard())
+
+def _show_notifications(uid, peer_id, lang):
+    p = notification_prefs(uid)
+    if not isinstance(p, dict):
+        p = {}
+    status = T(lang, "notification_enabled") if p.get("enabled") else T(lang, "notification_disabled")
+    city = p.get("city") or get_user_city(uid) or "—"
+    text = T(lang, "notification_settings", status=status,
+             rain="✅" if p.get("rain", True) else "❌",
+             wind="✅" if p.get("wind", True) else "❌",
+             frost="✅" if p.get("frost", True) else "❌",
+             heat="✅" if p.get("heat", True) else "❌",
+             time=p.get("time", "08:00"), city=city)
+    vk_send(peer_id, vk_strip_md(text), _notif_keyboard(uid, lang))
+
+def _show_help(uid, peer_id, lang):
+    text = ("🌤 WeatherTomBot для ВКонтакте\n\n"
+            "🌤 Погода сейчас — текущая погода\n"
+            "📅 Прогноз 5 дней — прогноз по дням\n"
+            "⭐ Избранное — ваши города (добавить/удалить)\n"
+            "🏙 Город — установить город (следующим сообщением)\n"
+            "🔔 Оповещения — статус, время и тумблеры\n"
+            "🌐 Язык — переключить русский/english\n"
+            "❓ Помощь — это сообщение")
+    vk_send(peer_id, text, vk_menu_keyboard(lang))
+
+def _handle_state(uid, peer_id, lang, text):
+    mode = _get_state(uid)
+    if not mode:
+        return False
+    _clear_state(uid)
+    if mode == "city":
+        save_user_city(uid, text)
+        vk_send(peer_id, f"✅ Город сохранён: {text}", vk_menu_keyboard(lang))
+    elif mode == "time":
+        m = re.match(r"^(\d{1,2}):(\d{2})$", text.strip())
+        if m:
+            hh = int(m.group(1)); mm = int(m.group(2))
+            if 0 <= hh <= 23 and 0 <= mm <= 59:
+                set_notification_prefs(uid, time=f"{hh:02d}:{mm:02d}")
+                vk_send(peer_id, f"✅ Время оповещений: {hh:02d}:{mm:02d}", _notif_keyboard(uid, lang))
+            else:
+                vk_send(peer_id, "❌ Неверный формат. Пример: 08:00", _notif_keyboard(uid, lang))
+        else:
+            vk_send(peer_id, "❌ Неверный формат. Пример: 08:00", _notif_keyboard(uid, lang))
+    elif mode == "fav_add":
+        ok = add_favorite(uid, text.strip())
+        vk_send(peer_id, "✅ Город добавлен в избранное!" if ok else "❌ Не удалось добавить (лимит 50 или дубликат).", _fav_keyboard())
+    elif mode == "fav_del":
+        ok = remove_favorite(uid, text.strip())
+        vk_send(peer_id, "✅ Город удалён из избранного." if ok else "❌ Такого города нет в избранном.", _fav_keyboard())
+    return True
+
+def _route(uid, peer_id, lang, cmd, text):
+    low = (text or "").strip().lower()
+    if cmd == "weather" or low in ("погода", "🌤 погода сейчас"):
+        _show_weather(uid, peer_id, lang)
+    elif cmd == "forecast" or low in ("прогноз", "📅 прогноз 5 дней"):
+        _show_forecast(uid, peer_id, lang)
+    elif cmd == "favorites" or low in ("избранное", "⭐ избранное"):
+        _show_favorites(uid, peer_id, lang)
+    elif cmd == "city" or low in ("город", "🏙 город"):
+        _set_state(uid, "city")
+        vk_send(peer_id, "✏️ Введите название города одним сообщением:", vk_menu_keyboard(lang))
+    elif cmd == "notifications" or low in ("оповещения", "🔔 оповещения"):
+        _show_notifications(uid, peer_id, lang)
+    elif cmd == "lang" or low in ("язык", "🌐 язык"):
+        new = "en" if lang == "ru" else "ru"
+        set_user_lang(uid, new)
+        vk_send(peer_id, "✅ Language switched to English." if new == "en" else "✅ Язык переключён на русский.", vk_menu_keyboard(new))
+    elif cmd == "help" or low in ("помощь", "❓ помощь", "/start", "start", "старт", ""):
+        _show_help(uid, peer_id, lang)
+    elif cmd == "back":
+        vk_send(peer_id, vk_strip_md(T(lang, "cities_choose")) if False else "🏠 Главное меню:", vk_menu_keyboard(lang))
+    elif cmd == "notif_toggle":
+        p = notification_prefs(uid)
+        set_notification_prefs(uid, enabled=not (p.get("enabled") if isinstance(p, dict) else False))
+        _show_notifications(uid, peer_id, lang)
+    elif cmd in ("notif_rain", "notif_wind", "notif_frost", "notif_heat"):
+        key = cmd[6:]
+        p = notification_prefs(uid)
+        cur = p.get(key, True) if isinstance(p, dict) else True
+        set_notification_prefs(uid, **{key: not cur})
+        _show_notifications(uid, peer_id, lang)
+    elif cmd == "notif_time":
+        _set_state(uid, "time")
+        vk_send(peer_id, "⏰ Введите время в формате ЧЧ:ММ (например 08:00):")
+    elif cmd == "fav_add":
+        _set_state(uid, "fav_add")
+        vk_send(peer_id, "➕ Введите город для добавления в избранное:")
+    elif cmd == "fav_del":
+        _set_state(uid, "fav_del")
+        vk_send(peer_id, "🗑 Введите город для удаления из избранного:")
+    else:
+        vk_send(peer_id, "Не знаю такой команды. Нажмите '❓ Помощь'.", vk_menu_keyboard(lang))
 
 def vk_process_event(event):
-    """Обработка события в фоновом потоке."""
     try:
-        event_type = event.get("type")
         obj = event.get("object", {})
         message = obj.get("message", {})
-        
         from_id = message.get("from_id", 0)
         peer_id = message.get("peer_id", 0)
         uid = f"vk_{from_id}"
-        
-        # Получаем текст и payload
-        text = message.get("text", "").strip()
-        payload = message.get("payload")
-        
+        lang = get_user_lang(uid) or "ru"
+        text = (message.get("text") or "").strip()
         cmd = None
+        payload = message.get("payload")
         if payload:
             try:
                 cmd = json.loads(payload).get("cmd")
-            except:
-                pass
-        
-        # Роутер команд
-        if cmd == "weather" or text.lower() in ["🌤 погода сейчас", "погода", "weather"]:
-            city = get_user_city(uid)
-            if not city:
-                vk_send(peer_id, "❌ Город не установлен. Нажмите '🏙 Город' и введите название.", vk_menu_keyboard())
-                return
-            
-            lang = get_user_lang(uid) or "ru"
-            w = get_weather_aggregated(city, lang)
-            if not w or "error" in w:
-                vk_send(peer_id, "❌ Не удалось получить погоду. Попробуйте позже.", vk_menu_keyboard())
-                return
-            
-            formatted = format_weather_text(uid, w)
-            text_clean = vk_strip_md(formatted)
-            vk_send(peer_id, text_clean, vk_menu_keyboard())
-        
-        elif cmd == "forecast" or text.lower() in ["📅 прогноз 5 дней", "прогноз", "forecast"]:
-            city = get_user_city(uid)
-            if not city:
-                vk_send(peer_id, "❌ Город не установлен.", vk_menu_keyboard())
-                return
-            
-            lang = get_user_lang(uid) or "ru"
-            f = get_forecast_aggregated(city, 5, lang)
-            if not f or "error" in f:
-                vk_send(peer_id, "❌ Не удалось получить прогноз.", vk_menu_keyboard())
-                return
-            
-            # Форматируем прогноз
-            text = f"📅 Прогноз на 5 дней для {city}:\n\n"
-            for day in f.get("daily", [])[:5]:
-                date = day.get("date", "—")
-                temp_max = day.get("temp_max", "—")
-                temp_min = day.get("temp_min", "—")
-                desc = day.get("description", "—")
-                text += f"🗓 {date}\n🌡 {temp_min}°...{temp_max}°C\n☁️ {desc}\n\n"
-            
-            vk_send(peer_id, vk_strip_md(text), vk_menu_keyboard())
-        
-        elif cmd == "favorites" or text.lower() in ["⭐ избранное", "избранное", "favorites"]:
-            favs = favorites(uid)
-            if not favs:
-                vk_send(peer_id, "📭 Избранное пусто.", vk_menu_keyboard())
-                return
-            
-            text = "⭐ Ваши города:\n\n" + "\n".join(f"📍 {c}" for c in favs)
-            vk_send(peer_id, text, vk_menu_keyboard())
-        
-        elif cmd == "city" or text.lower() in ["🏙 город", "город", "city"]:
-            vk_send(peer_id, "✏️ Введите название города (следующим сообщением):", vk_menu_keyboard())
-            # В упрощённой версии не реализуем state machine
-            # В реальности нужно сохранить состояние "ожидание_города" для uid
-        
-        elif cmd == "notifications" or text.lower() in ["🔔 оповещения", "оповещения", "notifications"]:
-            prefs = notification_prefs(uid)
-            enabled = prefs.get("enabled") if isinstance(prefs, dict) else False
-            time = prefs.get("time", "08:00") if isinstance(prefs, dict) else "08:00"
-            status = "✅ Включены" if enabled else "❌ Выключены"
-            text = f"🔔 Оповещения: {status}\n⏰ Время: {time}"
-            vk_send(peer_id, text, vk_menu_keyboard())
-        
-        elif cmd == "help" or text.lower() in ["❓ помощь", "помощь", "help", "/start", "старт", "start"]:
-            text = ("🌤 WeatherTomBot для ВКонтакте\n\n"
-                   "Доступные команды:\n"
-                   "🌤 Погода сейчас — текущая погода\n"
-                   "📅 Прогноз 5 дней — прогноз на неделю\n"
-                   "⭐ Избранное — ваши города\n"
-                   "🏙 Город — установить город\n"
-                   "🔔 Оповещения — статус уведомлений\n"
-                   "❓ Помощь — это сообщение")
-            vk_send(peer_id, text, vk_menu_keyboard())
-        
-        else:
-            # Неизвестная команда или введён город (упрощённо)
-            if text and len(text) > 2 and not text.startswith("/"):
-                # Попытка сохранить как город (упрощённая логика)
-                save_user_city(uid, text)
-                vk_send(peer_id, f"✅ Город '{text}' сохранён!", vk_menu_keyboard())
-            else:
-                vk_send(peer_id, "Неизвестная команда. Нажмите '❓ Помощь'.", vk_menu_keyboard())
-    
+            except Exception:
+                cmd = None
+        if _handle_state(uid, peer_id, lang, text):
+            return
+        _route(uid, peer_id, lang, cmd, text)
     except Exception as e:
         logger.error(f"VK process error: {e}", exc_info=True)
 
 def vk_webhook():
-    """Flask-маршрут для VK Callback API."""
     data = request.json
     if not data:
         return "no data", 400
-    
-    # Проверка секрета
-    secret = data.get("secret")
-    if VK_SECRET and secret != VK_SECRET:
-        logger.warning(f"VK: неверный secret от {request.remote_addr}")
+    if VK_SECRET and data.get("secret") != VK_SECRET:
+        logger.warning(f"VK: bad secret from {request.remote_addr}")
         return "forbidden", 403
-    
-    event_type = data.get("type")
-    
-    # Confirmation (специальный случай — возвращаем строку сразу)
-    if event_type == "confirmation":
-        logger.info("VK: confirmation request")
+    if data.get("type") == "confirmation":
         return VK_CONFIRM
-    
-    # Антидубль
-    event_id = data.get("object", {}).get("id") or data.get("object", {}).get("message", {}).get("id")
+    event_id = (data.get("object") or {}).get("id") or ((data.get("object") or {}).get("message") or {}).get("id")
     if event_id and event_id in recent_events:
-        logger.info(f"VK: дубль события {event_id}")
         return "ok"
-    
     if event_id:
         recent_events.add(event_id)
         if len(recent_events) > MAX_EVENTS:
             recent_events.pop()
-    
-    # Фоновая обработка (возвращаем "ok" мгновенно)
     threading.Thread(target=vk_process_event, args=(data,), daemon=True).start()
-    
     return "ok"
 
 def register_vk_routes(app):
-    """Регистрация маршрута в Flask."""
     app.add_url_rule("/vk_webhook", "vk_webhook", vk_webhook, methods=["POST"])
     logger.info("✅ VK webhook registered at /vk_webhook")
