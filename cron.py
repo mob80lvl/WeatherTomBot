@@ -63,18 +63,22 @@ def vk_media_file(fname):
 
 @app.route("/vkpost/<pid>")
 def vk_post_page(pid):
-    fname = f"p{pid}.jpg"
-    d = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "vk_media")
-    if not _os.path.exists(_os.path.join(d, fname)):
-        return "not found", 404
-    img_url = f"https://mob100500lvl.pythonanywhere.com/vkmedia/{fname}"
+    ext = vk_posts.get_card_url(pid)
+    if ext:
+        img_url, w, h = ext, "1280", "720"
+    else:
+        fname = f"p{pid}.jpg"
+        d = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "vk_media")
+        if not _os.path.exists(_os.path.join(d, fname)):
+            return "not found", 404
+        img_url, w, h = f"https://mob100500lvl.pythonanywhere.com/vkmedia/{fname}", "1200", "630"
     page_url = f"https://mob100500lvl.pythonanywhere.com/vkpost/{pid}"
     return (f'<!DOCTYPE html><html><head>'
             f'<meta charset="utf-8">'
             f'<meta property="og:url" content="{page_url}">'
             f'<meta property="og:image" content="{img_url}">'
-            f'<meta property="og:image:width" content="1200">'
-            f'<meta property="og:image:height" content="630">'
+            f'<meta property="og:image:width" content="{w}">'
+            f'<meta property="og:image:height" content="{h}">'
             f'<meta property="og:image:type" content="image/jpeg">'
             f'<meta property="og:title" content="WeatherTomBot">'
             f'<meta property="og:description" content="Погодная открытка часа">'

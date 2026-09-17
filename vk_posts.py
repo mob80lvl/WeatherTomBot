@@ -323,12 +323,16 @@ def _tg_send_photo(topic, text):
             d = r.json()
             if d.get("ok"):
                 logger.info(f"TG AI-photo sent (prompt: {prompt[:60]})")
-                return True
+                return url
             logger.error(f"TG sendPhoto error: {d}")
         except Exception as e:
             logger.error(f"TG sendPhoto exception: {e}")
-    return False
+    return None
 
+
+def get_card_url(pid):
+    """Внешний URL AI-картинки для сниппета VK (og:image)."""
+    return _state.get("cards", {}).get(str(pid))
 
 def _tg_send(text):
     """Отправка текста в TG-канал (кросспостинг)."""
@@ -400,22 +404,33 @@ def publish_post(topic=None, also_tg=False):
     except Exception:
         now = datetime.utcnow()
     current_slot = f"{now.hour:02d}:00_{now.strftime('%Y-%m-%d')}"
-    message = text
+    tg_ok = None
+    tg_url = None
+    if also_tg:
+        tg_url = _tg_send_photo(topic, text)
+        if tg_url:
+            tg_ok = True
+        else:
+            tg_ok = _tg_send(text)
+    ts = int(time.time())
     params = {
         "owner_id": f"-{VK_GROUP_ID}",
         "from_group": 1,
-        "message": message,
+        "message": text,
     }
+    if tg_url:
+        _state.setdefault("cards", {})[str(ts)] = tg_url
+        _save_state()
+        params["attachments"] = f"https://mob100500lvl.pythonanywhere.com/vkpost/{ts}"
     post = _vk_api("wall.post", params)
+    if "error" in post and params.get("attachments"):
+        logger.warning(f"VK post with attachment failed, retry text-only: {post['error']}")
+        params.pop("attachments", None)
+        post = _vk_api("wall.post", params)
     if "error" in post:
         return False, f"wall.post error: {post['error']}"
     _state["last_slot"] = current_slot
     _save_state()
-    tg_ok = None
-    if also_tg:
-        tg_ok = _tg_send_photo(topic, text)
-        if not tg_ok:
-            tg_ok = _tg_send(text)
     return True, {"topic": topic, "post_id": post.get("response", {}).get("post_id"), "text": text[:100], "tg": tg_ok}
 
 def hourly_job():
