@@ -198,6 +198,110 @@ def _make_image(topic):
     buf.seek(0)
     return buf
 
+CARD_THEMES = {
+    "weather_fact": ((135, 206, 250), (70, 130, 180), (25, 60, 110)),
+    "travel":       ((255, 200, 120), (200, 100, 50), (120, 55, 20)),
+    "humor":        ((255, 230, 150), (255, 160, 100), (150, 80, 30)),
+    "tip":          ((180, 220, 180), (80, 140, 80), (35, 80, 35)),
+    "history":      ((210, 180, 140), (120, 90, 60), (70, 50, 30)),
+    "science":      ((170, 150, 230), (90, 70, 160), (45, 35, 95)),
+    "folklore":     ((190, 220, 150), (100, 140, 70), (50, 80, 35)),
+    "records":      ((255, 160, 150), (190, 70, 60), (110, 30, 25)),
+    "myths":        ((160, 175, 195), (70, 90, 115), (35, 45, 60)),
+    "season":       ((250, 200, 130), (160, 100, 60), (95, 55, 30)),
+}
+
+import re as _re
+_EMOJI_RE = _re.compile(
+    "[\U0001F300-\U0001FAFF\U0001F000-\U0001F02F\U00002600-\U000027BF"
+    "\U00002B00-\U00002BFF\U0000FE0F\U0000200D]", flags=_re.UNICODE)
+
+def _make_card(topic, text):
+    """Карточка под рубрику и текст поста (1280px, JPEG)."""
+    import textwrap
+    c1, c2, hdr = CARD_THEMES.get(topic, ((150, 150, 150), (80, 80, 80), (40, 40, 40)))
+    clean = _EMOJI_RE.sub("", text or "")
+    clean = _re.sub(r"\n{3,}", "\n\n", clean).strip()
+    lines = []
+    for para in clean.split("\n"):
+        para = para.strip()
+        if not para:
+            lines.append("")
+            continue
+        lines.extend(textwrap.wrap(para, width=30) or [""])
+    if len(lines) > 12:
+        lines = lines[:12]
+        lines[-1] = lines[-1][:29] + "…"
+    W, line_h, top = 1280, 62, 190
+    H = top + len(lines) * line_h + 140
+    img = Image.new("RGB", (W, H))
+    d = ImageDraw.Draw(img)
+    for y in range(H):
+        k = y / H
+        d.line([(0, y), (W, y)], fill=(int(c1[0] + (c2[0] - c1[0]) * k),
+                                       int(c1[1] + (c2[1] - c1[1]) * k),
+                                       int(c1[2] + (c2[2] - c1[2]) * k)))
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(overlay).rectangle([0, 0, W, H], fill=(0, 0, 0, 110))
+    img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, W, 120], fill=hdr)
+    try:
+        f_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+        f_body = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 42)
+        f_foot = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+    except Exception:
+        f_title = f_body = f_foot = ImageFont.load_default()
+    label = _EMOJI_RE.sub("", TOPIC_LABELS.get(topic, "WeatherTomBot")).strip().upper()
+    d.text((60, 60), label, font=f_title, fill=(255, 255, 255), anchor="lm")
+    y = top + 10
+    for ln in lines:
+        d.text((60, y), ln, font=f_body, fill=(255, 255, 255))
+        y += line_h
+    d.text((60, H - 70), "WeatherTomBot", font=f_foot, fill=(225, 225, 225))
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=88)
+    buf.seek(0)
+    return buf
+
+def _tg_send_photo(topic, text):
+    """Фото-карточка + подпись в TG-канал."""
+    token = os.getenv("TELEGRAM_TOKEN", "").strip()
+    chan = os.getenv("TG_CHANNEL_ID", "").strip()
+    if not token or not chan:
+        return False
+    try:
+        buf = _make_card(topic, text)
+        r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
+                          data={"chat_id": chan, "caption": (text or "")[:1024]},
+                          files={"photo": ("card.jpg", buf, "image/jpeg")}, timeout=30)
+        d = r.json()
+        if d.get("ok"):
+            return True
+        logger.error(f"TG sendPhoto error: {d}")
+        return False
+    except Exception as e:
+        logger.error(f"TG sendPhoto exception: {e}")
+        return False
+
+def _tg_send(text):
+    """Отправка текста в TG-канал (кросспостинг)."""
+    token = os.getenv("TELEGRAM_TOKEN", "").strip()
+    chan = os.getenv("TG_CHANNEL_ID", "").strip()
+    if not token or not chan:
+        return False
+    try:
+        r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                          json={"chat_id": chan, "text": text}, timeout=15)
+        d = r.json()
+        if d.get("ok"):
+            return True
+        logger.error(f"TG channel send error: {d}")
+        return False
+    except Exception as e:
+        logger.error(f"TG channel send exception: {e}")
+        return False
+
 def _vk_api(method, params, files=None, timeout=15):
     if not VK_POST_TOKEN or not VK_GROUP_ID:
         return {"error": {"error_msg": "VK_POST_TOKEN or VK_GROUP_ID not set"}}
@@ -238,7 +342,7 @@ def _upload_photo(img_bytes):
     p = photos[0]
     return f"photo{p['owner_id']}_{p['id']}", None
 
-def publish_post(topic=None):
+def publish_post(topic=None, also_tg=False):
     if not VK_POST_TOKEN:
         return False, "VK_POST_TOKEN not set"
     topic = topic or _pick_topic()
@@ -261,7 +365,12 @@ def publish_post(topic=None):
         return False, f"wall.post error: {post['error']}"
     _state["last_slot"] = current_slot
     _save_state()
-    return True, {"topic": topic, "post_id": post.get("response", {}).get("post_id"), "text": text[:100]}
+    tg_ok = None
+    if also_tg:
+        tg_ok = _tg_send_photo(topic, text)
+        if not tg_ok:
+            tg_ok = _tg_send(text)
+    return True, {"topic": topic, "post_id": post.get("response", {}).get("post_id"), "text": text[:100], "tg": tg_ok}
 
 def hourly_job():
     if not VK_POST_TOKEN:
@@ -279,7 +388,7 @@ def hourly_job():
     # Защита от дублей в одном слоте
     if _state.get("last_slot", "") == slot_key:
         return None
-    ok, info = publish_post()
+    ok, info = publish_post(also_tg=True)
     if ok:
         logger.info(f"VK POST: {info}")
         return info
