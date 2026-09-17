@@ -303,6 +303,47 @@ def _generate_image_prompt(topic, text):
         logger.warning(f"Image prompt LLM error: {e}")
     return IMG_FALLBACK_PROMPTS.get(topic, "beautiful weather sky clouds, photorealistic")
 
+def _tg_download_bytes(file_id):
+    """Байты фото из Telegram (api.telegram.org в белом списке PA)."""
+    token = os.getenv("TELEGRAM_TOKEN", "").strip()
+    if not token or not file_id:
+        return None
+    try:
+        fp = requests.post(f"https://api.telegram.org/bot{token}/getFile",
+                           json={"file_id": file_id}, timeout=15).json()
+        if not fp.get("ok"):
+            return None
+        r = requests.get(f"https://api.telegram.org/file/bot{token}/{fp['result']['file_path']}", timeout=30)
+        if r.status_code == 200 and len(r.content) > 1000:
+            return r.content
+    except Exception as e:
+        logger.warning(f"TG download error: {e}")
+    return None
+
+def _vk_upload_wall_photo(blob):
+    """Нативная загрузка фото на стену группы через user-токен."""
+    up = _vk_user_api("photos.getWallUploadServer", {"group_id": VK_GROUP_ID})
+    if not up or "error" in up:
+        logger.warning(f"user getWallUploadServer: {up}")
+        return None
+    try:
+        r = requests.post(up["response"]["upload_url"],
+                          files={"photo": ("ai.jpg", blob, "image/jpeg")}, timeout=30)
+        if r.status_code != 200:
+            return None
+        d = r.json()
+        sv = _vk_user_api("photos.saveWallPhoto", {
+            "server": d["server"], "photo": d["photo"], "hash": d["hash"],
+            "group_id": VK_GROUP_ID})
+        if not sv or "error" in sv:
+            logger.warning(f"user saveWallPhoto: {sv}")
+            return None
+        p = sv["response"][0]
+        return f"photo{p['owner_id']}_{p['id']}"
+    except Exception as e:
+        logger.warning(f"user upload exception: {e}")
+        return None
+
 def _tg_send_photo(topic, text):
     """AI-картинка под текст поста (Pollinations) + подпись в TG-канал."""
     import random as _rnd
@@ -351,6 +392,21 @@ def _tg_send(text):
     except Exception as e:
         logger.error(f"TG channel send exception: {e}")
         return False
+
+def _vk_user_api(method, params, timeout=15):
+    """VK API с user-токеном (для загрузки фото)."""
+    token = os.getenv("VK_USER_TOKEN", "").strip()
+    if not token:
+        return None
+    params = dict(params)
+    params["v"] = "5.199"
+    params["access_token"] = token
+    try:
+        r = requests.post(f"https://api.vk.com/method/{method}", data=params, timeout=timeout)
+        return r.json()
+    except Exception as e:
+        logger.warning(f"VK user API error: {e}")
+        return {"error": {"error_msg": str(e)}}
 
 def _vk_api(method, params, files=None, timeout=15):
     if not VK_POST_TOKEN or not VK_GROUP_ID:
@@ -411,12 +467,20 @@ def publish_post(topic=None, also_tg=False):
         "message": text,
     }
     tg_ok = None
+    tg_url = None
+    tg_fid = None
     if also_tg:
-        tg_url = _tg_send_photo(topic, text)
-        if tg_url:
+        res = _tg_send_photo(topic, text)
+        if res:
+            tg_url, tg_fid = res
             tg_ok = True
         else:
             tg_ok = _tg_send(text)
+    if tg_url and tg_fid and os.getenv("VK_USER_TOKEN"):
+        blob = _tg_download_bytes(tg_fid)
+        att = _vk_upload_wall_photo(blob) if blob else None
+        if att:
+            params["attachments"] = att
     post = _vk_api("wall.post", params)
     if "error" in post and params.get("attachments"):
         logger.warning(f"VK post with attachment failed, retry text-only: {post['error']}")
