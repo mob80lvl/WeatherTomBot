@@ -149,6 +149,15 @@ def _team_plan(chat_id):
         return None
 
 def get_current_plan(chat_id):
+    try:
+        import json as _j, os as _o, time as _t
+        _pp = _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "plans.json")
+        with open(_pp, encoding="utf-8") as _f:
+            _e = _j.load(_f).get(str(chat_id), {})
+        if _e.get("plan") in ("business", "premium") and _e.get("expires", 0) > int(_t.time()):
+            return _e["plan"]
+    except Exception:
+        pass
     """Return exactly one active plan: free, premium or business.
     Expired subscriptions are automatically downgraded to free.
     """

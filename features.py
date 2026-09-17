@@ -317,13 +317,25 @@ def _team_role_info(uid):
         pass
     return None, None
 
+def _trial_active(uid):
+    try:
+        d = _plans_load()
+        e = d.get(str(uid), {})
+        return e.get("plan") in ("business", "premium") and e.get("expires", 0) > int(_time_mod.time())
+    except Exception:
+        return False
+
 def _premium(uid):
     if _own_subscribed(uid):
         return True
     owner, _r = _team_role_info(uid)
-    return bool(owner) and _own_subscribed(owner)
+    if bool(owner) and _own_subscribed(owner):
+        return True
+    return _trial_active(uid)
 
 def _business(uid):
+    if _trial_active(uid):
+        return True
     if _own_subscribed(uid):
         fn = CFG.get("get_user_b2b_type")
         if bool(fn and fn(uid) == "business"):
@@ -335,6 +347,8 @@ def _business(uid):
     return bool(_own_subscribed(owner) and fn and fn(owner) == "business")
 
 def _b2b_type(uid):
+    if _trial_active(uid):
+        return "business"
     if not _premium(uid):
         return None
     fn = CFG.get("get_user_b2b_type")
