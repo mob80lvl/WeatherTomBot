@@ -10,18 +10,30 @@ VK_POST_TOKEN = os.getenv("VK_POST_TOKEN", "")
 VK_GROUP_ID = os.getenv("VK_GROUP_ID", "")
 logger = logging.getLogger(__name__)
 
-TOPICS = ["weather_fact", "travel", "humor", "tip"]
+TOPICS = ["weather_fact", "travel", "humor", "tip", "history", "science", "folklore", "records", "myths", "season"]
 TOPIC_PROMPTS = {
     "weather_fact": "Короткий интересный факт о погоде, климате или атмосферных явлениях (2-3 предложения, живо, с эмодзи, на русском).",
     "travel": "Совет путешественнику про погоду, одежду или лучшее время для поездки в интересный регион (2-3 предложения, живо, с эмодзи, на русском).",
     "humor": "Забавная шутка или каламбур про погоду, дождь, солнце или зиму (1-2 предложения, с юмором, с эмодзи, на русском).",
     "tip": "Практический совет на сегодня по погоде (что взять, как одеться, куда не стоит идти) (2 предложения, с эмодзи, на русском).",
+    "history": "Расскажи интересный исторический факт о погоде или климате.",
+    "science": "Объясни научное явление погоды простым языком.",
+    "folklore": "Расскажи народную примету о погоде и её происхождение.",
+    "records": "Расскажи о мировом рекорде погоды (температура, осадки, ветер).",
+    "myths": "Развенчай популярный миф о погоде.",
+    "season": "Опиши текущий сезон и что характерно для погоды сейчас.",
 }
 TOPIC_LABELS = {
     "weather_fact": "Факт о погоде",
     "travel": "Путешествия",
     "humor": "Юмор",
     "tip": "Совет дня",
+    "history": "📜 История",
+    "science": "🔬 Наука",
+    "folklore": "🌾 Народные приметы",
+    "records": "🏆 Рекорды",
+    "myths": "🧩 Мифы и правда",
+    "season": "🍂 Сезон сейчас",
 }
 
 FALLBACK_TEXTS = {
@@ -44,6 +56,36 @@ FALLBACK_TEXTS = {
         "Если утром туман - днём, скорее всего, будет солнечно и тепло. Отличная погода для прогулки!",
         "Правило слоёв: футболка + рубашка + лёгкая куртка. Так вы сможете подстроиться под любую погоду за день.",
         "При высокой влажности +25 C ощущаются как +30 C. Берите воду и ищите тень.",
+    ],
+    "history": [
+        "В 1816 году был «год без лета» после извержения вулкана Тамбора — снег выпадал даже в июне!",
+        "Великий лондонский смог 1952 года унёс жизни 12 000 человек — после этого приняли закон о чистом воздухе.",
+        "В 1972 году в Иране выпал снег высотой 8 метров — самый сильный снегопад в истории.",
+    ],
+    "science": [
+        "Молния нагревает воздух до 30 000°C — в 5 раз горячее поверхности Солнца!",
+        "Снежинки имеют 6 лучей из-за молекулярной структуры воды — каждая уникальна.",
+        "Радуга появляется, когда солнечный свет преломляется в каплях воды под углом 42°.",
+    ],
+    "folklore": [
+        "Если ласточки летают низко — будет дождь. Они ловят насекомых, которые опускаются перед ненастьем.",
+        "Красный закат — к ветреной погоде. Пыль в воздухе рассеивает красный свет.",
+        "Если кошки умываются лапой — к гостям. На самом деле они чувствуют изменение давления.",
+    ],
+    "records": [
+        "Самая высокая температура на Земле: +56.7°C в Долине Смерти (1913 год).",
+        "Самый сильный ветер: 407 км/ч на острове Барроу (Австралия, 1996 год).",
+        "Самый сильный град: камни весом 1 кг падали в Бангладеш (1986 год), погибли 92 человека.",
+    ],
+    "myths": [
+        "Миф: молния никогда не бьёт дважды в одно место. Правда: в Эмпайр-стейт-билдинг попадает до 25 раз в год!",
+        "Миф: если слышишь гром, значит дождь близко. Правда: гром слышен за 15 км, а дождь может быть далеко.",
+        "Миф: животные чувствуют землетрясение. Правда: они реагируют на предварительные толчки, которые люди не замечают.",
+    ],
+    "season": [
+        "Сентябрь — время бабьего лета: тёплые дни, прохладные ночи, золотая листва.",
+        "Октябрь — месяц первых заморозков и листопада. Природа готовится к зиме.",
+        "Ноябрь — предзимье: холодно, пасмурно, но снег ещё не ложится надолго.",
     ],
 }
 
@@ -122,6 +164,12 @@ def _make_image(topic):
         "travel":       ((255, 200, 120), (200, 100, 50), "T"),
         "humor":        ((255, 230, 150), (255, 160, 100), "H"),
         "tip":          ((180, 220, 180), (80, 140, 80),   "i"),
+    "history": "📜 История погоды\n\nВ 1816 году был «год без лета» после извержения вулкана Тамбора — снег выпадал даже в июне!",
+    "science": "🔬 Наука о погоде\n\nМолния нагревает воздух до 30 000°C — в 5 раз горячее поверхности Солнца!",
+    "folklore": "🌾 Народная примета\n\nЕсли ласточки летают низко — будет дождь. Они ловят насекомых, которые опускаются перед ненастьем.",
+    "records": "🏆 Рекорд погоды\n\nСамая высокая температура на Земле: +56.7°C в Долине Смерти (1913 год).",
+    "myths": "🧩 Миф о погоде\n\nМиф: молния никогда не бьёт дважды в одно место. Правда: в Эмпайр-стейт-билдинг попадает до 25 раз в год!",
+    "season": "🍂 Сезон сейчас\n\nСентябрь — время бабьего лета: тёплые дни, прохладные ночи, золотая листва.",
     }
     c1, c2, icon = themes.get(topic, ((200,200,200),(100,100,100),"W"))
     W, H = 1200, 630
@@ -195,25 +243,14 @@ def publish_post(topic=None):
         return False, "VK_POST_TOKEN not set"
     topic = topic or _pick_topic()
     text = _generate_text(topic)
-    ts = int(time.time())
-    fname = f"p{ts}.jpg"
-    media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vk_media")
+    from datetime import datetime
     try:
-        os.makedirs(media_dir, exist_ok=True)
-        img = _make_image(topic)
-        with open(os.path.join(media_dir, fname), "wb") as f:
-            f.write(img.read())
-        for old_f in sorted(os.listdir(media_dir))[:-30]:
-            try:
-                os.remove(os.path.join(media_dir, old_f))
-            except Exception:
-                pass
-    except Exception as e:
-        logger.warning(f"VK media save error: {e}")
-        fname = None
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo("Europe/Moscow"))
+    except Exception:
+        now = datetime.utcnow()
+    current_slot = now.strftime("%H:%M") + "_" + now.strftime("%Y-%m-%d")
     message = text
-    if fname:
-        message += f"\n\n🖼 Открытка часа: https://mob100500lvl.pythonanywhere.com/vkpost/{ts}"
     params = {
         "owner_id": f"-{VK_GROUP_ID}",
         "from_group": 1,
@@ -222,15 +259,27 @@ def publish_post(topic=None):
     post = _vk_api("wall.post", params)
     if "error" in post:
         return False, f"wall.post error: {post['error']}"
-    _state["last_post_ts"] = ts
+    _state["last_slot"] = current_slot
     _save_state()
     return True, {"topic": topic, "post_id": post.get("response", {}).get("post_id"), "text": text[:100]}
 
 def hourly_job():
     if not VK_POST_TOKEN:
         return None
-    elapsed = time.time() - _state.get("last_post_ts", 0)
-    if elapsed < 55 * 60:
+    from datetime import datetime
+    try:
+        from zoneinfo import ZoneInfo
+        now = datetime.now(ZoneInfo("Europe/Moscow"))
+    except Exception:
+        now = datetime.utcnow()
+    current_hm = now.strftime("%H:%M")
+    # Расписание: 09:00, 12:00, 15:00, 18:00, 21:00 МСК
+    slots = ["09:00", "12:00", "15:00", "18:00", "21:00"]
+    if current_hm not in slots:
+        return None
+    # Защита от дублей в одном слоте
+    last_slot = _state.get("last_slot", "")
+    if last_slot == current_hm + "_" + now.strftime("%Y-%m-%d"):
         return None
     ok, info = publish_post()
     if ok:
