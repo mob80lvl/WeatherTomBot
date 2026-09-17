@@ -224,7 +224,7 @@ TZ_LIST = [
     ("Australia/Perth", "🕐 Перт +8"),
     ("Pacific/Auckland", "🕐 Окленд +12"),
 ]
-TZ_KEYBOARD = [c0 for c0, _ in TZ_LIST[:16]]
+TZ_KEYBOARD = ["Europe/Moscow", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "America/New_York", "Asia/Dubai", "Australia/Sydney", "UTC"]
 
 def _tz_keyboard(lang):
     labels = dict(TZ_LIST)
