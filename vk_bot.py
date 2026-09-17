@@ -185,46 +185,8 @@ def _lang_keyboard():
     rows.append([_btn(MSG["ru"]["back"], {"cmd": "back"})])
     return {"one_time": False, "inline": False, "buttons": rows}
 
-TZ_LIST = [
-    ("Europe/Kaliningrad", "🕐 Калининград +2"),
-    ("Europe/Moscow", "🕐 Москва +3"),
-    ("Europe/Samara", "🕐 Самара +4"),
-    ("Asia/Yekaterinburg", "🕐 Екатеринбург +5"),
-    ("Asia/Novosibirsk", "🕐 Новосибирск +7"),
-    ("Asia/Krasnoyarsk", "🕐 Красноярск +7"),
-    ("Asia/Vladivostok", "🕐 Владивосток +10"),
-    ("Europe/London", "🕐 Лондон +0"),
-    ("Europe/Berlin", "🕐 Берлин +1"),
-    ("Europe/Istanbul", "🕐 Стамбул +3"),
-    ("Asia/Dubai", "🕐 Дубай +4"),
-    ("Asia/Kolkata", "🕐 Дели +5:30"),
-    ("Asia/Tokyo", "🕐 Токио +9"),
-    ("America/New_York", "🕐 Нью-Йорк -5"),
-    ("America/Los_Angeles", "🕐 Лос-Анджелес -8"),
-    ("Australia/Sydney", "🕐 Сидней +10"),
-    ("UTC", "🕐 UTC +0"),
-    ("Europe/Kyiv", "🕐 Киев +2"),
-    ("Europe/Madrid", "🕐 Мадрид +1"),
-    ("Europe/Paris", "🕐 Париж +1"),
-    ("Europe/Rome", "🕐 Рим +1"),
-    ("Africa/Cairo", "🕐 Каир +2"),
-    ("Africa/Lagos", "🕐 Лагос +1"),
-    ("Africa/Johannesburg", "🕐 Йоханнесбург +2"),
-    ("Asia/Tashkent", "🕐 Ташкент +5"),
-    ("Asia/Tehran", "🕐 Тегеран +3:30"),
-    ("Asia/Bangkok", "🕐 Бангкок +7"),
-    ("Asia/Shanghai", "🕐 Пекин +8"),
-    ("Asia/Seoul", "🕐 Сеул +9"),
-    ("Asia/Singapore", "🕐 Сингапур +8"),
-    ("Asia/Irkutsk", "🕐 Иркутск +8"),
-    ("America/Chicago", "🕐 Чикаго -6"),
-    ("America/Mexico_City", "🕐 Мехико -6"),
-    ("America/Sao_Paulo", "🕐 Сан-Паулу -3"),
-    ("America/Santiago", "🕐 Сантьяго -4"),
-    ("Australia/Perth", "🕐 Перт +8"),
-    ("Pacific/Auckland", "🕐 Окленд +12"),
-]
-TZ_KEYBOARD = ["Europe/Moscow", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "America/New_York", "Asia/Dubai", "Australia/Sydney", "UTC"]
+from features import WORLD_TIMEZONES as TZ_LIST, WORLD_TZ_KEYBOARD as TZ_KEYBOARD
+
 
 def _tz_keyboard(lang):
     labels = dict(TZ_LIST)

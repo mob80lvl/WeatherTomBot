@@ -60,7 +60,23 @@ def get_city_keyboard(chat_id):
     return {"keyboard": rows, "resize_keyboard": True}
 def get_notification_keyboard(chat_id):
     lang = get_user_lang(chat_id)
-    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_frequency")],[T(lang,"threshold_heat"),T(lang,"threshold_frost")],[T(lang,"threshold_wind"),T(lang,"threshold_rain")],[T(lang,"threshold_heavy_rain")],[T(lang,"notification_back")]],"resize_keyboard":True}
+    return {"keyboard":[[T(lang,"notification_toggle")],[T(lang,"notification_rain"),T(lang,"notification_wind")],[T(lang,"notification_frost"),T(lang,"notification_heat")],[T(lang,"notification_time"),T(lang,"notification_city")],[T(lang,"notification_frequency")],[T(lang,"threshold_heat"),T(lang,"threshold_frost")],[T(lang,"threshold_wind"),T(lang,"threshold_rain")],[T(lang,"threshold_heavy_rain")],["🌍 Часовой пояс" if lang == "ru" else "🌍 Timezone"],[T(lang,"notification_back")]],"resize_keyboard":True}
+def get_tz_keyboard(chat_id):
+    from features import WORLD_TIMEZONES, WORLD_TZ_KEYBOARD
+    lang = get_user_lang(chat_id)
+    labels = dict(WORLD_TIMEZONES)
+    rows = []
+    row = []
+    for code in WORLD_TZ_KEYBOARD:
+        row.append(labels.get(code, code))
+        if len(row) == 2:
+            rows.append(row); row = []
+    if row:
+        rows.append(row)
+    rows.append(["🌐 Весь список" if lang == "ru" else "🌐 Full list"])
+    rows.append([T(lang, "notification_back")])
+    return {"keyboard": rows, "resize_keyboard": True}
+
 def get_white_label_keyboard(chat_id):
     lang = get_user_lang(chat_id)
     return {

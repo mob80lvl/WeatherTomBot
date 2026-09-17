@@ -120,7 +120,7 @@ from formatting import format_help_text, format_subscription_status, format_trip
 
 
 
-from keyboards import get_city_keyboard, get_language_keyboard, get_main_keyboard, get_notification_keyboard, get_payment_keyboard, get_team_main_keyboard, get_tz_keyboard, get_white_label_keyboard
+from keyboards import get_city_keyboard, get_language_keyboard, get_main_keyboard, get_notification_keyboard, get_payment_keyboard, get_team_main_keyboard, get_white_label_keyboard
 
 
 
@@ -139,11 +139,6 @@ def _show_cities(chat_id):
     lang=get_user_lang(chat_id); favs=advanced_features.favorites(chat_id) if advanced_features else []
     listing="\n".join(f"📍 *{x}*" for x in favs) if favs else T(lang,"cities_empty")
     send_message(chat_id,T(lang,"cities_title")+"\n\n"+listing+"\n\n"+T(lang,"cities_choose"),get_city_keyboard(chat_id))
-
-def _tz_list_text(lang):
-    from features import WORLD_TIMEZONES as _WTZ
-    head = "🌍 Выберите часовой пояс (номер или название):" if lang == "ru" else "🌍 Choose timezone (number or name):"
-    return head + "\n" + "\n".join(f"{i}. {lb} ({cz})" for i, (cz, lb) in enumerate(_WTZ, 1))
 
 def _show_notification_settings(chat_id):
     lang=get_user_lang(chat_id)
@@ -428,38 +423,6 @@ def webhook():
         if _r: return _r
         state = _get_user_state(chat_id)
 
-        # Ввод часового пояса (номер / название / кнопка)
-        if state.get("mode") == "tz":
-            from features import WORLD_TIMEZONES as _WTZ
-            t = text.strip()
-            if t.startswith("/"):
-                _clear_user_state(chat_id)
-                send_message(chat_id, T(lang, "invalid_action"), get_main_keyboard(chat_id))
-                return "ok",200
-            if t in (T(lang, "notification_back"), "⬅️ Назад", "⬅️ Back"):
-                _clear_user_state(chat_id)
-                _show_notification_settings(chat_id)
-                return "ok",200
-            code = None
-            labels = {lb: cz for cz, lb in _WTZ}
-            if t in labels:
-                code = labels[t]
-            elif t.isdigit() and 1 <= int(t) <= len(_WTZ):
-                code = _WTZ[int(t) - 1][0]
-            else:
-                low = t.casefold()
-                for cz, lb in _WTZ:
-                    if low in lb.casefold() or low in cz.casefold():
-                        code = cz
-                        break
-            if code:
-                _clear_user_state(chat_id)
-                if advanced_features:
-                    advanced_features.set_notification_prefs(chat_id, timezone=code)
-                send_message(chat_id, f"✅ {code}", get_notification_keyboard(chat_id))
-            else:
-                send_message(chat_id, _tz_list_text(lang), get_tz_keyboard(chat_id))
-            return "ok",200
         # Обработка ввода города для API
         if state.get("mode") == "api_city_input":
             if text.strip().startswith("/"):
@@ -714,10 +677,6 @@ def webhook():
             _set_user_state(chat_id,"notification_time"); send_message(chat_id,T(lang,"notification_time_prompt"),get_notification_keyboard(chat_id)); return "ok",200
         if text == T(lang,"notification_city"):
             _set_user_state(chat_id,"notification_city"); send_message(chat_id,T(lang,"notification_city_prompt"),get_notification_keyboard(chat_id)); return "ok",200
-        if text in ("🌍 Часовой пояс", "🌍 Timezone"):
-            _set_user_state(chat_id,"tz"); send_message(chat_id,_tz_list_text(lang),get_tz_keyboard(chat_id)); return "ok",200
-        if text in ("🌐 Весь список", "🌐 Full list"):
-            send_message(chat_id,_tz_list_text(lang),get_tz_keyboard(chat_id)); return "ok",200
         if text == T(lang,"notification_back"):
             _clear_user_state(chat_id); send_message(chat_id,T(lang,"btn_back"),get_main_keyboard(chat_id)); return "ok",200
 
