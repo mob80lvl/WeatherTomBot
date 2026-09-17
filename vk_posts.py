@@ -323,12 +323,33 @@ def _tg_send_photo(topic, text):
             d = r.json()
             if d.get("ok"):
                 logger.info(f"TG AI-photo sent (prompt: {prompt[:60]})")
-                return url
+                try:
+                    fid = d["result"]["photo"][-1]["file_id"]
+                except Exception:
+                    fid = None
+                return url, fid
             logger.error(f"TG sendPhoto error: {d}")
         except Exception as e:
             logger.error(f"TG sendPhoto exception: {e}")
     return None
 
+
+def _tg_download_bytes(file_id):
+    """Байты фото из Telegram (api.telegram.org в белом списке PA)."""
+    token = os.getenv("TELEGRAM_TOKEN", "").strip()
+    if not token or not file_id:
+        return None
+    try:
+        fp = requests.post(f"https://api.telegram.org/bot{token}/getFile",
+                           json={"file_id": file_id}, timeout=15).json()
+        if not fp.get("ok"):
+            return None
+        r = requests.get(f"https://api.telegram.org/file/bot{token}/{fp['result']['file_path']}", timeout=30)
+        if r.status_code == 200 and len(r.content) > 1000:
+            return r.content
+    except Exception as e:
+        logger.warning(f"TG download error: {e}")
+    return None
 
 def get_card_url(pid):
     """Внешний URL AI-картинки для сниппета VK (og:image)."""
@@ -406,9 +427,11 @@ def publish_post(topic=None, also_tg=False):
     current_slot = f"{now.hour:02d}:00_{now.strftime('%Y-%m-%d')}"
     tg_ok = None
     tg_url = None
+    tg_fid = None
     if also_tg:
-        tg_url = _tg_send_photo(topic, text)
-        if tg_url:
+        res = _tg_send_photo(topic, text)
+        if res:
+            tg_url, tg_fid = res
             tg_ok = True
         else:
             tg_ok = _tg_send(text)
@@ -419,7 +442,23 @@ def publish_post(topic=None, also_tg=False):
         "message": text,
     }
     if tg_url:
-        _state.setdefault("cards", {})[str(ts)] = tg_url
+        local = None
+        blob = _tg_download_bytes(tg_fid)
+        if blob:
+            try:
+                media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vk_media")
+                os.makedirs(media_dir, exist_ok=True)
+                with open(os.path.join(media_dir, f"p{ts}.jpg"), "wb") as f:
+                    f.write(blob)
+                for old_f in sorted(os.listdir(media_dir))[:-30]:
+                    try:
+                        os.remove(os.path.join(media_dir, old_f))
+                    except Exception:
+                        pass
+                local = f"https://mob100500lvl.pythonanywhere.com/vkmedia/p{ts}.jpg"
+            except Exception as e:
+                logger.warning(f"vk_media save error: {e}")
+        _state.setdefault("cards", {})[str(ts)] = local or tg_url
         _save_state()
         params["attachments"] = f"https://mob100500lvl.pythonanywhere.com/vkpost/{ts}"
     post = _vk_api("wall.post", params)
