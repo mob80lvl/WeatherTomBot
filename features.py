@@ -389,6 +389,8 @@ def _plans_save(d):
 
 def _grant_trial(uid):
     """Одноразовая выдача business-триала на 7 дней новому пользователю."""
+    if _premium(uid):
+        return
     d = _plans_load()
     e = d.setdefault(str(uid), {})
     if not e.get("trial_granted"):
@@ -400,7 +402,15 @@ def _grant_trial(uid):
 
 def consume_trial_notice(uid):
     """Одноразовый флаг: показать приветствие о триале.
-    Legacy: если триал выдан до введения флага и триал ещё активен — показать один раз."""
+    Legacy: если триал выдан до введения флага и триал ещё активен — показать один раз.
+    Пользователям с оплаченной подпиской триал не показываем."""
+    if _premium(uid):
+        d = _plans_load()
+        e = d.setdefault(str(uid), {})
+        if e.get("notice_pending", True):
+            e["notice_pending"] = False
+            _plans_save(d)
+        return False
     d = _plans_load()
     e = d.get(str(uid), {})
     if e.get("notice_pending"):

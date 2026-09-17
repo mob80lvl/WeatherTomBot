@@ -354,7 +354,15 @@ def webhook():
             if not current_city:
                 _set_user_state(chat_id, "initial_city")
                 send_long_text(chat_id, T(lang, "welcome"), keyboard)
-                if advanced_features and advanced_features.consume_trial_notice(chat_id):
+                _has_city = False
+                try:
+                    _has_city = bool(get_user_city(chat_id))
+                except Exception:
+                    try:
+                        _has_city = bool(advanced_features._city(chat_id))
+                    except Exception:
+                        _has_city = False
+                if advanced_features and _has_city and advanced_features.consume_trial_notice(chat_id):
                     send_message(chat_id, "🎁 Вам начислена пробная Business-подписка на 7 дней!\n\n✅ 100 AI-запросов в день\n✅ Каналы с автопубликацией\n✅ API и white-label\n✅ Команды и совместный доступ\n\nПосле окончания триала план переключится на Free. Статус: кнопка «Статус подписки».", keyboard)
                 send_message(chat_id, T(lang, "enter_city"), keyboard)
             else:
