@@ -264,25 +264,78 @@ def _make_card(topic, text):
     buf.seek(0)
     return buf
 
+KEYWORD_TAGS = [
+    (("молни", "гроз", "шторм"), "lightning,storm"),
+    (("дожд", "ливень", "зонт", "капел"), "rain,umbrella"),
+    (("снег", "метел", "сугроб", "зим"), "winter,snow"),
+    (("туман", "дымк"), "fog,forest"),
+    (("радуг",), "rainbow,sky"),
+    (("осен", "сентябр", "октябр", "ноябр", "листв"), "autumn,leaves"),
+    (("весн", "апрел", "май", "цвет"), "spring,flowers"),
+    (("мор", "океан", "пляж", "курорт", "волн"), "sea"),
+    (("закат", "рассвет"), "sunset"),
+    (("ноч", "звезд", "космос"), "night,stars"),
+    (("гор", "поход", "вершин", "альп"), "mountains"),
+    (("лес", "дерев", "природ"), "forest"),
+    (("город", "улиц", "мегаполис"), "city"),
+    (("солнц", "ясн", "жар", "лет", "тепл"), "sun,summer"),
+    (("облак", "неб"), "clouds,sky"),
+]
+
+def _season_tags():
+    m = __import__("datetime").datetime.now().month
+    if m in (3, 4, 5):
+        return "spring,flowers"
+    if m in (6, 7, 8):
+        return "sun,summer"
+    if m in (9, 10, 11):
+        return "autumn,leaves"
+    return "winter,snow"
+
+RUBRIC_TAGS = {
+    "weather_fact": "clouds,sky",
+    "travel": "mountains",
+    "humor": "rain,umbrella",
+    "tip": "sun",
+    "history": "city,old",
+    "science": "night,stars",
+    "folklore": "forest",
+    "records": "lightning,storm",
+    "myths": "fog",
+    "season": None,
+}
+
+def _pick_tags(topic, text):
+    """Подбор тегов картинки по ключевым словам текста поста."""
+    low = (text or "").lower()
+    for kws, tags in KEYWORD_TAGS:
+        if any(k in low for k in kws):
+            return tags
+    rub = RUBRIC_TAGS.get(topic, "clouds,sky")
+    return rub or _season_tags()
+
 def _tg_send_photo(topic, text):
-    """Фото-карточка + подпись в TG-канал."""
+    """Фото из интернета (LoremFlickr) + подпись в TG-канал."""
     token = os.getenv("TELEGRAM_TOKEN", "").strip()
     chan = os.getenv("TG_CHANNEL_ID", "").strip()
     if not token or not chan:
         return False
-    try:
-        buf = _make_card(topic, text)
-        r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
-                          data={"chat_id": chan, "caption": (text or "")[:1024]},
-                          files={"photo": ("card.jpg", buf, "image/jpeg")}, timeout=30)
-        d = r.json()
-        if d.get("ok"):
-            return True
-        logger.error(f"TG sendPhoto error: {d}")
-        return False
-    except Exception as e:
-        logger.error(f"TG sendPhoto exception: {e}")
-        return False
+    tags = _pick_tags(topic, text)
+    urls = [f"https://loremflickr.com/1280/720/{tags}",
+            f"https://loremflickr.com/1280/720/{tags.split(',')[0]}"]
+    for u in urls:
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
+                              json={"chat_id": chan, "photo": u, "caption": (text or "")[:1024]},
+                              timeout=40)
+            d = r.json()
+            if d.get("ok"):
+                return True
+            logger.error(f"TG sendPhoto error: {d}")
+        except Exception as e:
+            logger.error(f"TG sendPhoto exception: {e}")
+    return False
+
 
 def _tg_send(text):
     """Отправка текста в TG-канал (кросспостинг)."""
