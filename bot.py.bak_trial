@@ -579,21 +579,10 @@ def webhook():
         if state.get("mode") == "ai_question":
             question = text.strip()
             _clear_user_state(chat_id)
-            if advanced_features:
-                advanced_features.check_trial_expiry(chat_id)
-                ok_limit, used, limit, plan = advanced_features.check_ai_limit(chat_id)
-                if not ok_limit:
-                    msg = (f"🔒 Лимит AI-запросов на сегодня исчерпан ({used}/{limit}).\n\n"
-                           f"Лимит обновится завтра в 00:00.\n"
-                           f"Хотите больше? Бизнес-подписка даёт 100 запросов в день.")
-                    send_message(chat_id, msg, get_main_keyboard(chat_id))
-                    return "ok", 200
             if get_current_plan(chat_id) == "free":
                 _paywall(chat_id, "premium")
             elif advanced_features:
                 answer, err = advanced_features.ai_answer(chat_id, question)
-                if answer:
-                    advanced_features.bump_ai_usage(chat_id)
                 text_to_send = f"🤖 {answer}" if answer else f"❌ {err}"
                 # Безопасная отправка AI ответа (ответ может содержать спецсимволы)
                 result = send_message(chat_id, text_to_send, keyboard)

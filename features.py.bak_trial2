@@ -365,82 +365,6 @@ def track(uid, event, props=None):
         profile.setdefault("started", True)
     _save_db(db)
 
-import time as _time_mod
-
-TRIAL_DAYS = 7
-AI_LIMIT_FREE = 10
-AI_LIMIT_PREMIUM = 50
-AI_LIMIT_BUSINESS = 100
-PLANS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plans.json")
-
-def _plans_load():
-    try:
-        with open(PLANS_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-def _plans_save(d):
-    try:
-        with open(PLANS_PATH, "w", encoding="utf-8") as f:
-            json.dump(d, f)
-    except Exception as e:
-        logger.warning(f"plans save error: {e}")
-
-def _grant_trial(uid):
-    """Одноразовая выдача business-триала на 7 дней новому пользователю."""
-    d = _plans_load()
-    e = d.setdefault(str(uid), {})
-    if not e.get("trial_granted"):
-        e["trial_granted"] = True
-        e["plan"] = "business"
-        e["expires"] = int(_time_mod.time()) + TRIAL_DAYS * 86400
-        _plans_save(d)
-
-def get_user_plan(uid):
-    """Текущий план: оплаченный > триал > free (с автодаунгрейдом)."""
-    if _business(uid):
-        return "business"
-    if _premium(uid):
-        return "premium"
-    d = _plans_load()
-    e = d.get(str(uid), {})
-    plan = e.get("plan", "free")
-    if plan in ("business", "premium") and e.get("expires", 0) < int(_time_mod.time()):
-        e["plan"] = "free"
-        e["expires"] = 0
-        _plans_save(d)
-        track(uid, "plan_expired", {"was": plan})
-        return "free"
-    return plan
-
-def check_trial_expiry(uid):
-    return get_user_plan(uid)
-
-def check_ai_limit(uid):
-    """(ok, used, limit, plan) — суточный лимит AI-запросов."""
-    plan = get_user_plan(uid)
-    limit = {"business": AI_LIMIT_BUSINESS, "premium": AI_LIMIT_PREMIUM}.get(plan, AI_LIMIT_FREE)
-    d = _plans_load()
-    e = d.setdefault(str(uid), {})
-    today = _time_mod.strftime("%Y-%m-%d")
-    if e.get("ai_day") != today:
-        e["ai_day"] = today
-        e["ai_used"] = 0
-        _plans_save(d)
-    used = e.get("ai_used", 0)
-    return used < limit, used, limit, plan
-
-def bump_ai_usage(uid):
-    d = _plans_load()
-    e = d.setdefault(str(uid), {})
-    today = _time_mod.strftime("%Y-%m-%d")
-    if e.get("ai_day") != today:
-        e["ai_day"] = today
-        e["ai_used"] = 0
-    e["ai_used"] = e.get("ai_used", 0) + 1
-    _plans_save(d)
-
 def register_user(uid, source="organic"):
     db = _db()
     p = db["users"].setdefault(str(uid), {})
@@ -450,7 +374,6 @@ def register_user(uid, source="organic"):
         p.setdefault("source", source)
     p.setdefault("source", source or "organic")
     _save_db(db)
-    _grant_trial(uid)
     track(uid, "start", {"source": source or "organic"})
 
 def favorites(uid):
