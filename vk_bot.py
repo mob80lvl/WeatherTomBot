@@ -193,14 +193,45 @@ TZ_LIST = [
     ("Asia/Novosibirsk", "🕐 Новосибирск +7"),
     ("Asia/Krasnoyarsk", "🕐 Красноярск +7"),
     ("Asia/Vladivostok", "🕐 Владивосток +10"),
+    ("Europe/London", "🕐 Лондон +0"),
+    ("Europe/Berlin", "🕐 Берлин +1"),
+    ("Europe/Istanbul", "🕐 Стамбул +3"),
+    ("Asia/Dubai", "🕐 Дубай +4"),
+    ("Asia/Kolkata", "🕐 Дели +5:30"),
+    ("Asia/Tokyo", "🕐 Токио +9"),
+    ("America/New_York", "🕐 Нью-Йорк -5"),
+    ("America/Los_Angeles", "🕐 Лос-Анджелес -8"),
+    ("Australia/Sydney", "🕐 Сидней +10"),
     ("UTC", "🕐 UTC +0"),
+    ("Europe/Kyiv", "🕐 Киев +2"),
+    ("Europe/Madrid", "🕐 Мадрид +1"),
+    ("Europe/Paris", "🕐 Париж +1"),
+    ("Europe/Rome", "🕐 Рим +1"),
+    ("Africa/Cairo", "🕐 Каир +2"),
+    ("Africa/Lagos", "🕐 Лагос +1"),
+    ("Africa/Johannesburg", "🕐 Йоханнесбург +2"),
+    ("Asia/Tashkent", "🕐 Ташкент +5"),
+    ("Asia/Tehran", "🕐 Тегеран +3:30"),
+    ("Asia/Bangkok", "🕐 Бангкок +7"),
+    ("Asia/Shanghai", "🕐 Пекин +8"),
+    ("Asia/Seoul", "🕐 Сеул +9"),
+    ("Asia/Singapore", "🕐 Сингапур +8"),
+    ("Asia/Irkutsk", "🕐 Иркутск +8"),
+    ("America/Chicago", "🕐 Чикаго -6"),
+    ("America/Mexico_City", "🕐 Мехико -6"),
+    ("America/Sao_Paulo", "🕐 Сан-Паулу -3"),
+    ("America/Santiago", "🕐 Сантьяго -4"),
+    ("Australia/Perth", "🕐 Перт +8"),
+    ("Pacific/Auckland", "🕐 Окленд +12"),
 ]
+TZ_KEYBOARD = [c0 for c0, _ in TZ_LIST[:16]]
 
 def _tz_keyboard(lang):
+    labels = dict(TZ_LIST)
     rows = []
     row = []
-    for code, label in TZ_LIST:
-        row.append(_btn(label, {"cmd": "tz_set", "zone": code}))
+    for code in TZ_KEYBOARD:
+        row.append(_btn(labels.get(code, code), {"cmd": "tz_set", "zone": code}))
         if len(row) == 2:
             rows.append(row); row = []
     if row:
