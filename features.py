@@ -399,10 +399,15 @@ def _grant_trial(uid):
         _plans_save(d)
 
 def consume_trial_notice(uid):
-    """Одноразовый флаг: показать приветствие о триале."""
+    """Одноразовый флаг: показать приветствие о триале.
+    Legacy: если триал выдан до введения флага и триал ещё активен — показать один раз."""
     d = _plans_load()
     e = d.get(str(uid), {})
     if e.get("notice_pending"):
+        e["notice_pending"] = False
+        _plans_save(d)
+        return True
+    if "notice_pending" not in e and e.get("trial_granted") and e.get("expires", 0) > int(_time_mod.time()):
         e["notice_pending"] = False
         _plans_save(d)
         return True
