@@ -249,7 +249,7 @@ def publish_post(topic=None):
         now = datetime.now(ZoneInfo("Europe/Moscow"))
     except Exception:
         now = datetime.utcnow()
-    current_slot = f"{now.hour:02d}:00_{now.strftime('%Y-%m-%d')}"
+    current_slot = now.strftime("%H:%M") + "_" + now.strftime("%Y-%m-%d")
     message = text
     params = {
         "owner_id": f"-{VK_GROUP_ID}",
@@ -272,12 +272,14 @@ def hourly_job():
         now = datetime.now(ZoneInfo("Europe/Moscow"))
     except Exception:
         now = datetime.utcnow()
-    # Расписание: 09:00, 12:00, 15:00, 18:00, 21:00 МСК (сверка по часу — устойчиво к задержкам планировщика)
-    slot_key = f"{now.hour:02d}:00_{now.strftime('%Y-%m-%d')}"
-    if now.hour not in (9, 12, 15, 18, 21):
+    current_hm = now.strftime("%H:%M")
+    # Расписание: 09:00, 12:00, 15:00, 18:00, 21:00 МСК
+    slots = ["09:00", "12:00", "15:00", "18:00", "21:00"]
+    if current_hm not in slots:
         return None
     # Защита от дублей в одном слоте
-    if _state.get("last_slot", "") == slot_key:
+    last_slot = _state.get("last_slot", "")
+    if last_slot == current_hm + "_" + now.strftime("%Y-%m-%d"):
         return None
     ok, info = publish_post()
     if ok:
