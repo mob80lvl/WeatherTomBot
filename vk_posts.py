@@ -154,8 +154,9 @@ def _generate_text(topic):
     if not text or len(text) < 30:
         text = random.choice(FALLBACK_TEXTS.get(topic, ["Погода - это настроение дня!"]))
     label = TOPIC_LABELS.get(topic, "Погода")
-    emoji = {"weather_fact": "🌤", "travel": "✈️", "humor": "😄", "tip": "💡"}.get(topic, "🌤")
-    return f"{emoji} {label}\n\n{text}\n\n#погода #WeatherTomBot"
+    emoji = {"weather_fact": "🌤", "travel": "✈️", "humor": "😄", "tip": "💡"}.get(topic, "")
+    prefix = f"{emoji} " if emoji else ""
+    return f"{prefix}{label}\n\n{text}\n\n#погода #WeatherTomBot"
 
 def _make_image(topic):
     """Картинка 1200x630 (стандарт VK OG, соотношение 1.9:1)."""
@@ -264,72 +265,64 @@ def _make_card(topic, text):
     buf.seek(0)
     return buf
 
-KEYWORD_TAGS = [
-    (("молни", "гроз", "шторм"), "lightning,storm"),
-    (("дожд", "ливень", "зонт", "капел"), "rain,umbrella"),
-    (("снег", "метел", "сугроб", "зим"), "winter,snow"),
-    (("туман", "дымк"), "fog,forest"),
-    (("радуг",), "rainbow,sky"),
-    (("осен", "сентябр", "октябр", "ноябр", "листв"), "autumn,leaves"),
-    (("весн", "апрел", "май", "цвет"), "spring,flowers"),
-    (("мор", "океан", "пляж", "курорт", "волн"), "sea"),
-    (("закат", "рассвет"), "sunset"),
-    (("ноч", "звезд", "космос"), "night,stars"),
-    (("гор", "поход", "вершин", "альп"), "mountains"),
-    (("лес", "дерев", "природ"), "forest"),
-    (("город", "улиц", "мегаполис"), "city"),
-    (("солнц", "ясн", "жар", "лет", "тепл"), "sun,summer"),
-    (("облак", "неб"), "clouds,sky"),
-]
-
-def _season_tags():
-    m = __import__("datetime").datetime.now().month
-    if m in (3, 4, 5):
-        return "spring,flowers"
-    if m in (6, 7, 8):
-        return "sun,summer"
-    if m in (9, 10, 11):
-        return "autumn,leaves"
-    return "winter,snow"
-
-RUBRIC_TAGS = {
-    "weather_fact": "clouds,sky",
-    "travel": "mountains",
-    "humor": "rain,umbrella",
-    "tip": "sun",
-    "history": "city,old",
-    "science": "night,stars",
-    "folklore": "forest",
-    "records": "lightning,storm",
-    "myths": "fog",
-    "season": None,
+IMG_FALLBACK_PROMPTS = {
+    "weather_fact": "dramatic beautiful clouds and sky, soft sunlight, photorealistic",
+    "travel": "traveler with backpack on mountain trail at sunrise, photorealistic",
+    "humor": "cute funny robot holding umbrella in rain, cartoon style",
+    "tip": "cozy window with rain drops and warm light, photorealistic",
+    "history": "historical volcanic eruption dramatic sky, 19th century painting style",
+    "science": "lightning storm over night city, long exposure photography",
+    "folklore": "swallows flying low over golden field before rain, photorealistic",
+    "records": "extreme heat desert mirage dramatic sky, photorealistic",
+    "myths": "lightning striking skyscraper in stormy night, photorealistic",
+    "season": "golden autumn park with falling leaves, warm sunlight",
 }
 
-def _pick_tags(topic, text):
-    """Подбор тегов картинки по ключевым словам текста поста."""
-    low = (text or "").lower()
-    for kws, tags in KEYWORD_TAGS:
-        if any(k in low for k in kws):
-            return tags
-    rub = RUBRIC_TAGS.get(topic, "clouds,sky")
-    return rub or _season_tags()
+def _generate_image_prompt(topic, text):
+    """LLM подбирает точный промпт картинки под смысл текста поста."""
+    try:
+        from features import _get_ai_provider
+        provider, api_key, model, base_url = _get_ai_provider()
+        if provider and api_key and provider != "huggingface":
+            headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+            data = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You pick illustrations for weather posts. Reply with ONLY a short English prompt (6-12 words) for a beautiful illustration matching the post meaning exactly. No text, no letters, no watermark."},
+                    {"role": "user", "content": (text or "")[:600]}
+                ],
+                "max_tokens": 60,
+                "temperature": 0.7
+            }
+            resp = requests.post(base_url, headers=headers, json=data, timeout=25)
+            if resp.status_code == 200:
+                p = resp.json()["choices"][0]["message"]["content"].strip().strip('"')
+                if p and len(p) < 200:
+                    return p
+    except Exception as e:
+        logger.warning(f"Image prompt LLM error: {e}")
+    return IMG_FALLBACK_PROMPTS.get(topic, "beautiful weather sky clouds, photorealistic")
 
 def _tg_send_photo(topic, text):
-    """Фото из интернета (LoremFlickr) + подпись в TG-канал."""
+    """AI-картинка под текст поста (Pollinations) + подпись в TG-канал."""
+    import random as _rnd
+    from urllib.parse import quote
     token = os.getenv("TELEGRAM_TOKEN", "").strip()
     chan = os.getenv("TG_CHANNEL_ID", "").strip()
     if not token or not chan:
         return False
-    tags = _pick_tags(topic, text)
-    urls = [f"https://loremflickr.com/1280/720/{tags}",
-            f"https://loremflickr.com/1280/720/{tags.split(',')[0]}"]
-    for u in urls:
+    prompt = _generate_image_prompt(topic, text)
+    for attempt in range(2):
+        seed = _rnd.randint(1, 999999)
+        url = (f"https://image.pollinations.ai/prompt/{quote(prompt)}"
+               f"?width=1280&height=720&nologo=true&model=flux&seed={seed}")
         try:
             r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
-                              json={"chat_id": chan, "photo": u, "caption": (text or "")[:1024]},
-                              timeout=40)
+                              json={"chat_id": chan, "photo": url, "caption": (text or "")[:1024]},
+                              timeout=90)
             d = r.json()
             if d.get("ok"):
+                logger.info(f"TG AI-photo sent (prompt: {prompt[:60]})")
                 return True
             logger.error(f"TG sendPhoto error: {d}")
         except Exception as e:
