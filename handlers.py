@@ -182,9 +182,6 @@ def handle_stateful_flows(chat_id, text, lang):
         save_user_city(chat_id, city_name)
         _clear_user_state(chat_id)
         send_message(chat_id, T(lang, "city_changed" if state.get("mode") == "change_city" else "city_saved", city=city_name), get_main_keyboard(chat_id))
-        import features as _feat_trial
-        if _feat_trial.consume_trial_notice(chat_id):
-            send_message(chat_id, "🎁 Вам начислена пробная Business-подписка на 7 дней!\n\n✅ 100 AI-запросов в день\n✅ Каналы с автопубликацией\n✅ API и white-label\n✅ Команды и совместный доступ\n\nПосле окончания триала план переключится на Free. Статус: кнопка «Статус подписки».", get_main_keyboard(chat_id))
         send_message(chat_id, format_weather_text(chat_id, weather), get_main_keyboard(chat_id))
         return "ok", 200
 

@@ -49,6 +49,37 @@ def format_subscription_status(chat_id):
              premium=PRICE_PREMIUM, business=PRICE_BUSINESS)
 
 
+def format_welcome_status(chat_id):
+    """Строка статуса подписки/триала для приветствия /start. None — если показывать нечего."""
+    sub = get_user_subscription(chat_id) or {}
+    try:
+        expiry = datetime.fromisoformat(sub["expiry"])
+        if expiry > datetime.now():
+            plan = get_current_plan(chat_id)
+            days = max(0, (expiry - datetime.now()).days)
+            if plan == "business":
+                return f"💼 *Business* активна!\n⏳ Осталось: *{days}* дн.\n✅ Доступны все Premium и Business-функции."
+            if plan == "premium":
+                return f"⭐ *Premium* активна!\n⏳ Осталось: *{days}* дн.\n✅ Доступны все Premium-функции."
+    except Exception:
+        pass
+    tr_active, tr_days, _plan = _trial_info(chat_id)
+    if tr_active:
+        return (f"🎁 *Пробная Business-подписка активна!*\n"
+                f"✅ 100 AI-запросов в день\n✅ Каналы с автопубликацией\n✅ API и white-label\n✅ Команды и совместный доступ\n"
+                f"⏳ Осталось: *{tr_days}* дн.\n\n"
+                f"После окончания план переключится на Free (10 AI-запросов в день).")
+    try:
+        import json as _j, os as _o
+        with open(_o.path.join(_o.path.dirname(_o.path.abspath(__file__)), "plans.json"), encoding="utf-8") as f:
+            e = _j.load(f).get(str(chat_id), {})
+    except Exception:
+        e = {}
+    if e.get("trial_granted"):
+        return (f"🎁 Пробный период завершён.\nТекущий план: Free (10 AI-запросов в день).\n"
+                f"⭐ Premium — {PRICE_PREMIUM} · 💼 Business — {PRICE_BUSINESS}: раздел «Тарифы».")
+    return None
+
 def format_help_text(chat_id):
     lang = get_user_lang(chat_id)
     city = get_user_city(chat_id) or T(lang, "city_not_set")
