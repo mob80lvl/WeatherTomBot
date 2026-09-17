@@ -185,6 +185,29 @@ def _lang_keyboard():
     rows.append([_btn(MSG["ru"]["back"], {"cmd": "back"})])
     return {"one_time": False, "inline": False, "buttons": rows}
 
+TZ_LIST = [
+    ("Europe/Kaliningrad", "🕐 Калининград"),
+    ("Europe/Moscow", "🕐 Москва"),
+    ("Europe/Samara", "🕐 Самара"),
+    ("Asia/Yekaterinburg", "🕐 Екатеринбург"),
+    ("Asia/Novosibirsk", "🕐 Новосибирск"),
+    ("Asia/Krasnoyarsk", "🕐 Красноярск"),
+    ("Asia/Vladivostok", "🕐 Владивосток"),
+    ("UTC", "🕐 UTC"),
+]
+
+def _tz_keyboard(lang):
+    rows = []
+    row = []
+    for code, label in TZ_LIST:
+        row.append(_btn(label, {"cmd": "tz_set", "zone": code}))
+        if len(row) == 2:
+            rows.append(row); row = []
+    if row:
+        rows.append(row)
+    rows.append([_btn(_m(lang, "back"), {"cmd": "back"})])
+    return {"one_time": False, "inline": False, "buttons": rows}
+
 def _notif_keyboard(uid, lang):
     p = notification_prefs(uid)
     if not isinstance(p, dict):
@@ -196,6 +219,7 @@ def _notif_keyboard(uid, lang):
         [_btn(_m(lang, "status_btn", st=st), {"cmd": "notif_toggle"}), _btn(_m(lang, "time_btn"), {"cmd": "notif_time"})],
         [_btn(f"{f['rain']}: {on('rain')}", {"cmd": "notif_rain"}), _btn(f"{f['wind']}: {on('wind')}", {"cmd": "notif_wind"})],
         [_btn(f"{f['frost']}: {on('frost')}", {"cmd": "notif_frost"}), _btn(f"{f['heat']}: {on('heat')}", {"cmd": "notif_heat"})],
+        [_btn("🌍 Часовой пояс", {"cmd": "notif_tz"})],
         [_btn(_m(lang, "back"), {"cmd": "back"})],
     ]}
 
@@ -325,6 +349,8 @@ def _route(uid, peer_id, lang, cmd, text):
     elif cmd == "notif_time":
         _set_state(uid, "time")
         vk_send(peer_id, _m(lang, "enter_time"), vk_menu_keyboard(lang))
+    elif cmd == "notif_tz":
+        vk_send(peer_id, "🌍 Выберите часовой пояс:", _tz_keyboard(lang))
     elif cmd == "fav_add":
         _set_state(uid, "fav_add")
         vk_send(peer_id, _m(lang, "fav_enter_add"), vk_menu_keyboard(lang))
@@ -358,6 +384,12 @@ def vk_process_event(event):
             if new in TEXTS:
                 set_user_lang(uid, new)
                 vk_send(peer_id, _m(new, "lang_set"), vk_menu_keyboard(new))
+            return
+        if cmd == "tz_set":
+            zone = extra.get("zone")
+            if zone:
+                set_notification_prefs(uid, timezone=zone)
+                vk_send(peer_id, f"✅ Часовой пояс: {zone}", _notif_keyboard(uid, lang))
             return
         if cmd == "city_pick":
             city = extra.get("city")
