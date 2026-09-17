@@ -186,14 +186,14 @@ def _lang_keyboard():
     return {"one_time": False, "inline": False, "buttons": rows}
 
 TZ_LIST = [
-    ("Europe/Kaliningrad", "🕐 Калининград +2"),
-    ("Europe/Moscow", "🕐 Москва +3"),
-    ("Europe/Samara", "🕐 Самара +4"),
-    ("Asia/Yekaterinburg", "🕐 Екатеринбург +5"),
-    ("Asia/Novosibirsk", "🕐 Новосибирск +7"),
-    ("Asia/Krasnoyarsk", "🕐 Красноярск +7"),
-    ("Asia/Vladivostok", "🕐 Владивосток +10"),
-    ("UTC", "🕐 UTC +0"),
+    ("Europe/Kaliningrad", "🕐 Калининград"),
+    ("Europe/Moscow", "🕐 Москва"),
+    ("Europe/Samara", "🕐 Самара"),
+    ("Asia/Yekaterinburg", "🕐 Екатеринбург"),
+    ("Asia/Novosibirsk", "🕐 Новосибирск"),
+    ("Asia/Krasnoyarsk", "🕐 Красноярск"),
+    ("Asia/Vladivostok", "🕐 Владивосток"),
+    ("UTC", "🕐 UTC"),
 ]
 
 def _tz_keyboard(lang):
@@ -303,22 +303,6 @@ def _handle_state(uid, peer_id, lang, text):
                 vk_send(peer_id, _m(lang, "time_saved", time=saved), _notif_keyboard(uid, lang))
             else:
                 vk_send(peer_id, _m(lang, "time_bad"), _notif_keyboard(uid, lang))
-        elif mode == "tz":
-            code = None
-            t = text.strip()
-            if t.isdigit() and 1 <= int(t) <= len(TZ_LIST):
-                code = TZ_LIST[int(t) - 1][0]
-            else:
-                low = t.casefold()
-                for cz, lb in TZ_LIST:
-                    if low in lb.casefold() or low in cz.casefold():
-                        code = cz
-                        break
-            if code:
-                set_notification_prefs(uid, timezone=code)
-                vk_send(peer_id, f"✅ Часовой пояс: {code}", _notif_keyboard(uid, lang))
-            else:
-                vk_send(peer_id, "❌ Не понял пояс. Напишите номер из списка.", _tz_keyboard(lang))
         elif mode == "fav_add":
             ok = add_favorite(uid, text.strip())
             vk_send(peer_id, _m(lang, "fav_added") if ok else _m(lang, "fav_add_fail"), _fav_keyboard(uid, lang))
@@ -366,9 +350,7 @@ def _route(uid, peer_id, lang, cmd, text):
         _set_state(uid, "time")
         vk_send(peer_id, _m(lang, "enter_time"), vk_menu_keyboard(lang))
     elif cmd == "notif_tz":
-        _set_state(uid, "tz")
-        lines = "\n".join(f"{i}. {label}" for i, (code, label) in enumerate(TZ_LIST, 1))
-        vk_send(peer_id, f"🌍 Выберите часовой пояс кнопкой\nили напишите номер/название:\n{lines}", _tz_keyboard(lang))
+        vk_send(peer_id, "🌍 Выберите часовой пояс:", _tz_keyboard(lang))
     elif cmd == "fav_add":
         _set_state(uid, "fav_add")
         vk_send(peer_id, _m(lang, "fav_enter_add"), vk_menu_keyboard(lang))
