@@ -86,7 +86,7 @@ def _save(path, obj):
 def _load_notif(raw):
     """Читает колонку notifications: JSON-словарь, legacy 0/1 или мусор."""
     base = {
-        "enabled": False, "time": "08:00", "frequency": "daily",
+        "enabled": False, "time": "08:00", "frequency": "daily", "timezone": "Europe/Moscow",
         "rain": True, "storm": True, "wind": True, "temp": True,
         "heat": True, "frost": True, "heavy_rain": True,
         "alerts": {
@@ -608,7 +608,7 @@ def notification_prefs(uid):
     if not isinstance(prefs, dict):
         default = {
             "enabled": bool(prefs) if prefs is not None else False,
-            "time": "08:00", "frequency": "daily",
+            "time": "08:00", "frequency": "daily", "timezone": "Europe/Moscow",
             "rain": True, "storm": True, "wind": True, "temp": True,
             "heat": True, "frost": True, "heavy_rain": True,
             "alerts": {
@@ -633,7 +633,7 @@ def set_notification_prefs(uid, **changes):
     if not isinstance(prefs, dict):
         prefs = {
             "enabled": bool(prefs) if prefs is not None else False,
-            "time": "08:00", "frequency": "daily",
+            "time": "08:00", "frequency": "daily", "timezone": "Europe/Moscow",
             "rain": True, "storm": True, "wind": True, "temp": True,
             "heat": True, "frost": True, "heavy_rain": True,
             "alerts": {
@@ -1539,6 +1539,15 @@ def daily_notification_job():
         city = _city(uid)
         if not city:
             continue
+        # Персональная таймзона пользователя (fallback на DEFAULT_TIMEZONE)
+        user_tz_name = (prefs.get("timezone") or tz_name) if isinstance(prefs, dict) else tz_name
+        try:
+            from zoneinfo import ZoneInfo as _ZI
+            user_now = datetime.now(_ZI(user_tz_name))
+        except Exception:
+            user_now = local_now
+        current_hm = user_now.strftime("%H:%M")
+        today = user_now.strftime("%Y-%m-%d")
         weather_fn = CFG.get("get_weather_aggregated")
         if not weather_fn:
             continue
