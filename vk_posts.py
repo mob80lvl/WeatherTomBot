@@ -351,6 +351,31 @@ def _tg_download_bytes(file_id):
         logger.warning(f"TG download error: {e}")
     return None
 
+def _vk_upload_wall_photo(blob):
+    """Нативная загрузка фото на стену (нужен scope photos у group-токена)."""
+    up = _vk_api("photos.getWallUploadServer", {"group_id": VK_GROUP_ID})
+    if "error" in up:
+        logger.warning(f"getWallUploadServer: {up['error'].get('error_msg')}")
+        return None
+    try:
+        r = requests.post(up["response"]["upload_url"],
+                          files={"photo": ("ai.jpg", blob, "image/jpeg")}, timeout=30)
+        if r.status_code != 200:
+            logger.warning(f"VK upload http {r.status_code}")
+            return None
+        d = r.json()
+        sv = _vk_api("photos.saveWallPhoto", {
+            "server": d["server"], "photo": d["photo"], "hash": d["hash"],
+            "group_id": VK_GROUP_ID})
+        if "error" in sv:
+            logger.warning(f"saveWallPhoto: {sv['error'].get('error_msg')}")
+            return None
+        p = sv["response"][0]
+        return f"photo{p['owner_id']}_{p['id']}"
+    except Exception as e:
+        logger.warning(f"VK upload exception: {e}")
+        return None
+
 def get_card_url(pid):
     """Внешний URL AI-картинки для сниппета VK (og:image)."""
     return _state.get("cards", {}).get(str(pid))
@@ -442,25 +467,29 @@ def publish_post(topic=None, also_tg=False):
         "message": text,
     }
     if tg_url:
-        local = None
         blob = _tg_download_bytes(tg_fid)
-        if blob:
-            try:
-                media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vk_media")
-                os.makedirs(media_dir, exist_ok=True)
-                with open(os.path.join(media_dir, f"p{ts}.jpg"), "wb") as f:
-                    f.write(blob)
-                for old_f in sorted(os.listdir(media_dir))[:-30]:
-                    try:
-                        os.remove(os.path.join(media_dir, old_f))
-                    except Exception:
-                        pass
-                local = f"https://mob100500lvl.pythonanywhere.com/vkmedia/p{ts}.jpg"
-            except Exception as e:
-                logger.warning(f"vk_media save error: {e}")
-        _state.setdefault("cards", {})[str(ts)] = local or tg_url
-        _save_state()
-        params["attachments"] = f"https://mob100500lvl.pythonanywhere.com/vkpost/{ts}"
+        att = _vk_upload_wall_photo(blob) if blob else None
+        if att:
+            params["attachments"] = att
+        else:
+            local = None
+            if blob:
+                try:
+                    media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vk_media")
+                    os.makedirs(media_dir, exist_ok=True)
+                    with open(os.path.join(media_dir, f"p{ts}.jpg"), "wb") as f:
+                        f.write(blob)
+                    for old_f in sorted(os.listdir(media_dir))[:-30]:
+                        try:
+                            os.remove(os.path.join(media_dir, old_f))
+                        except Exception:
+                            pass
+                    local = f"https://mob100500lvl.pythonanywhere.com/vkmedia/p{ts}.jpg"
+                except Exception as e:
+                    logger.warning(f"vk_media save error: {e}")
+            _state.setdefault("cards", {})[str(ts)] = local or tg_url
+            _save_state()
+            params["attachments"] = f"https://mob100500lvl.pythonanywhere.com/vkpost/{ts}"
     post = _vk_api("wall.post", params)
     if "error" in post and params.get("attachments"):
         logger.warning(f"VK post with attachment failed, retry text-only: {post['error']}")
