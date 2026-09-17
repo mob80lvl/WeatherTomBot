@@ -395,7 +395,18 @@ def _grant_trial(uid):
         e["trial_granted"] = True
         e["plan"] = "business"
         e["expires"] = int(_time_mod.time()) + TRIAL_DAYS * 86400
+        e["notice_pending"] = True
         _plans_save(d)
+
+def consume_trial_notice(uid):
+    """Одноразовый флаг: показать приветствие о триале."""
+    d = _plans_load()
+    e = d.get(str(uid), {})
+    if e.get("notice_pending"):
+        e["notice_pending"] = False
+        _plans_save(d)
+        return True
+    return False
 
 def get_user_plan(uid):
     """Текущий план: оплаченный > триал > free (с автодаунгрейдом)."""

@@ -7,23 +7,48 @@ from texts import T, b2b_name, b2b_features
 from storage import (get_user_lang, get_user_city, get_current_plan,
                      is_user_subscribed, get_user_subscription, get_user_b2b_type)
 
+def _trial_info(chat_id):
+    """(active, days_left, plan) из plans.json — автономное чтение."""
+    import json as _json, os as _os, time as _time
+    try:
+        path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "plans.json")
+        with open(path, "r", encoding="utf-8") as f:
+            d = _json.load(f)
+        e = d.get(str(chat_id), {})
+        left = e.get("expires", 0) - int(_time.time())
+        if e.get("plan") in ("business", "premium") and left > 0:
+            return True, max(1, -(-left // 86400)), e.get("plan")
+    except Exception:
+        pass
+    return False, 0, None
+
 def format_subscription_status(chat_id):
     """Return only the current subscription status; never append a paywall."""
     lang = get_user_lang(chat_id)
-    plan = get_current_plan(chat_id)
-    if plan == "free":
-        return T(lang, "subscription_inactive",
-                 premium=PRICE_PREMIUM, business=PRICE_BUSINESS)
     sub = get_user_subscription(chat_id) or {}
+    paid_plan = None
     try:
         expiry = datetime.fromisoformat(sub["expiry"])
-        days = max(0, (expiry - datetime.now()).days)
-        expiry_text = expiry.strftime("%d.%m.%Y %H:%M")
+        if expiry > datetime.now():
+            paid_plan = get_current_plan(chat_id)
+            days = max(0, (expiry - datetime.now()).days)
+            expiry_text = expiry.strftime("%d.%m.%Y %H:%M")
     except Exception:
         days, expiry_text = 0, "—"
-    if plan == "business":
+    if paid_plan == "business":
         return f"💼 *Business*\n{T(lang, 'status_active')}\n📅 До: *{expiry_text}*\n⏳ Осталось: *{days}* дн.\n\n✅ Доступны все Premium и Business-функции."
-    return f"⭐ *Premium*\n{T(lang, 'status_active')}\n📅 До: *{expiry_text}*\n⏳ Осталось: *{days}* дн.\n\n✅ Доступны все Premium-функции."
+    if paid_plan == "premium":
+        return f"⭐ *Premium*\n{T(lang, 'status_active')}\n📅 До: *{expiry_text}*\n⏳ Осталось: *{days}* дн.\n\n✅ Доступны все Premium-функции."
+    tr_active, tr_days, tr_plan = _trial_info(chat_id)
+    if tr_active:
+        return (f"💼 *Business (пробная)*\n🟢 Активна\n⏳ Осталось: *{tr_days}* дн.\n\n"
+                f"✅ Доступны все Business-функции: 100 AI-запросов в день, каналы, API, white-label.\n"
+                f"🎁 Триал выдан на 7 дней при регистрации.\n\n"
+                f"После окончания план переключится на Free (10 AI-запросов в день).")
+    return T(lang, "subscription_inactive",
+             premium=PRICE_PREMIUM, business=PRICE_BUSINESS)
+
+
 def format_help_text(chat_id):
     lang = get_user_lang(chat_id)
     city = get_user_city(chat_id) or T(lang, "city_not_set")
