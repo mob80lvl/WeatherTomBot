@@ -64,20 +64,6 @@ def admin_menu(lang):
             f'<a href="/admin/lang/ru" title="Русский">🇷🇺</a>'
             f'<a href="/admin/lang/en" title="English">🇬</a>'
             f'<a href="/admin/logout">{AL(lang, "menu_logout")}</a></div>')
-
-ADMIN_UI["en"].update({
- "title_dashboard":"Dashboard","stat_users":"Users","stat_subscribed":"Subscribed","stat_revenue_stars":"Revenue Stars","stat_revenue_rub":"Revenue RUB","stat_new7":"New 7 days","stat_payments":"Payments",
- "title_payments":"Payments","col_date":"Date","col_user":"User","col_plan":"Plan","col_method":"Method","col_amount":"Amount","col_status":"Status","no_payments":"No payments yet","method_stars":"⭐ Stars","method_card":"💳 Card",
- "title_promos":"Promo codes","promo_code":"Code","promo_auto":"leave empty = auto","promo_days":"Days","promo_discount":"Discount %","promo_max":"Max uses","promo_expires":"Expires (YYYY-MM-DD, optional)","promo_create":"Create","no_promos":"No promo codes","tip_promo_del":"Delete promo code",
- "title_subs":"Subscriptions","col_expiry":"Valid until","col_days":"Days left","col_by":"Activated by","tip_revoke":"Revoke subscription","revoke":"Revoke","no_subs":"No subscriptions","active":"✅ Active","expired":"❌ Expired"
-})
-ADMIN_UI["ru"].update({
- "title_dashboard":"Дашборд","stat_users":"Пользователи","stat_subscribed":"Подписаны","stat_revenue_stars":"Выручка Stars","stat_revenue_rub":"Выручка ₽","stat_new7":"Новых за 7 дней","stat_payments":"Платежей",
- "title_payments":"Платежи","col_date":"Дата","col_user":"Пользователь","col_plan":"План","col_method":"Способ","col_amount":"Сумма","col_status":"Статус","no_payments":"Платежей пока нет","method_stars":"⭐ Stars","method_card":"💳 Карта",
- "title_promos":"Промокоды","promo_code":"Код","promo_auto":"пусто = сгенерировать","promo_days":"Дней","promo_discount":"Скидка %","promo_max":"Лимит активаций","promo_expires":"Истекает (ГГГГ-ММ-ДД, необяз.)","promo_create":"Создать","no_promos":"Промокодов нет","tip_promo_del":"Удалить промокод",
- "title_subs":"Подписки","col_expiry":"Действует до","col_days":"Осталось дней","col_by":"Кем выдана","tip_revoke":"Отозвать подписку","revoke":"Отозвать","no_subs":"Подписок нет","active":"✅ Активна","expired":"❌ Истекла"
-})
-ADMIN_CSS = "*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}.container{max-width:1200px;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{color:#ffd200}.menu a{color:#aaa;text-decoration:none;margin-left:20px}.menu a:hover{color:#fff}table{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}th{background:rgba(255,255,255,0.1)}.subscribed{color:#0f0}.free{color:#ff6b6b}.expiring{color:#ffd700}.btn{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block}.btn-sub{color:#0f0;border:1px solid #0f0}.btn-b2b{color:#ffd700;border:1px solid #ffd700}.btn-disable{color:#ff6b6b;border:1px solid #ff6b6b}.btn-del{color:#ff6b6b;border:1px solid #ff6b6b}.btn-disable:hover{background:#ff6b6b;color:#fff}.btn-sub:hover{background:#0f0;color:#000}.btn-b2b:hover{background:#ffd700;color:#000}.btn-del:hover{background:#ff6b6b;color:#fff}.search{margin-bottom:15px}.search input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;width:300px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-bottom:30px}.stat-card{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;text-align:center}.stat-number{font-size:2em;font-weight:bold;color:#ffd200}.stat-label{opacity:0.7}form.promo input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;margin:4px;width:180px}form.promo button{padding:8px 16px;border-radius:8px;border:1px solid #0f0;background:rgba(0,255,0,0.1);color:#0f0;cursor:pointer}"
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -182,54 +168,41 @@ def admin_slash_redirect():
 @app.route('/admin')
 @login_required
 def admin_dashboard():
-    from datetime import timedelta
-    lang = session.get('admin_lang', 'en')
     users = _admin_get_users()
     subscriptions = _admin_get_subscriptions()
-    now = datetime.now()
-    subscribed = 0
-    for s in subscriptions.values():
-        try:
-            if datetime.fromisoformat(s['expiry']) > now:
-                subscribed += 1
-        except Exception:
-            pass
-    tot_stars = 0.0
-    tot_rub = 0.0
-    pay_count = 0
-    new7 = 0
-    try:
-        import features as _feat
-        db = _feat._db()
-        for p in db.get('payments', {}).values():
-            pay_count += 1
-            amt = float(p.get('amount', 0) or 0)
-            if p.get('currency') == 'RUB':
-                tot_rub += amt / 100.0
-            else:
-                tot_stars += amt
-        cutoff = (now - timedelta(days=7)).isoformat()[:10]
-        for u in db.get('users', {}).values():
-            fs = (u.get('first_seen') or '')[:10]
-            if fs and fs >= cutoff:
-                new7 += 1
-    except Exception:
-        pass
-    cards = [
-        (len(users), AL(lang, 'stat_users')),
-        (subscribed, AL(lang, 'stat_subscribed')),
-        (f"{tot_stars:.0f} ⭐", AL(lang, 'stat_revenue_stars')),
-        (f"{tot_rub:.0f} ₽", AL(lang, 'stat_revenue_rub')),
-        (new7, AL(lang, 'stat_new7')),
-        (pay_count, AL(lang, 'stat_payments')),
-    ]
-    cards_html = "".join(f'<div class="stat-card"><div class="stat-number">{v}</div><div class="stat-label">{lbl}</div></div>' for v, lbl in cards)
-    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_dashboard')}</title>
-    <style>{ADMIN_CSS}</style></head><body><div class="container">
-    <div class="header"><h1>🌤 MeteoBot</h1>{admin_menu(lang)}</div>
-    <div class="stats">{cards_html}</div>
-    </div></body></html>"""
+    b2b_users = _admin_get_b2b_users()
 
+    total_users = len(users)
+    subscribed_users = len([u for u in users if u in subscriptions])
+    b2b_count = len(b2b_users)
+
+    return f'''<!DOCTYPE html>
+    <html>
+    <head><title>MeteoBot - Admin Panel</title>
+    <style>*{{margin:0;padding:0;box-sizing:border-box}}body{{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}}.container{{max-width:1200px;margin:0 auto}}.header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}}h1{{color:#ffd200}}.menu a{{color:#aaa;text-decoration:none;margin-left:20px}}.menu a:hover{{color:#fff}}.stats{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-bottom:30px}}.stat-card{{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;text-align:center}}.stat-number{{font-size:2em;font-weight:bold;color:#ffd200}}.stat-label{{opacity:0.7}}</style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🌤 MeteoBot</h1>
+                <div class="menu">
+                    <a href="/admin">Dashboard</a>
+                    <a href="/admin/users">Users</a>
+                    <a href="/admin/subscriptions">Subscriptions</a>
+                    <a href="/admin/texts">📝 Texts</a>
+                    <a href="/admin/logout">Logout</a>
+                </div>
+            </div>
+            <div class="stats">
+                <div class="stat-card"><div class="stat-number">{total_users}</div><div class="stat-label">👥 Users</div></div>
+                <div class="stat-card"><div class="stat-number">{subscribed_users}</div><div class="stat-label">✅ Subscribed</div></div>
+                <div class="stat-card"><div class="stat-number">{b2b_count}</div><div class="stat-label">🏢 B2B</div></div>
+                <div class="stat-card"><div class="stat-number">{total_users - subscribed_users}</div><div class="stat-label">🆓 Free</div></div>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
 @app.route('/admin/users')
 @login_required
 def admin_users():
@@ -324,122 +297,44 @@ def admin_subscription_disable(chat_id):
 
     flash(f'Subscription disabled for user {chat_id}', 'success')
     return redirect(url_for('admin_users'))
-@app.route('/admin/payments')
-@login_required
-def admin_payments():
-    lang = session.get('admin_lang', 'en')
-    pays = []
-    try:
-        import features as _feat
-        pays = list(_feat._db().get('payments', {}).values())
-    except Exception:
-        pays = []
-    pays.sort(key=lambda x: x.get('created_at') or '', reverse=True)
-    rows = ""
-    for p in pays:
-        cur = p.get('currency', 'XTR')
-        amt = float(p.get('amount', 0) or 0)
-        if cur == 'RUB':
-            method = AL(lang, 'method_card')
-            amount = f"{amt / 100:.2f} ₽"
-        else:
-            method = AL(lang, 'method_stars')
-            amount = f"{amt:.0f} ⭐"
-        payload = p.get('payload', '')
-        plan = 'business' if ('business' in payload or payload.startswith('b2b_')) else 'premium'
-        rows += f"<tr><td>{(p.get('created_at') or '')[:16].replace('T', ' ')}</td><td>{p.get('user_id')}</td><td>{plan}</td><td>{method}</td><td>{amount}</td><td class='subscribed'>{p.get('status', 'paid')}</td></tr>"
-    if not rows:
-        rows = f"<tr><td colspan='6'>{AL(lang, 'no_payments')}</td></tr>"
-    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_payments')}</title>
-    <style>{ADMIN_CSS}</style></head><body><div class="container">
-    <div class="header"><h1>💳 {AL(lang, 'title_payments')}</h1>{admin_menu(lang)}</div>
-    <table><thead><tr><th>{AL(lang, 'col_date')}</th><th>{AL(lang, 'col_user')}</th><th>{AL(lang, 'col_plan')}</th><th>{AL(lang, 'col_method')}</th><th>{AL(lang, 'col_amount')}</th><th>{AL(lang, 'col_status')}</th></tr></thead>
-    <tbody>{rows}</tbody></table></div></body></html>"""
-@app.route('/admin/promos', methods=['GET', 'POST'])
-@login_required
-def admin_promos():
-    import secrets as _secrets
-    import features as _feat
-    lang = session.get('admin_lang', 'en')
-    msg = ""
-    if request.method == 'POST':
-        code = (request.form.get('code') or '').strip().upper()
-        if not code:
-            code = _secrets.token_urlsafe(6).replace('-', '').replace('_', '')[:8].upper()
-        try:
-            _feat.create_promo(code,
-                               days=int(request.form.get('days') or 0),
-                               discount_percent=float(request.form.get('discount') or 0),
-                               max_uses=int(request.form.get('max_uses') or 0),
-                               expires_at=(request.form.get('expires') or '').strip() or None)
-            msg = f"✅ {code}"
-        except Exception as e:
-            msg = f"❌ {e}"
-    if request.args.get('del'):
-        dcode = request.args.get('del')
-        try:
-            db = _feat._db()
-            if dcode in db.get('promos', {}):
-                del db['promos'][dcode]
-                _feat._save_db(db)
-        except Exception:
-            pass
-        return redirect(url_for('admin_promos'))
-    promos = {}
-    try:
-        promos = _feat._db().get('promos', {})
-    except Exception:
-        promos = {}
-    rows = ""
-    for code, p in promos.items():
-        used = len(p.get('used_by', []) or [])
-        maxu = p.get('max_uses', 0)
-        rows += f"""<tr><td><b>{code}</b></td><td>{p.get('days', 0)}</td><td>{p.get('discount_percent', 0):.0f}%</td><td>{used}/{maxu if maxu else '∞'}</td><td>{(p.get('expires_at') or '-')[:10]}</td>
-        <td><a href="/admin/promos?del={code}" class="btn btn-del" title="{AL(lang, 'tip_promo_del')}" onclick="return confirm('{AL(lang, 'confirm')}')">🗑️</a></td></tr>"""
-    if not rows:
-        rows = f"<tr><td colspan='6'>{AL(lang, 'no_promos')}</td></tr>"
-    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_promos')}</title>
-    <style>{ADMIN_CSS}</style></head><body><div class="container">
-    <div class="header"><h1>🎁 {AL(lang, 'title_promos')}</h1>{admin_menu(lang)}</div>
-    <p style="margin-bottom:10px">{msg}</p>
-    <form class="promo" method="post">
-      <input name="code" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})">
-      <input name="days" type="number" placeholder="{AL(lang, 'promo_days')}" value="30">
-      <input name="discount" type="number" placeholder="{AL(lang, 'promo_discount')}" value="0">
-      <input name="max_uses" type="number" placeholder="{AL(lang, 'promo_max')}" value="0">
-      <input name="expires" placeholder="{AL(lang, 'promo_expires')}">
-      <button type="submit">➕ {AL(lang, 'promo_create')}</button>
-    </form>
-    <table><thead><tr><th>{AL(lang, 'promo_code')}</th><th>{AL(lang, 'promo_days')}</th><th>{AL(lang, 'promo_discount')}</th><th>{AL(lang, 'promo_max')}</th><th>{AL(lang, 'promo_expires')}</th><th>{AL(lang, 'col_act')}</th></tr></thead>
-    <tbody>{rows}</tbody></table></div></body></html>"""
-
 @app.route('/admin/subscriptions')
 @login_required
 def admin_subscriptions():
-    lang = session.get('admin_lang', 'en')
-    subs = _admin_get_subscriptions()
-    now = datetime.now()
-    rows = ""
-    for uid, s in subs.items():
-        try:
-            expiry = datetime.fromisoformat(s['expiry'])
-            days_left = (expiry - now).days
-            active = days_left >= 0
-        except Exception:
-            days_left = '?'
-            active = True
-        cls = 'subscribed' if active else 'free'
-        status = AL(lang, 'active') if active else AL(lang, 'expired')
-        rows += f"""<tr><td>{uid}</td><td>{s.get('plan')}</td><td>{(s.get('expiry') or '')[:10]}</td><td class="{cls}">{days_left}</td><td>{s.get('activated_by') or '-'}</td>
-        <td><a href="/admin/subscription/disable/{uid}" class="btn btn-disable" title="{AL(lang, 'tip_revoke')}" onclick="return confirm('{AL(lang, 'confirm')}')">🚫 {AL(lang, 'revoke')}</a></td></tr>"""
-    if not rows:
-        rows = f"<tr><td colspan='6'>{AL(lang, 'no_subs')}</td></tr>"
-    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_subs')}</title>
-    <style>{ADMIN_CSS}</style></head><body><div class="container">
-    <div class="header"><h1>🔑 {AL(lang, 'title_subs')}</h1>{admin_menu(lang)}</div>
-    <table><thead><tr><th>ID</th><th>{AL(lang, 'col_plan')}</th><th>{AL(lang, 'col_expiry')}</th><th>{AL(lang, 'col_days')}</th><th>{AL(lang, 'col_by')}</th><th>{AL(lang, 'col_act')}</th></tr></thead>
-    <tbody>{rows}</tbody></table></div></body></html>"""
+    subscriptions = _admin_get_subscriptions()
+    b2b_users = _admin_get_b2b_users()
 
+    html = '''<!DOCTYPE html><html><head><title>MeteoBot - Subscriptions</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}.container{max-width:1200px;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{color:#ffd200}.menu a{color:#aaa;text-decoration:none;margin-left:20px}.menu a:hover{color:#fff}table{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}th{background:rgba(255,255,255,0.1)}.active{color:#0f0}.expired{color:#ff6b6b}.b2b{color:#ffd700}.btn{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block;color:#ff6b6b;border:1px solid #ff6b6b}</style>
+    </head><body><div class="container"><div class="header"><h1>📋 Subscriptions</h1>
+    <div class="menu"><a href="/admin">Dashboard</a><a href="/admin/users">Users</a><a href="/admin/subscriptions">Subscriptions</a><a href="/admin/texts">📝 Texts</a><a href="/admin/logout">Logout</a></div></div>
+    <table><thead><tr><th>ID</th><th>Type</th><th>Valid until</th><th>Status</th><th>Actions</th></tr></thead><tbody>'''
+
+    now = datetime.now()
+    for user_id, sub in subscriptions.items():
+        expiry = datetime.fromisoformat(sub['expiry'])
+        is_active = expiry > now
+        b2b_type = sub.get('b2b_type')
+        status = '✅ Active' if is_active else '❌ Expired'
+        status_class = 'active' if is_active else 'expired'
+
+        if b2b_type:
+            b2b_data = B2B_TYPES.get(b2b_type, {})
+            type_label = f"{b2b_data.get('icon', '🏢')} {b2b_data.get('name', 'B2B')}"
+            type_class = 'b2b'
+        else:
+            type_label = '👤 Personal'
+            type_class = 'active' if is_active else 'expired'
+
+        html += f'''<tr>
+            <td>{user_id}</td>
+            <td class="{type_class}">{type_label}</td>
+            <td>{expiry.strftime('%d.%m.%Y')}</td>
+            <td class="{status_class}">{status}</td>
+            <td><a href="/admin/subscription/revoke/{user_id}" class="btn" onclick="return confirm('Revoke subscription?')">🔄 Revoke</a></td>
+        </tr>'''
+
+    html += '''</tbody></table></div></body></html>'''
+    return html
 @app.route('/admin/subscription/revoke/<chat_id>')
 @login_required
 def admin_subscription_revoke(chat_id):
