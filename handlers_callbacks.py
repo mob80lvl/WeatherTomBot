@@ -27,24 +27,38 @@ def handle_callback_query(callback_query):
     
     # Выбор плана → показать способы оплаты
     if data_str.startswith("choose_plan_"):
-        plan = data_str.replace("choose_plan_", "")
-        lang = get_user_lang(chat_id)
-        kb = get_payment_choice_keyboard(lang, plan)
-        send_message(chat_id, "💳 Выберите способ оплаты:" if lang == "ru" else "💳 Choose payment method:", kb)
+        import logging as _lg
+        _lg.getLogger(__name__).info(f"PAYCB: choose_plan data={data_str}")
+        try:
+            plan = data_str.replace("choose_plan_", "")
+            lang = get_user_lang(chat_id)
+            kb = get_payment_choice_keyboard(lang, plan)
+            send_message(chat_id, "💳 Выберите способ оплаты:" if lang == "ru" else "💳 Choose payment method:", kb)
+        except Exception as e:
+            _lg.getLogger(__name__).exception(f"PAYCB choose_plan error: {e}")
+            send_message(chat_id, f"❌ Ошибка меню оплаты: {e}")
         return "ok", 200
     
     # Выбор способа оплаты → создать invoice
     if data_str.startswith("pay_stars_") or data_str.startswith("pay_rub_"):
-        from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB
-        if data_str.startswith("pay_stars_"):
-            plan = data_str.replace("pay_stars_", "")
-            price = PRICE_BUSINESS if plan == "business" else PRICE_PREMIUM
-            method = "stars"
-        else:
-            plan = data_str.replace("pay_rub_", "")
-            price = PRICE_BUSINESS_RUB if plan == "business" else PRICE_PREMIUM_RUB
-            method = "rub"
-        create_invoice(chat_id, price, plan=plan, method=method)
+        import logging as _lg
+        _lg.getLogger(__name__).info(f"PAYCB: pay data={data_str}")
+        try:
+            from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB
+            from bot import create_invoice
+            if data_str.startswith("pay_stars_"):
+                plan = data_str.replace("pay_stars_", "")
+                price = PRICE_BUSINESS if plan == "business" else PRICE_PREMIUM
+                method = "stars"
+            else:
+                plan = data_str.replace("pay_rub_", "")
+                price = PRICE_BUSINESS_RUB if plan == "business" else PRICE_PREMIUM_RUB
+                method = "rub"
+            res = create_invoice(chat_id, price, plan=plan, method=method)
+            _lg.getLogger(__name__).info(f"PAYCB invoice result: {str(res)[:200]}")
+        except Exception as e:
+            _lg.getLogger(__name__).exception(f"PAYCB pay error: {e}")
+            send_message(chat_id, f"❌ Ошибка создания счёта: {e}")
         return "ok", 200
     lang = get_user_lang(chat_id)
     
