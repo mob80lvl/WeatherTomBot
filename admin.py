@@ -85,6 +85,8 @@ ADMIN_UI["ru"].update({
 })
 ADMIN_UI["en"].update({"title_texts":"Manage Texts","saved_ok":"✅ Texts saved successfully!"})
 ADMIN_UI["ru"].update({"title_texts":"Управление текстами","saved_ok":"✅ Тексты сохранены!"})
+ADMIN_UI["en"].update({"tip_promo_edit":"Edit promo code","promo_editing":"Editing code","btn_save":"Save"})
+ADMIN_UI["ru"].update({"tip_promo_edit":"Редактировать промокод","promo_editing":"Редактирование кода","btn_save":"Сохранить"})
 ADMIN_CSS = "*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}.container{max-width:1200px;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{color:#ffd200}.menu a{color:#aaa;text-decoration:none;margin-left:20px}.menu a:hover{color:#fff}table{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}th{background:rgba(255,255,255,0.1)}.subscribed{color:#0f0}.free{color:#ff6b6b}.expiring{color:#ffd700}.btn{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block}.btn-sub{color:#0f0;border:1px solid #0f0}.btn-b2b{color:#ffd700;border:1px solid #ffd700}.btn-disable{color:#ff6b6b;border:1px solid #ff6b6b}.btn-del{color:#ff6b6b;border:1px solid #ff6b6b}.btn-disable:hover{background:#ff6b6b;color:#fff}.btn-sub:hover{background:#0f0;color:#000}.btn-b2b:hover{background:#ffd700;color:#000}.btn-del:hover{background:#ff6b6b;color:#fff}.search{margin-bottom:15px}.search input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;width:300px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-bottom:30px}.stat-card{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;text-align:center}.stat-number{font-size:2em;font-weight:bold;color:#ffd200}.stat-label{opacity:0.7}form.promo input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;margin:4px;width:180px}form.promo button{padding:8px 16px;border-radius:8px;border:1px solid #0f0;background:rgba(0,255,0,0.1);color:#0f0;cursor:pointer}"
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -371,18 +373,26 @@ def admin_promos():
     lang = session.get('admin_lang', 'en')
     msg = ""
     if request.method == 'POST':
+        edit_code = (request.form.get('edit_code') or '').strip().upper()
         code = (request.form.get('code') or '').strip().upper()
-        if not code:
-            code = _secrets.token_urlsafe(6).replace('-', '').replace('_', '')[:8].upper()
-        try:
-            _feat.create_promo(code,
-                               days=int(request.form.get('days') or 0),
-                               discount_percent=float(request.form.get('discount') or 0),
-                               max_uses=int(request.form.get('max_uses') or 0),
-                               expires_at=(request.form.get('expires') or '').strip() or None)
-            msg = f"✅ {code}"
-        except Exception as e:
-            msg = f"❌ {e}"
+        days = int(request.form.get('days') or 0)
+        disc = float(request.form.get('discount') or 0)
+        maxu = int(request.form.get('max_uses') or 0)
+        exp = (request.form.get('expires') or '').strip() or None
+        if edit_code:
+            db = _feat._db()
+            if edit_code in db.get('promos', {}):
+                db['promos'][edit_code].update({"days": days, "discount_percent": disc, "max_uses": maxu, "expires_at": exp})
+                _feat._save_db(db)
+                msg = f"✅ {edit_code} updated"
+        else:
+            if not code:
+                code = _secrets.token_urlsafe(6).replace('-', '').replace('_', '')[:8].upper()
+            try:
+                _feat.create_promo(code, days=days, discount_percent=disc, max_uses=maxu, expires_at=exp)
+                msg = f"✅ {code} created"
+            except Exception as e:
+                msg = f"❌ {e}"
     if request.args.get('del'):
         dcode = request.args.get('del')
         try:
@@ -393,30 +403,41 @@ def admin_promos():
         except Exception:
             pass
         return redirect(url_for('admin_promos'))
+    edit_code = (request.args.get('edit') or '').strip().upper()
     promos = {}
     try:
         promos = _feat._db().get('promos', {})
     except Exception:
         promos = {}
+    ep = promos.get(edit_code, {}) if edit_code else {}
     rows = ""
     for code, p in promos.items():
         used = len(p.get('used_by', []) or [])
         maxu = p.get('max_uses', 0)
         rows += f"""<tr><td><b>{code}</b></td><td>{p.get('days', 0)}</td><td>{p.get('discount_percent', 0):.0f}%</td><td>{used}/{maxu if maxu else '∞'}</td><td>{(p.get('expires_at') or '-')[:10]}</td>
-        <td><a href="/admin/promos?del={code}" class="btn btn-del" title="{AL(lang, 'tip_promo_del')}" onclick="return confirm('{AL(lang, 'confirm')}')">🗑️</a></td></tr>"""
+        <td><a href="/admin/promos?edit={code}" class="btn btn-sub" title="{AL(lang, 'tip_promo_edit')}">✏️</a>
+        <a href="/admin/promos?del={code}" class="btn btn-del" title="{AL(lang, 'tip_promo_del')}" onclick="return confirm('{AL(lang, 'confirm')}')">🗑️</a></td></tr>"""
     if not rows:
         rows = f"<tr><td colspan='6'>{AL(lang, 'no_promos')}</td></tr>"
+    v_days = ep.get('days', 30) if edit_code else 30
+    v_disc = ep.get('discount_percent', 0) if edit_code else 0
+    v_max = ep.get('max_uses', 0) if edit_code else 0
+    v_exp = (ep.get('expires_at') or '') if edit_code else ''
+    hidden = f'<input type="hidden" name="edit_code" value="{edit_code}">' if edit_code else ''
+    form_head = f"{AL(lang, 'promo_editing')}: <b>{edit_code}</b>" if edit_code else AL(lang, 'title_promos')
     return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_promos')}</title>
     <style>{ADMIN_CSS}</style></head><body><div class="container">
     <div class="header"><h1>🎁 {AL(lang, 'title_promos')}</h1>{admin_menu(lang)}</div>
     <p style="margin-bottom:10px">{msg}</p>
+    <h3 style="margin:10px 0">{form_head}</h3>
     <form class="promo" method="post">
-      <input name="code" title="{AL(lang, 'help_code')}" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})">
-      <input name="days" type="number" title="{AL(lang, 'help_days')}" placeholder="{AL(lang, 'promo_days')}" value="30">
-      <input name="discount" type="number" title="{AL(lang, 'help_discount')}" placeholder="{AL(lang, 'promo_discount')}" value="0">
-      <input name="max_uses" type="number" title="{AL(lang, 'help_max')}" placeholder="{AL(lang, 'promo_max')}" value="0">
-      <input name="expires" title="{AL(lang, 'help_expires')}" placeholder="{AL(lang, 'promo_expires')}">
-      <button type="submit">➕ {AL(lang, 'promo_create')}</button>
+      {hidden}
+      <input name="code" title="{AL(lang, 'help_code')}" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})" {'disabled' if edit_code else ''}>
+      <input name="days" type="number" title="{AL(lang, 'help_days')}" placeholder="{AL(lang, 'promo_days')}" value="{v_days}">
+      <input name="discount" type="number" title="{AL(lang, 'help_discount')}" placeholder="{AL(lang, 'promo_discount')}" value="{v_disc}">
+      <input name="max_uses" type="number" title="{AL(lang, 'help_max')}" placeholder="{AL(lang, 'promo_max')}" value="{v_max}">
+      <input name="expires" title="{AL(lang, 'help_expires')}" placeholder="{AL(lang, 'promo_expires')}" value="{v_exp}">
+      <button type="submit">{'💾 ' + AL(lang, 'btn_save') if edit_code else '➕ ' + AL(lang, 'promo_create')}</button>
     </form>
     <ul style="margin:10px 0 20px 18px;opacity:0.75;font-size:13px">
       <li>💡 {AL(lang, 'help_code')}</li>

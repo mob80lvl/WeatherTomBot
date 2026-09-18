@@ -169,6 +169,8 @@ def _dump_notif(v):
 def _db():
     """Собирает словарь из SQLite (структура идентична features.json)."""
     conn = get_conn()
+    conn.execute("CREATE TABLE IF NOT EXISTS f_promos (code TEXT PRIMARY KEY, data TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS f_payments (pid TEXT PRIMARY KEY, data TEXT)")
     try:
         db = {
             "users": {}, "events": [], "promos": {}, "payments": {},
@@ -220,7 +222,13 @@ def _db():
             db["events"].append(json.loads(row[0]))
         for row in conn.execute("SELECT key, value FROM f_settings"):
             db["settings"][row[0]] = json.loads(row[1])
-        return db
+                for _row in conn.execute('SELECT code, data FROM f_promos'):
+            try: db['promos'][_row[0]] = json.loads(_row[1])
+            except Exception: pass
+        for _row in conn.execute('SELECT pid, data FROM f_payments'):
+            try: db['payments'][_row[0]] = json.loads(_row[1])
+            except Exception: pass
+return db
     finally:
         conn.close()
 
@@ -266,6 +274,12 @@ def _save_db(db):
             conn.execute("INSERT INTO f_referrals (code, owner, users, rewarded) VALUES (?,?,?,?)",
                          (code, r.get("owner"), json.dumps(r.get("users", []), ensure_ascii=False),
                           1 if r.get("rewarded") else 0))
+        conn.execute("DELETE FROM f_promos")
+        for _code, _p in db.get("promos", {}).items():
+            conn.execute("INSERT INTO f_promos (code, data) VALUES (?,?)", (_code, json.dumps(_p, ensure_ascii=False)))
+        conn.execute("DELETE FROM f_payments")
+        for _pid, _p in db.get("payments", {}).items():
+            conn.execute("INSERT INTO f_payments (pid, data) VALUES (?,?)", (_pid, json.dumps(_p, ensure_ascii=False)))
         existing = conn.execute("SELECT COUNT(*) FROM f_events").fetchone()[0]
         events = db.get("events", [])
         if len(events) < existing:
