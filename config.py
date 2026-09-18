@@ -1,4 +1,16 @@
 import os
+# Автозагрузка .env (не перезаписывает уже заданные переменные окружения)
+try:
+    _env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(_env_path):
+        with open(_env_path, encoding="utf-8") as _ef:
+            for _ln in _ef:
+                _ln = _ln.strip()
+                if _ln and not _ln.startswith("#") and "=" in _ln:
+                    _k, _v = _ln.split("=", 1)
+                    os.environ.setdefault(_k.strip(), _v.strip())
+except Exception:
+    pass
 
 # ============================================================
 #  НАСТРОЙКИ

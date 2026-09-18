@@ -65,9 +65,6 @@ def handle_callback_query(callback_query):
                 method = "rub"
             res = create_invoice(chat_id, price, plan=plan, method=method)
             _lg.getLogger(__name__).info(f"PAYCB invoice result: {str(res)[:200]}")
-            if not res or not res.get("ok"):
-                desc = (res or {}).get("description", "unknown error")
-                send_message(chat_id, f"Ошибка оплаты (тест-режим): {desc}" if get_user_lang(chat_id) == "ru" else f"Payment error (test): {desc}", parse_mode="")
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB pay error: {e}")
             send_message(chat_id, f"Ошибка создания счёта: {e}", parse_mode="")
