@@ -1,0 +1,592 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Админ-панель: вход, пользователи, подписки, тексты."""
+import os
+import json
+import sqlite3
+from db import get_conn, DB_FILE
+import logging
+from functools import wraps
+from datetime import datetime, timedelta
+from flask import request, session, redirect, url_for, render_template_string, jsonify, flash
+
+from app import app
+from config import *
+from texts import T, TEXTS, LANGUAGES
+from storage import (get_user_lang, get_user_city, get_current_plan, is_user_subscribed,
+                     get_user_subscription, set_user_subscription, set_user_lang,
+                     get_user_b2b_type, _load_json_file, _save_json_file)
+from utils import send_message
+
+logger = logging.getLogger(__name__)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            flash('Please log in', 'warning')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+ADMIN_UI = {
+ "en": {
+  "menu_dashboard":"Dashboard","menu_users":"Users","menu_payments":"Payments","menu_promos":"Promos","menu_subs":"Subscriptions","menu_texts":"Texts","menu_logout":"Logout",
+  "title_users":"Users","search_ph":"Search by ID or city...","col_id":"ID","col_city":"City","col_source":"Source","col_first":"First seen","col_sub":"Subscription","col_act":"Actions",
+  "no_sub":"No subscription",
+  "tip_premium":"Grant Premium 30 days","tip_business":"Grant Business 30 days","tip_disable":"Disable subscription","tip_delete":"Delete user",
+  "confirm":"Are you sure?"
+ },
+ "ru": {
+  "menu_dashboard":"Дашборд","menu_users":"Пользователи","menu_payments":"Платежи","menu_promos":"Промокоды","menu_subs":"Подписки","menu_texts":"Тексты","menu_logout":"Выход",
+  "title_users":"Пользователи","search_ph":"Поиск по ID или городу...","col_id":"ID","col_city":"Город","col_source":"Источник","col_first":"Первая активность","col_sub":"Подписка","col_act":"Действия",
+  "no_sub":"Нет подписки",
+  "tip_premium":"Выдать Premium 30 дней","tip_business":"Выдать Business 30 дней","tip_disable":"Отключить подписку","tip_delete":"Удалить пользователя",
+  "confirm":"Вы уверены?"
+ }
+}
+def AL(lang, key):
+    return ADMIN_UI.get(lang, ADMIN_UI["en"]).get(key, ADMIN_UI["en"].get(key, key))
+@app.route('/admin/lang/<lg>')
+@login_required
+def admin_lang(lg):
+    if lg in ("ru", "en"):
+        session['admin_lang'] = lg
+    return redirect(request.referrer or url_for('admin_dashboard'))
+def admin_menu(lang):
+    return ('<div class="menu">'
+            f'<a href="/admin">{AL(lang, "menu_dashboard")}</a>'
+            f'<a href="/admin/users">{AL(lang, "menu_users")}</a>'
+            f'<a href="/admin/payments">{AL(lang, "menu_payments")}</a>'
+            f'<a href="/admin/promos">{AL(lang, "menu_promos")}</a>'
+            f'<a href="/admin/subscriptions">{AL(lang, "menu_subs")}</a>'
+            f'<a href="/admin/texts">{AL(lang, "menu_texts")}</a>'
+            f'<a href="/admin/lang/ru" title="Русский">🇷🇺</a>'
+            f'<a href="/admin/lang/en" title="English">🇬</a>'
+            f'<a href="/admin/logout">{AL(lang, "menu_logout")}</a></div>')
+
+ADMIN_UI["en"].update({
+ "title_dashboard":"Dashboard","stat_users":"Users","stat_subscribed":"Subscribed","stat_revenue_stars":"Revenue Stars","stat_revenue_rub":"Revenue RUB","stat_new7":"New 7 days","stat_payments":"Payments",
+ "title_payments":"Payments","col_date":"Date","col_user":"User","col_plan":"Plan","col_method":"Method","col_amount":"Amount","col_status":"Status","no_payments":"No payments yet","method_stars":"⭐ Stars","method_card":"💳 Card",
+ "title_promos":"Promo codes","promo_code":"Code","promo_auto":"leave empty = auto","promo_days":"Days","promo_discount":"Discount %","promo_max":"Max uses","promo_expires":"Expires (YYYY-MM-DD, optional)","promo_create":"Create","no_promos":"No promo codes","tip_promo_del":"Delete promo code",
+ "title_subs":"Subscriptions","col_expiry":"Valid until","col_days":"Days left","col_by":"Activated by","tip_revoke":"Revoke subscription","revoke":"Revoke","no_subs":"No subscriptions","active":"✅ Active","expired":"❌ Expired"
+})
+ADMIN_UI["ru"].update({
+ "title_dashboard":"Дашборд","stat_users":"Пользователи","stat_subscribed":"Подписаны","stat_revenue_stars":"Выручка Stars","stat_revenue_rub":"Выручка ₽","stat_new7":"Новых за 7 дней","stat_payments":"Платежей",
+ "title_payments":"Платежи","col_date":"Дата","col_user":"Пользователь","col_plan":"План","col_method":"Способ","col_amount":"Сумма","col_status":"Статус","no_payments":"Платежей пока нет","method_stars":"⭐ Stars","method_card":"💳 Карта",
+ "title_promos":"Промокоды","promo_code":"Код","promo_auto":"пусто = сгенерировать","promo_days":"Дней","promo_discount":"Скидка %","promo_max":"Лимит активаций","promo_expires":"Истекает (ГГГГ-ММ-ДД, необяз.)","promo_create":"Создать","no_promos":"Промокодов нет","tip_promo_del":"Удалить промокод",
+ "title_subs":"Подписки","col_expiry":"Действует до","col_days":"Осталось дней","col_by":"Кем выдана","tip_revoke":"Отозвать подписку","revoke":"Отозвать","no_subs":"Подписок нет","active":"✅ Активна","expired":"❌ Истекла"
+})
+ADMIN_UI["en"].update({
+ "help_code":"Promo code. Leave empty to auto-generate","help_days":"How many days of subscription the code grants","help_discount":"Discount percent (0 = no discount)","help_max":"Maximum activations (0 = unlimited)","help_expires":"Code expiry date YYYY-MM-DD (empty = never expires)"
+})
+ADMIN_UI["ru"].update({
+ "help_code":"Код промокода. Оставьте пустым — сгенерируется автоматически","help_days":"Сколько дней подписки даёт код","help_discount":"Скидка в процентах (0 = без скидки)","help_max":"Лимит активаций (0 = без лимита)","help_expires":"Дата истечения ГГГГ-ММ-ДД (пусто = бессрочно)"
+})
+ADMIN_UI["en"].update({"title_texts":"Manage Texts","saved_ok":"✅ Texts saved successfully!"})
+ADMIN_UI["ru"].update({"title_texts":"Управление текстами","saved_ok":"✅ Тексты сохранены!"})
+ADMIN_CSS = "*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}.container{max-width:1200px;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{color:#ffd200}.menu a{color:#aaa;text-decoration:none;margin-left:20px}.menu a:hover{color:#fff}table{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}th{background:rgba(255,255,255,0.1)}.subscribed{color:#0f0}.free{color:#ff6b6b}.expiring{color:#ffd700}.btn{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block}.btn-sub{color:#0f0;border:1px solid #0f0}.btn-b2b{color:#ffd700;border:1px solid #ffd700}.btn-disable{color:#ff6b6b;border:1px solid #ff6b6b}.btn-del{color:#ff6b6b;border:1px solid #ff6b6b}.btn-disable:hover{background:#ff6b6b;color:#fff}.btn-sub:hover{background:#0f0;color:#000}.btn-b2b:hover{background:#ffd700;color:#000}.btn-del:hover{background:#ff6b6b;color:#fff}.search{margin-bottom:15px}.search input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;width:300px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-bottom:30px}.stat-card{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;text-align:center}.stat-number{font-size:2em;font-weight:bold;color:#ffd200}.stat-label{opacity:0.7}form.promo input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;margin:4px;width:180px}form.promo button{padding:8px 16px;border-radius:8px;border:1px solid #0f0;background:rgba(0,255,0,0.1);color:#0f0;cursor:pointer}"
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            flash('Welcome!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return render_template_string('''
+            <!DOCTYPE html>
+            <html>
+            <head><title>MeteoBot - Login</title>
+            <style>body{font-family:Arial;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}.box{background:rgba(255,255,255,0.05);padding:40px;border-radius:20px;width:350px}h1{text-align:center;color:#ffd200}input{width:100%;padding:12px;margin:10px 0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px}button{width:100%;padding:12px;background:linear-gradient(90deg,#f7971e,#ffd200);border:none;border-radius:8px;font-weight:bold;cursor:pointer}.error{color:#ff6b6b;text-align:center;margin-top:10px}</style>
+            </head>
+            <body>
+                <div class="box">
+                    <h1>🌤 MeteoBot</h1>
+                    <form method="post">
+                        <input type="text" name="username" placeholder="Username" required>
+                        <input type="password" name="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                    <div class="error">❌ Invalid username or password</div>
+                </div>
+            </body>
+            </html>
+            ''')
+
+    return render_template_string('''
+    <!DOCTYPE html>
+    <html>
+    <head><title>MeteoBot - Login</title>
+    <style>body{font-family:Arial;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh}.box{background:rgba(255,255,255,0.05);padding:40px;border-radius:20px;width:350px}h1{text-align:center;color:#ffd200}input{width:100%;padding:12px;margin:10px 0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px}button{width:100%;padding:12px;background:linear-gradient(90deg,#f7971e,#ffd200);border:none;border-radius:8px;font-weight:bold;cursor:pointer}</style>
+    </head>
+    <body>
+        <div class="box">
+            <h1>🌤 MeteoBot</h1>
+            <form method="post">
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    ''')
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('admin_login'))
+# ===== Хелперы для чтения данных админки из SQLite =====
+
+def _admin_get_users():
+    """Возвращает {chat_id: city} из таблицы users (только цифровые id)."""
+    conn = sqlite3.connect(DB_FILE)
+    users = {}
+    for row in conn.execute("SELECT chat_id, city FROM users"):
+        chat_id = str(row[0])
+        # Показываем TG и VK пользователей, скрываем только тестовые/отладочные id
+        if chat_id.isdigit() or (chat_id.startswith("vk_") and chat_id[3:].isdigit()):
+            users[chat_id] = row[1] if row[1] else ""
+    conn.close()
+    return users
+
+def _admin_get_subscriptions():
+    """Возвращает {chat_id: {plan, expiry, activated_by, activated_at, b2b_type}} из subscriptions."""
+    conn = sqlite3.connect(DB_FILE)
+    subs = {}
+    for row in conn.execute("SELECT chat_id, plan, expiry, activated_by, activated_at, b2b_type FROM subscriptions"):
+        subs[row[0]] = {
+            "plan": row[1],
+            "expiry": row[2],
+            "activated_by": row[3],
+            "activated_at": row[4],
+            "b2b_type": row[5],
+        }
+    conn.close()
+    return subs
+
+def _admin_get_b2b_users():
+    """Возвращает {chat_id: {type, activated_at, expiry, source}} из b2b_users."""
+    conn = sqlite3.connect(DB_FILE)
+    b2b = {}
+    for row in conn.execute("SELECT chat_id, type, activated_at, expiry, source FROM b2b_users"):
+        b2b[row[0]] = {
+            "type": row[1],
+            "activated_at": row[2],
+            "expiry": row[3],
+            "source": row[4],
+        }
+    conn.close()
+    return b2b
+
+
+@app.route('/admin/')
+@login_required
+def admin_slash_redirect():
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    from datetime import timedelta
+    lang = session.get('admin_lang', 'en')
+    users = _admin_get_users()
+    subscriptions = _admin_get_subscriptions()
+    now = datetime.now()
+    subscribed = 0
+    for s in subscriptions.values():
+        try:
+            if datetime.fromisoformat(s['expiry']) > now:
+                subscribed += 1
+        except Exception:
+            pass
+    tot_stars = 0.0
+    tot_rub = 0.0
+    pay_count = 0
+    new7 = 0
+    try:
+        import features as _feat
+        db = _feat._db()
+        for p in db.get('payments', {}).values():
+            pay_count += 1
+            amt = float(p.get('amount', 0) or 0)
+            if p.get('currency') == 'RUB':
+                tot_rub += amt / 100.0
+            else:
+                tot_stars += amt
+        cutoff = (now - timedelta(days=7)).isoformat()[:10]
+        for u in db.get('users', {}).values():
+            fs = (u.get('first_seen') or '')[:10]
+            if fs and fs >= cutoff:
+                new7 += 1
+    except Exception:
+        pass
+    cards = [
+        (len(users), AL(lang, 'stat_users')),
+        (subscribed, AL(lang, 'stat_subscribed')),
+        (f"{tot_stars:.0f} ⭐", AL(lang, 'stat_revenue_stars')),
+        (f"{tot_rub:.0f} ₽", AL(lang, 'stat_revenue_rub')),
+        (new7, AL(lang, 'stat_new7')),
+        (pay_count, AL(lang, 'stat_payments')),
+    ]
+    cards_html = "".join(f'<div class="stat-card"><div class="stat-number">{v}</div><div class="stat-label">{lbl}</div></div>' for v, lbl in cards)
+    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_dashboard')}</title>
+    <style>{ADMIN_CSS}</style></head><body><div class="container">
+    <div class="header"><h1>🌤 MeteoBot</h1>{admin_menu(lang)}</div>
+    <div class="stats">{cards_html}</div>
+    </div></body></html>"""
+
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    import html as _html
+    lang = session.get('admin_lang', 'en')
+    q = (request.args.get('q') or '').strip().lower()
+    users = _admin_get_users()
+    subscriptions = _admin_get_subscriptions()
+    fusers = {}
+    try:
+        import features as _feat
+        fusers = _feat._db().get("users", {})
+    except Exception:
+        fusers = {}
+    now = datetime.now()
+    rows_html = ""
+    for user_id, city in users.items():
+        if q and q not in str(user_id).lower() and q not in (city or "").lower():
+            continue
+        fu = fusers.get(str(user_id), {}) or {}
+        source = fu.get("source") or ("vk" if str(user_id).startswith("vk_") else "telegram")
+        first_seen = (fu.get("first_seen") or "")[:10] or "-"
+        sub = subscriptions.get(user_id)
+        if sub:
+            try:
+                expiry = datetime.fromisoformat(sub["expiry"])
+                days_left = (expiry - now).days
+                if days_left >= 0:
+                    left = f"{days_left}d left" if lang == "en" else f"осталось {days_left} дн."
+                    status = f'{sub["plan"]} · {expiry:%Y-%m-%d} · {left}'
+                    cls = "subscribed" if days_left > 7 else "expiring"
+                else:
+                    ago = f"expired {-days_left}d ago" if lang == "en" else f"истекла {-days_left} дн. назад"
+                    status = f'{sub["plan"]} · {ago}'
+                    cls = "free"
+            except Exception:
+                status = sub.get("plan") or "?"
+                cls = "subscribed"
+        else:
+            status = AL(lang, "no_sub")
+            cls = "free"
+        rows_html += f"""<tr>
+            <td>{user_id}</td>
+            <td>{city}</td>
+            <td>{source}</td>
+            <td>{first_seen}</td>
+            <td class="{cls}">{status}</td>
+            <td>
+                <a href="/admin/user/subscribe/{user_id}" class="btn btn-sub" title="{AL(lang, 'tip_premium')}" onclick="return confirm('{AL(lang, 'confirm')}')">👤</a>
+                <a href="/admin/user/b2b/{user_id}/business" class="btn btn-b2b" title="{AL(lang, 'tip_business')}" onclick="return confirm('{AL(lang, 'confirm')}')">🏢</a>
+                <a href="/admin/subscription/disable/{user_id}" class="btn btn-disable" title="{AL(lang, 'tip_disable')}" onclick="return confirm('{AL(lang, 'confirm')}')">🚫</a>
+                <a href="/admin/user/delete/{user_id}" class="btn btn-del" title="{AL(lang, 'tip_delete')}" onclick="return confirm('{AL(lang, 'confirm')}')">🗑️</a>
+            </td>
+        </tr>"""
+    q_esc = _html.escape(q, quote=True)
+    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_users')}</title>
+    <style>*{{margin:0;padding:0;box-sizing:border-box}}body{{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}}.container{{max-width:1200px;margin:0 auto}}.header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}}h1{{color:#ffd200}}.menu a{{color:#aaa;text-decoration:none;margin-left:20px}}.menu a:hover{{color:#fff}}table{{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}}th,td{{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}}th{{background:rgba(255,255,255,0.1)}}.subscribed{{color:#0f0}}.free{{color:#ff6b6b}}.expiring{{color:#ffd700}}.btn{{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block}}.btn-sub{{color:#0f0;border:1px solid #0f0}}.btn-b2b{{color:#ffd700;border:1px solid #ffd700}}.btn-disable{{color:#ff6b6b;border:1px solid #ff6b6b}}.btn-del{{color:#ff6b6b;border:1px solid #ff6b6b}}.btn-disable:hover{{background:#ff6b6b;color:#fff}}.btn-sub:hover{{background:#0f0;color:#000}}.btn-b2b:hover{{background:#ffd700;color:#000}}.btn-del:hover{{background:#ff6b6b;color:#fff}}.search{{margin-bottom:15px}}.search input{{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;width:300px}}</style>
+    </head><body><div class="container"><div class="header"><h1>👥 {AL(lang, 'title_users')}</h1>
+    {admin_menu(lang)}</div>
+    <form class="search" method="get" action="/admin/users"><input name="q" value="{q_esc}" placeholder="{AL(lang, 'search_ph')}"></form>
+    <table><thead><tr><th>{AL(lang, 'col_id')}</th><th>{AL(lang, 'col_city')}</th><th>{AL(lang, 'col_source')}</th><th>{AL(lang, 'col_first')}</th><th>{AL(lang, 'col_sub')}</th><th>{AL(lang, 'col_act')}</th></tr></thead><tbody>
+    {rows_html}
+    </tbody></table></div></body></html>"""
+
+@app.route('/admin/user/delete/<chat_id>')
+@login_required
+def admin_user_delete(chat_id):
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM users WHERE chat_id=?", (str(chat_id),))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin_users'))
+@app.route('/admin/user/subscribe/<chat_id>')
+@login_required
+def admin_user_subscribe(chat_id):
+    set_user_subscription(chat_id, 30, b2b_type=None)
+    return redirect(url_for('admin_users'))
+@app.route('/admin/user/b2b/<chat_id>/<b2b_type>')
+@login_required
+def admin_user_b2b(chat_id, b2b_type):
+    if b2b_type in B2B_TYPES:
+        set_user_subscription(chat_id, 30, b2b_type=b2b_type)
+    return redirect(url_for('admin_users'))
+@app.route('/admin/subscription/disable/<chat_id>')
+@login_required
+def admin_subscription_disable(chat_id):
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM subscriptions WHERE chat_id=?", (str(chat_id),))
+    conn.execute("DELETE FROM b2b_users WHERE chat_id=?", (str(chat_id),))
+    conn.commit()
+    conn.close()
+
+    flash(f'Subscription disabled for user {chat_id}', 'success')
+    return redirect(url_for('admin_users'))
+@app.route('/admin/payments')
+@login_required
+def admin_payments():
+    lang = session.get('admin_lang', 'en')
+    pays = []
+    try:
+        import features as _feat
+        pays = list(_feat._db().get('payments', {}).values())
+    except Exception:
+        pays = []
+    pays.sort(key=lambda x: x.get('created_at') or '', reverse=True)
+    rows = ""
+    for p in pays:
+        cur = p.get('currency', 'XTR')
+        amt = float(p.get('amount', 0) or 0)
+        if cur == 'RUB':
+            method = AL(lang, 'method_card')
+            amount = f"{amt / 100:.2f} ₽"
+        else:
+            method = AL(lang, 'method_stars')
+            amount = f"{amt:.0f} ⭐"
+        payload = p.get('payload', '')
+        plan = 'business' if ('business' in payload or payload.startswith('b2b_')) else 'premium'
+        rows += f"<tr><td>{(p.get('created_at') or '')[:16].replace('T', ' ')}</td><td>{p.get('user_id')}</td><td>{plan}</td><td>{method}</td><td>{amount}</td><td class='subscribed'>{p.get('status', 'paid')}</td></tr>"
+    if not rows:
+        rows = f"<tr><td colspan='6'>{AL(lang, 'no_payments')}</td></tr>"
+    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_payments')}</title>
+    <style>{ADMIN_CSS}</style></head><body><div class="container">
+    <div class="header"><h1>💳 {AL(lang, 'title_payments')}</h1>{admin_menu(lang)}</div>
+    <table><thead><tr><th>{AL(lang, 'col_date')}</th><th>{AL(lang, 'col_user')}</th><th>{AL(lang, 'col_plan')}</th><th>{AL(lang, 'col_method')}</th><th>{AL(lang, 'col_amount')}</th><th>{AL(lang, 'col_status')}</th></tr></thead>
+    <tbody>{rows}</tbody></table></div></body></html>"""
+@app.route('/admin/promos', methods=['GET', 'POST'])
+@login_required
+def admin_promos():
+    import secrets as _secrets
+    import features as _feat
+    lang = session.get('admin_lang', 'en')
+    msg = ""
+    if request.method == 'POST':
+        code = (request.form.get('code') or '').strip().upper()
+        if not code:
+            code = _secrets.token_urlsafe(6).replace('-', '').replace('_', '')[:8].upper()
+        try:
+            _feat.create_promo(code,
+                               days=int(request.form.get('days') or 0),
+                               discount_percent=float(request.form.get('discount') or 0),
+                               max_uses=int(request.form.get('max_uses') or 0),
+                               expires_at=(request.form.get('expires') or '').strip() or None)
+            msg = f"✅ {code}"
+        except Exception as e:
+            msg = f"❌ {e}"
+    if request.args.get('del'):
+        dcode = request.args.get('del')
+        try:
+            db = _feat._db()
+            if dcode in db.get('promos', {}):
+                del db['promos'][dcode]
+                _feat._save_db(db)
+        except Exception:
+            pass
+        return redirect(url_for('admin_promos'))
+    promos = {}
+    try:
+        promos = _feat._db().get('promos', {})
+    except Exception:
+        promos = {}
+    rows = ""
+    for code, p in promos.items():
+        used = len(p.get('used_by', []) or [])
+        maxu = p.get('max_uses', 0)
+        rows += f"""<tr><td><b>{code}</b></td><td>{p.get('days', 0)}</td><td>{p.get('discount_percent', 0):.0f}%</td><td>{used}/{maxu if maxu else '∞'}</td><td>{(p.get('expires_at') or '-')[:10]}</td>
+        <td><a href="/admin/promos?del={code}" class="btn btn-del" title="{AL(lang, 'tip_promo_del')}" onclick="return confirm('{AL(lang, 'confirm')}')">🗑️</a></td></tr>"""
+    if not rows:
+        rows = f"<tr><td colspan='6'>{AL(lang, 'no_promos')}</td></tr>"
+    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_promos')}</title>
+    <style>{ADMIN_CSS}</style></head><body><div class="container">
+    <div class="header"><h1>🎁 {AL(lang, 'title_promos')}</h1>{admin_menu(lang)}</div>
+    <p style="margin-bottom:10px">{msg}</p>
+    <form class="promo" method="post">
+      <input name="code" title="{AL(lang, 'help_code')}" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})">
+      <input name="days" type="number" title="{AL(lang, 'help_days')}" placeholder="{AL(lang, 'promo_days')}" value="30">
+      <input name="discount" type="number" title="{AL(lang, 'help_discount')}" placeholder="{AL(lang, 'promo_discount')}" value="0">
+      <input name="max_uses" type="number" title="{AL(lang, 'help_max')}" placeholder="{AL(lang, 'promo_max')}" value="0">
+      <input name="expires" title="{AL(lang, 'help_expires')}" placeholder="{AL(lang, 'promo_expires')}">
+      <button type="submit">➕ {AL(lang, 'promo_create')}</button>
+    </form>
+    <ul style="margin:10px 0 20px 18px;opacity:0.75;font-size:13px">
+      <li>💡 {AL(lang, 'help_code')}</li>
+      <li>💡 {AL(lang, 'help_days')}</li>
+      <li>💡 {AL(lang, 'help_discount')}</li>
+      <li>💡 {AL(lang, 'help_max')}</li>
+      <li>💡 {AL(lang, 'help_expires')}</li>
+    </ul>
+    <table><thead><tr><th>{AL(lang, 'promo_code')}</th><th>{AL(lang, 'promo_days')}</th><th>{AL(lang, 'promo_discount')}</th><th>{AL(lang, 'promo_max')}</th><th>{AL(lang, 'promo_expires')}</th><th>{AL(lang, 'col_act')}</th></tr></thead>
+    <tbody>{rows}</tbody></table></div></body></html>"""
+
+@app.route('/admin/subscriptions')
+@login_required
+def admin_subscriptions():
+    lang = session.get('admin_lang', 'en')
+    subs = _admin_get_subscriptions()
+    now = datetime.now()
+    rows = ""
+    for uid, s in subs.items():
+        try:
+            expiry = datetime.fromisoformat(s['expiry'])
+            days_left = (expiry - now).days
+            active = days_left >= 0
+        except Exception:
+            days_left = '?'
+            active = True
+        cls = 'subscribed' if active else 'free'
+        status = AL(lang, 'active') if active else AL(lang, 'expired')
+        rows += f"""<tr><td>{uid}</td><td>{s.get('plan')}</td><td>{(s.get('expiry') or '')[:10]}</td><td class="{cls}">{days_left}</td><td>{s.get('activated_by') or '-'}</td>
+        <td><a href="/admin/subscription/disable/{uid}" class="btn btn-disable" title="{AL(lang, 'tip_revoke')}" onclick="return confirm('{AL(lang, 'confirm')}')">🚫 {AL(lang, 'revoke')}</a></td></tr>"""
+    if not rows:
+        rows = f"<tr><td colspan='6'>{AL(lang, 'no_subs')}</td></tr>"
+    return f"""<!DOCTYPE html><html><head><title>MeteoBot - {AL(lang, 'title_subs')}</title>
+    <style>{ADMIN_CSS}</style></head><body><div class="container">
+    <div class="header"><h1>🔑 {AL(lang, 'title_subs')}</h1>{admin_menu(lang)}</div>
+    <table><thead><tr><th>ID</th><th>{AL(lang, 'col_plan')}</th><th>{AL(lang, 'col_expiry')}</th><th>{AL(lang, 'col_days')}</th><th>{AL(lang, 'col_by')}</th><th>{AL(lang, 'col_act')}</th></tr></thead>
+    <tbody>{rows}</tbody></table></div></body></html>"""
+
+@app.route('/admin/subscription/revoke/<chat_id>')
+@login_required
+def admin_subscription_revoke(chat_id):
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM subscriptions WHERE chat_id=?", (str(chat_id),))
+    conn.execute("DELETE FROM b2b_users WHERE chat_id=?", (str(chat_id),))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('admin_subscriptions'))
+@app.route('/admin/texts', methods=['GET', 'POST'])
+@login_required
+def admin_texts():
+    global TEXTS
+
+    if request.method == 'POST':
+        new_texts = {}
+        for lang in TEXTS.keys():
+            new_texts[lang] = {}
+            for key in TEXTS[lang].keys():
+                form_key = f"{lang}_{key}"
+                new_texts[lang][key] = request.form.get(form_key, '')
+
+        TEXTS = new_texts
+        flash(AL(session.get('admin_lang', 'en'), 'saved_ok'), 'success')
+        return redirect(url_for('admin_texts'))
+
+    html = '''<!DOCTYPE html>
+    <html>
+    <head>
+        <title>📝 Manage Texts</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; background: #0f0c29; color: #fff; padding: 20px; }
+            .container { max-width: 1200px; margin: 0 auto; }
+            .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; }
+            h1 { color: #ffd200; }
+            .menu a { color: #aaa; text-decoration: none; margin-left: 20px; }
+            .menu a:hover { color: #fff; }
+            .flash { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .flash-success { background: rgba(0,255,0,0.1); border: 1px solid rgba(0,255,0,0.3); color: #0f0; }
+            .flash-error { background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); color: #ff6b6b; }
+            .lang-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+            .lang-tab { padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; color: #aaa; }
+            .lang-tab.active { background: rgba(255,215,0,0.1); border-color: #ffd200; color: #ffd200; }
+            .lang-content { display: none; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 20px; }
+            .lang-content.active { display: block; }
+            .field { margin-bottom: 15px; }
+            .field label { display: block; margin-bottom: 5px; font-weight: bold; opacity: 0.8; }
+            .field .key { color: #888; font-size: 0.8em; font-family: monospace; display: block; margin-bottom: 5px; }
+            .field textarea { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; min-height: 60px; resize: vertical; }
+            .field textarea:focus { outline: none; border-color: #ffd200; }
+            .btn-save { padding: 12px 40px; background: linear-gradient(90deg, #f7971e, #ffd200); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 20px; }
+            .btn-save:hover { transform: scale(1.02); }
+            .lang-select {
+                padding: 10px 15px;
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.2);
+                color: #fff;
+                border-radius: 8px;
+                font-size: 14px;
+                margin-bottom: 20px;
+                cursor: pointer;
+            }
+            .lang-select option { background: #0f0c29; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>__ADMIN_TITLE__</h1>
+                __ADMIN_MENU__
+            </div>
+
+            <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+                <span style="opacity: 0.7;">🌐 Language:</span>
+                <select class="lang-select" id="langSelect" onchange="switchLang(this.value)">
+                    <option value="ru">🇷🇺 Русский</option>
+                    <option value="en" selected>🇬🇧 English</option>
+                                    </select>
+                <span style="opacity: 0.5; font-size: 12px;">(default: English)</span>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="post">
+    '''
+
+    for lang_code, lang_name in [("ru", "🇷🇺 Русский"), ("en", "🇬🇧 English")]:
+        display = "block" if lang_code == "en" else "none"
+        html += f'<div class="lang-content" id="lang_{lang_code}" style="display:{display}">'
+        html += f'<h2>{lang_name}</h2>'
+
+        lang_texts = TEXTS.get(lang_code, TEXTS.get('ru', {}))
+        for key, value in lang_texts.items():
+            html += f'''
+                <div class="field">
+                    <label for="{lang_code}_{key}">{key}</label>
+                    <span class="key">🔑 {lang_code}.{key}</span>
+                    <textarea id="{lang_code}_{key}" name="{lang_code}_{key}" rows="2">{value}</textarea>
+                </div>
+            '''
+
+        html += '</div>'
+
+    html += '''
+                <button type="submit" class="btn-save">💾 Save all texts</button>
+            </form>
+        </div>
+
+        <script>
+            function switchLang(lang) {
+                document.querySelectorAll('.lang-content').forEach(el => {
+                    el.style.display = el.id === 'lang_' + lang ? 'block' : 'none';
+                });
+                document.getElementById('langSelect').value = lang;
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                switchLang('en');
+            });
+        </script>
+    </body>
+    </html>
+    '''
+
+    _lang = session.get('admin_lang', 'en')
+    html = html.replace("__ADMIN_MENU__", admin_menu(_lang))
+    html = html.replace("__ADMIN_TITLE__", AL(_lang, 'title_texts'))
+    return render_template_string(html, TEXTS=TEXTS)
