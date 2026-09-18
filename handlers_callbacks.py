@@ -30,7 +30,7 @@ def handle_callback_query(callback_query):
         plan = data_str.replace("choose_plan_", "")
         lang = get_user_lang(chat_id)
         kb = get_payment_choice_keyboard(lang, plan)
-        send_message(chat_id, T(lang, "select_payment_method"), kb)
+        send_message(chat_id, "💳 Выберите способ оплаты:" if lang == "ru" else "💳 Choose payment method:", kb)
         return "ok", 200
     
     # Выбор способа оплаты → создать invoice

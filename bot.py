@@ -767,7 +767,7 @@ def webhook():
                     [{"text": "🏢 Business (400⭐)", "callback_data": "choose_plan_business"}],
                 ]
             }
-            send_message(chat_id, T(lang, "select_plan"), kb)
+            send_message(chat_id, "💰 Выберите тариф:" if lang == "ru" else "💰 Choose a plan:", kb)
             return "ok", 200
         
         # ===== ОБРАБОТКА КНОПОК =====
