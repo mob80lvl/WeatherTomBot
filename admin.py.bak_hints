@@ -77,14 +77,6 @@ ADMIN_UI["ru"].update({
  "title_promos":"Промокоды","promo_code":"Код","promo_auto":"пусто = сгенерировать","promo_days":"Дней","promo_discount":"Скидка %","promo_max":"Лимит активаций","promo_expires":"Истекает (ГГГГ-ММ-ДД, необяз.)","promo_create":"Создать","no_promos":"Промокодов нет","tip_promo_del":"Удалить промокод",
  "title_subs":"Подписки","col_expiry":"Действует до","col_days":"Осталось дней","col_by":"Кем выдана","tip_revoke":"Отозвать подписку","revoke":"Отозвать","no_subs":"Подписок нет","active":"✅ Активна","expired":"❌ Истекла"
 })
-ADMIN_UI["en"].update({
- "help_code":"Promo code. Leave empty to auto-generate","help_days":"How many days of subscription the code grants","help_discount":"Discount percent (0 = no discount)","help_max":"Maximum activations (0 = unlimited)","help_expires":"Code expiry date YYYY-MM-DD (empty = never expires)"
-})
-ADMIN_UI["ru"].update({
- "help_code":"Код промокода. Оставьте пустым — сгенерируется автоматически","help_days":"Сколько дней подписки даёт код","help_discount":"Скидка в процентах (0 = без скидки)","help_max":"Лимит активаций (0 = без лимита)","help_expires":"Дата истечения ГГГГ-ММ-ДД (пусто = бессрочно)"
-})
-ADMIN_UI["en"].update({"title_texts":"Manage Texts","saved_ok":"✅ Texts saved successfully!"})
-ADMIN_UI["ru"].update({"title_texts":"Управление текстами","saved_ok":"✅ Тексты сохранены!"})
 ADMIN_CSS = "*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:#0f0c29;color:#fff;padding:20px}.container{max-width:1200px;margin:0 auto}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{color:#ffd200}.menu a{color:#aaa;text-decoration:none;margin-left:20px}.menu a:hover{color:#fff}table{width:100%;border-collapse:collapse;background:rgba(255,255,255,0.05);border-radius:15px;overflow:hidden}th,td{padding:12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05)}th{background:rgba(255,255,255,0.1)}.subscribed{color:#0f0}.free{color:#ff6b6b}.expiring{color:#ffd700}.btn{padding:5px 10px;border-radius:5px;text-decoration:none;margin:2px;display:inline-block}.btn-sub{color:#0f0;border:1px solid #0f0}.btn-b2b{color:#ffd700;border:1px solid #ffd700}.btn-disable{color:#ff6b6b;border:1px solid #ff6b6b}.btn-del{color:#ff6b6b;border:1px solid #ff6b6b}.btn-disable:hover{background:#ff6b6b;color:#fff}.btn-sub:hover{background:#0f0;color:#000}.btn-b2b:hover{background:#ffd700;color:#000}.btn-del:hover{background:#ff6b6b;color:#fff}.search{margin-bottom:15px}.search input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;width:300px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:20px;margin-bottom:30px}.stat-card{background:rgba(255,255,255,0.05);padding:20px;border-radius:15px;text-align:center}.stat-number{font-size:2em;font-weight:bold;color:#ffd200}.stat-label{opacity:0.7}form.promo input{padding:8px 12px;border-radius:8px;border:1px solid #444;background:rgba(255,255,255,0.08);color:#fff;margin:4px;width:180px}form.promo button{padding:8px 16px;border-radius:8px;border:1px solid #0f0;background:rgba(0,255,0,0.1);color:#0f0;cursor:pointer}"
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -411,20 +403,13 @@ def admin_promos():
     <div class="header"><h1>🎁 {AL(lang, 'title_promos')}</h1>{admin_menu(lang)}</div>
     <p style="margin-bottom:10px">{msg}</p>
     <form class="promo" method="post">
-      <input name="code" title="{AL(lang, 'help_code')}" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})">
-      <input name="days" type="number" title="{AL(lang, 'help_days')}" placeholder="{AL(lang, 'promo_days')}" value="30">
-      <input name="discount" type="number" title="{AL(lang, 'help_discount')}" placeholder="{AL(lang, 'promo_discount')}" value="0">
-      <input name="max_uses" type="number" title="{AL(lang, 'help_max')}" placeholder="{AL(lang, 'promo_max')}" value="0">
-      <input name="expires" title="{AL(lang, 'help_expires')}" placeholder="{AL(lang, 'promo_expires')}">
+      <input name="code" placeholder="{AL(lang, 'promo_code')} ({AL(lang, 'promo_auto')})">
+      <input name="days" type="number" placeholder="{AL(lang, 'promo_days')}" value="30">
+      <input name="discount" type="number" placeholder="{AL(lang, 'promo_discount')}" value="0">
+      <input name="max_uses" type="number" placeholder="{AL(lang, 'promo_max')}" value="0">
+      <input name="expires" placeholder="{AL(lang, 'promo_expires')}">
       <button type="submit">➕ {AL(lang, 'promo_create')}</button>
     </form>
-    <ul style="margin:10px 0 20px 18px;opacity:0.75;font-size:13px">
-      <li>💡 {AL(lang, 'help_code')}</li>
-      <li>💡 {AL(lang, 'help_days')}</li>
-      <li>💡 {AL(lang, 'help_discount')}</li>
-      <li>💡 {AL(lang, 'help_max')}</li>
-      <li>💡 {AL(lang, 'help_expires')}</li>
-    </ul>
     <table><thead><tr><th>{AL(lang, 'promo_code')}</th><th>{AL(lang, 'promo_days')}</th><th>{AL(lang, 'promo_discount')}</th><th>{AL(lang, 'promo_max')}</th><th>{AL(lang, 'promo_expires')}</th><th>{AL(lang, 'col_act')}</th></tr></thead>
     <tbody>{rows}</tbody></table></div></body></html>"""
 
@@ -479,7 +464,7 @@ def admin_texts():
                 new_texts[lang][key] = request.form.get(form_key, '')
 
         TEXTS = new_texts
-        flash(AL(session.get('admin_lang', 'en'), 'saved_ok'), 'success')
+        flash('✅ Texts saved successfully!', 'success')
         return redirect(url_for('admin_texts'))
 
     html = '''<!DOCTYPE html>
@@ -525,8 +510,14 @@ def admin_texts():
     <body>
         <div class="container">
             <div class="header">
-                <h1>__ADMIN_TITLE__</h1>
-                __ADMIN_MENU__
+                <h1>📝 Manage Texts</h1>
+                <div class="menu">
+                    <a href="/admin">Dashboard</a>
+                    <a href="/admin/users">Users</a>
+                    <a href="/admin/subscriptions">Subscriptions</a>
+                    <a href="/admin/texts">📝 Texts</a>
+                    <a href="/admin/logout">Logout</a>
+                </div>
             </div>
 
             <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
@@ -586,7 +577,4 @@ def admin_texts():
     </html>
     '''
 
-    _lang = session.get('admin_lang', 'en')
-    html = html.replace("__ADMIN_MENU__", admin_menu(_lang))
-    html = html.replace("__ADMIN_TITLE__", AL(_lang, 'title_texts'))
     return render_template_string(html, TEXTS=TEXTS)
