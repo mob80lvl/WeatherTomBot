@@ -19,10 +19,16 @@ def get_payment_choice_keyboard(lang, plan="premium"):
     usd_price = round(rub_price / rate, 2)
     from config import YOOKASSA_TOKEN
     rows = [[{"text": f"⭐ Stars — {stars_price}⭐", "callback_data": f"pay_stars_{plan}"}]]
-    if YOOKASSA_TOKEN:
-        rows.append([{"text": f"💳 Карта — {rub_price}₽ (≈${usd_price})", "callback_data": f"pay_rub_{plan}"}])
+    if lang == "ru":
+        card_lbl = f"💳 Карта — {rub_price}₽ (≈${usd_price})"
+        soon_lbl = "💳 Карта — скоро (ЮKassa подключается)"
     else:
-        rows.append([{"text": "💳 Карта — скоро (ЮKassa подключается)", "callback_data": "pay_soon"}])
+        card_lbl = f"💳 Card — {rub_price}₽ (≈${usd_price})"
+        soon_lbl = "💳 Card — coming soon (YooKassa setup in progress)"
+    if YOOKASSA_TOKEN:
+        rows.append([{"text": card_lbl, "callback_data": f"pay_rub_{plan}"}])
+    else:
+        rows.append([{"text": soon_lbl, "callback_data": "pay_soon"}])
     return {"inline_keyboard": rows}
 
 def get_main_keyboard(chat_id):
