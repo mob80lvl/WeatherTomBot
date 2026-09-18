@@ -83,11 +83,13 @@ def admin_logout():
 # ===== Хелперы для чтения данных админки из SQLite =====
 
 def _admin_get_users():
-    """Возвращает {chat_id: city} из таблицы users."""
+    """Возвращает {chat_id: city} из таблицы users (только цифровые id)."""
     conn = sqlite3.connect(DB_FILE)
     users = {}
     for row in conn.execute("SELECT chat_id, city FROM users"):
-        users[row[0]] = row[1] if row[1] else ""
+        chat_id = str(row[0])
+        if chat_id.isdigit():  # Пропускаем тестовые/vk аккаунты
+            users[chat_id] = row[1] if row[1] else ""
     conn.close()
     return users
 
@@ -120,6 +122,11 @@ def _admin_get_b2b_users():
     conn.close()
     return b2b
 
+
+@app.route('/admin/')
+@login_required
+def admin_slash_redirect():
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin')
 @login_required
