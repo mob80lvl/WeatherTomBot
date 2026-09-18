@@ -139,11 +139,13 @@ def get_usd_rate():
     if _usd_rate_cache["rate"] and (now - _usd_rate_cache["timestamp"]) < 3600:
         return _usd_rate_cache["rate"]
     try:
-        r = requests.get("https://www.cbr-xml-daily.ru/daily_json.js", timeout=5)
+        r = requests.get("https://www.cbr-xml-daily.ru/daily_json.js", timeout=3)
         data = r.json()
         rate = float(data["Valute"]["USD"]["Value"])
         _usd_rate_cache["rate"] = rate
         _usd_rate_cache["timestamp"] = now
         return rate
     except Exception:
+        _usd_rate_cache["rate"] = USD_FALLBACK_RATE
+        _usd_rate_cache["timestamp"] = now
         return USD_FALLBACK_RATE

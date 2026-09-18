@@ -36,13 +36,13 @@ def handle_callback_query(callback_query):
             send_message(chat_id, "💳 Выберите способ оплаты:" if lang == "ru" else "💳 Choose payment method:", kb)
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB choose_plan error: {e}")
-            send_message(chat_id, f"Ошибка меню оплаты: {e}", parse_mode="")
+            send_message(chat_id, f"Ошибка меню оплаты: {e}")
         return "ok", 200
     
     # Карта без токена ЮKassa — вежливый фолбэк
     if data_str == "pay_soon":
         lang = get_user_lang(chat_id)
-        send_message(chat_id, "💳 Оплата картой через ЮKassa появится в ближайшие дни.\nСейчас доступна оплата ⭐ Telegram Stars." if lang == "ru" else "Card payments via YooKassa coming soon. ⭐ Telegram Stars available now.", parse_mode="")
+        send_message(chat_id, "💳 Оплата картой через ЮKassa появится в ближайшие дни.\nСейчас доступна оплата ⭐ Telegram Stars." if lang == "ru" else "Card payments via YooKassa coming soon. ⭐ Telegram Stars available now.")
         return "ok", 200
     
     # Выбор способа оплаты → создать invoice
@@ -53,7 +53,7 @@ def handle_callback_query(callback_query):
             from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB, YOOKASSA_TOKEN
             from bot import create_invoice
             if data_str.startswith("pay_rub_") and not YOOKASSA_TOKEN:
-                send_message(chat_id, "Оплата картой временно недоступна. Используйте Stars." if get_user_lang(chat_id) == "ru" else "Card payments unavailable. Use Stars.", parse_mode="")
+                send_message(chat_id, "Оплата картой временно недоступна. Используйте Stars." if get_user_lang(chat_id) == "ru" else "Card payments unavailable. Use Stars.")
                 return "ok", 200
             if data_str.startswith("pay_stars_"):
                 plan = data_str.replace("pay_stars_", "")
@@ -67,10 +67,10 @@ def handle_callback_query(callback_query):
             _lg.getLogger(__name__).info(f"PAYCB invoice result: {str(res)[:200]}")
             if not res or not res.get("ok"):
                 desc = (res or {}).get("description", "unknown error")
-                send_message(chat_id, f"Ошибка оплаты (тест-режим): {desc}" if get_user_lang(chat_id) == "ru" else f"Payment error (test): {desc}", parse_mode="")
+                send_message(chat_id, f"Ошибка оплаты (тест-режим): {desc}" if get_user_lang(chat_id) == "ru" else f"Payment error (test): {desc}")
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB pay error: {e}")
-            send_message(chat_id, f"Ошибка создания счёта: {e}", parse_mode="")
+            send_message(chat_id, f"Ошибка создания счёта: {e}")
         return "ok", 200
     lang = get_user_lang(chat_id)
     
