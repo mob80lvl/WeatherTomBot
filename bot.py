@@ -259,6 +259,13 @@ def webhook():
             if not subscription_ok:
                 logger.error(f"PAYMENT: subscription activation FAILED user={chat_id} payload={payload!r}")
                 return "ok", 200
+            sp = data['message']['successful_payment']
+            if advanced_features:
+                try:
+                    advanced_features.record_payment(str(chat_id), payload, sp.get('total_amount', 0), sp.get('currency', 'XTR'))
+                    logger.info(f"PAYMENT: recorded uid={chat_id} amount={sp.get('total_amount')} cur={sp.get('currency')}")
+                except Exception as e:
+                    logger.error(f"PAYMENT: record_payment failed: {e}")
             keyboard = get_main_keyboard(chat_id)
             if b2b_type or plan == "business":
                 plan_info = B2B_TYPES.get(b2b_type or "business", {})
