@@ -778,8 +778,8 @@ def webhook():
         if text == T(lang, "btn_buy"):
             kb = {
                 "inline_keyboard": [
-                    [{"text": "⭐ Premium (100⭐)", "callback_data": "choose_plan_premium"}],
-                    [{"text": "🏢 Business (400⭐)", "callback_data": "choose_plan_business"}],
+                    [{"text": "⭐ Premium", "callback_data": "choose_plan_premium"}],
+                    [{"text": "🏢 Business", "callback_data": "choose_plan_business"}],
                 ]
             }
             send_message(chat_id, "💰 Выберите тариф:" if lang == "ru" else "💰 Choose a plan:", kb)
