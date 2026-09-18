@@ -88,7 +88,8 @@ def _admin_get_users():
     users = {}
     for row in conn.execute("SELECT chat_id, city FROM users"):
         chat_id = str(row[0])
-        if chat_id.isdigit():  # Пропускаем тестовые/vk аккаунты
+        # Показываем TG и VK пользователей, скрываем только тестовые/отладочные id
+        if chat_id.isdigit() or (chat_id.startswith("vk_") and chat_id[3:].isdigit()):
             users[chat_id] = row[1] if row[1] else ""
     conn.close()
     return users

@@ -425,6 +425,8 @@ def webhook():
             success = 0
             failed = 0
             for uid_str in all_users:
+                if not str(uid_str).isdigit():
+                    continue  # VK и тестовые id не рассылаются через Telegram
                 try:
                     uid = int(uid_str)
                     result = send_message(uid, message_text)
