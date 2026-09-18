@@ -759,6 +759,17 @@ def webhook():
             except Exception as e:
                 logger.error(f"Ошибка advanced_features.handle: {e}", exc_info=True)
 
+        # Кнопка "💰 Купить подписку" → inline-меню выбора способа оплаты
+        if text == T(lang, "btn_buy"):
+            kb = {
+                "inline_keyboard": [
+                    [{"text": "⭐ Premium (100⭐)", "callback_data": "choose_plan_premium"}],
+                    [{"text": "🏢 Business (400⭐)", "callback_data": "choose_plan_business"}],
+                ]
+            }
+            send_message(chat_id, T(lang, "select_plan"), kb)
+            return "ok", 200
+        
         # ===== ОБРАБОТКА КНОПОК =====
         _r = handle_buttons(chat_id, text, lang, keyboard, current_city, b2b_type)
         if _r: return _r

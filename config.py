@@ -17,6 +17,11 @@ LOG_FILE = os.getenv("LOG_FILE", "bot.log")
 PRICE_PERSONAL = 100
 PRICE_PREMIUM = 100
 PRICE_BUSINESS = 400
+# ЮKassa (RUB, копейки) + USD fallback rate
+PRICE_PREMIUM_RUB = 19900  # 199 ₽ в копейках
+PRICE_BUSINESS_RUB = 49900  # 499 ₽ в копейках
+USD_FALLBACK_RATE = 92.5  # Фолбэк-курс USD/RUB
+YOOKASSA_TOKEN = os.getenv("YOOKASSA_TOKEN", "")  # live_xxx... или test_xxx...
 PRICE_B2B_AGRICULTURE = 200
 PRICE_B2B_CONSTRUCTION = 200
 PRICE_B2B_TOURISM = 200

@@ -125,3 +125,25 @@ def create_invoice(chat_id, price, b2b_type=None, plan=None):
         logger.error(f"Ошибка создания счёта: {e}")
         return None
 
+
+# ============================================================
+#  КУРС ВАЛЮТ (ЦБ РФ)
+# ============================================================
+_usd_rate_cache = {"rate": None, "timestamp": 0}
+
+def get_usd_rate():
+    """Возвращает курс USD/RUB с ЦБ РФ (кэш на час). При ошибке — фолбэк из config."""
+    import time, requests
+    from config import USD_FALLBACK_RATE
+    now = time.time()
+    if _usd_rate_cache["rate"] and (now - _usd_rate_cache["timestamp"]) < 3600:
+        return _usd_rate_cache["rate"]
+    try:
+        r = requests.get("https://www.cbr-xml-daily.ru/daily_json.js", timeout=5)
+        data = r.json()
+        rate = float(data["Valute"]["USD"]["Value"])
+        _usd_rate_cache["rate"] = rate
+        _usd_rate_cache["timestamp"] = now
+        return rate
+    except Exception:
+        return USD_FALLBACK_RATE

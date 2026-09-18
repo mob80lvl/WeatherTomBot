@@ -20,9 +20,32 @@ logger = logging.getLogger(__name__)
 
 def handle_callback_query(callback_query):
     """Обрабатывает callback_query. Возвращает ("ok",200)."""
+    from keyboards import get_payment_choice_keyboard
     callback_id = callback_query['id']
     chat_id = callback_query['message']['chat']['id']
     data_str = callback_query['data']
+    
+    # Выбор плана → показать способы оплаты
+    if data_str.startswith("choose_plan_"):
+        plan = data_str.replace("choose_plan_", "")
+        lang = get_user_lang(chat_id)
+        kb = get_payment_choice_keyboard(lang, plan)
+        send_message(chat_id, T(lang, "select_payment_method"), kb)
+        return "ok", 200
+    
+    # Выбор способа оплаты → создать invoice
+    if data_str.startswith("pay_stars_") or data_str.startswith("pay_rub_"):
+        from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB
+        if data_str.startswith("pay_stars_"):
+            plan = data_str.replace("pay_stars_", "")
+            price = PRICE_BUSINESS if plan == "business" else PRICE_PREMIUM
+            method = "stars"
+        else:
+            plan = data_str.replace("pay_rub_", "")
+            price = PRICE_BUSINESS_RUB if plan == "business" else PRICE_PREMIUM_RUB
+            method = "rub"
+        create_invoice(chat_id, price, plan=plan, method=method)
+        return "ok", 200
     lang = get_user_lang(chat_id)
     
     # Ответ на callback чтобы убрать "часики"

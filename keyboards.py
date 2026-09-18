@@ -5,6 +5,24 @@ from config import *
 from texts import T, LANGUAGES
 from storage import (get_user_lang, get_user_city, get_notification_status,
                      get_current_plan, get_user_b2b_type, is_user_subscribed)
+def get_payment_choice_keyboard(lang, plan="premium"):
+    """Inline-меню выбора способа оплаты: Stars или ЮKassa (RUB с пересчётом в $)."""
+    from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB
+    from utils import get_usd_rate
+    rate = get_usd_rate()
+    if plan == "business":
+        stars_price = PRICE_BUSINESS
+        rub_price = PRICE_BUSINESS_RUB // 100
+    else:
+        stars_price = PRICE_PREMIUM
+        rub_price = PRICE_PREMIUM_RUB // 100
+    usd_price = round(rub_price / rate, 2)
+    return {
+        "inline_keyboard": [
+            [{"text": f"⭐ Stars — {stars_price}⭐", "callback_data": f"pay_stars_{plan}"}],
+            [{"text": f"💳 Карта — {rub_price}₽ (≈${usd_price})", "callback_data": f"pay_rub_{plan}"}],
+        ]
+    }
 
 def get_main_keyboard(chat_id):
     """One consistent menu for every plan. Access is checked on click."""
