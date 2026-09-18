@@ -67,7 +67,7 @@ def handle_callback_query(callback_query):
             _lg.getLogger(__name__).info(f"PAYCB invoice result: {str(res)[:200]}")
             if not res or not res.get("ok"):
                 desc = (res or {}).get("description", "unknown error")
-                send_message(chat_id, f"Ошибка оплаты (тест-режим): {desc}" if get_user_lang(chat_id) == "ru" else f"Payment error (test): {desc}")
+                send_message(chat_id, "💳 Оплата картой через ЮKassa скоро заработает.\nПока доступна оплата ⭐ Telegram Stars — кнопка выше." if get_user_lang(chat_id) == "ru" else "💳 YooKassa card payments are coming soon.\nFor now, please use ⭐ Telegram Stars — the button is above.")
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB pay error: {e}")
             send_message(chat_id, f"Ошибка создания счёта: {e}")
