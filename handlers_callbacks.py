@@ -36,7 +36,7 @@ def handle_callback_query(callback_query):
             send_message(chat_id, "💳 Выберите способ оплаты:" if lang == "ru" else "💳 Choose payment method:", kb)
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB choose_plan error: {e}")
-            send_message(chat_id, f"❌ Ошибка меню оплаты: {e}")
+            send_message(chat_id, f"Ошибка меню оплаты: {e}", parse_mode="")
         return "ok", 200
     
     # Выбор способа оплаты → создать invoice
@@ -58,7 +58,7 @@ def handle_callback_query(callback_query):
             _lg.getLogger(__name__).info(f"PAYCB invoice result: {str(res)[:200]}")
         except Exception as e:
             _lg.getLogger(__name__).exception(f"PAYCB pay error: {e}")
-            send_message(chat_id, f"❌ Ошибка создания счёта: {e}")
+            send_message(chat_id, f"Ошибка создания счёта: {e}", parse_mode="")
         return "ok", 200
     lang = get_user_lang(chat_id)
     
