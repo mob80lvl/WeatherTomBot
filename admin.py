@@ -8,7 +8,7 @@ from db import get_conn, DB_FILE
 import logging
 from functools import wraps
 from datetime import datetime, timedelta
-from flask import request, session, redirect, url_for, render_template_string, jsonify
+from flask import request, session, redirect, url_for, render_template_string, jsonify, flash
 
 from app import app
 from config import *
