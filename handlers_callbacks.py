@@ -39,13 +39,22 @@ def handle_callback_query(callback_query):
             send_message(chat_id, f"Ошибка меню оплаты: {e}", parse_mode="")
         return "ok", 200
     
+    # Карта без токена ЮKassa — вежливый фолбэк
+    if data_str == "pay_soon":
+        lang = get_user_lang(chat_id)
+        send_message(chat_id, "💳 Оплата картой через ЮKassa появится в ближайшие дни.\nСейчас доступна оплата ⭐ Telegram Stars." if lang == "ru" else "Card payments via YooKassa coming soon. ⭐ Telegram Stars available now.", parse_mode="")
+        return "ok", 200
+    
     # Выбор способа оплаты → создать invoice
     if data_str.startswith("pay_stars_") or data_str.startswith("pay_rub_"):
         import logging as _lg
         _lg.getLogger(__name__).info(f"PAYCB: pay data={data_str}")
         try:
-            from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB
+            from config import PRICE_PREMIUM, PRICE_BUSINESS, PRICE_PREMIUM_RUB, PRICE_BUSINESS_RUB, YOOKASSA_TOKEN
             from bot import create_invoice
+            if data_str.startswith("pay_rub_") and not YOOKASSA_TOKEN:
+                send_message(chat_id, "Оплата картой временно недоступна. Используйте Stars." if get_user_lang(chat_id) == "ru" else "Card payments unavailable. Use Stars.", parse_mode="")
+                return "ok", 200
             if data_str.startswith("pay_stars_"):
                 plan = data_str.replace("pay_stars_", "")
                 price = PRICE_BUSINESS if plan == "business" else PRICE_PREMIUM

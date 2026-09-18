@@ -17,12 +17,13 @@ def get_payment_choice_keyboard(lang, plan="premium"):
         stars_price = PRICE_PREMIUM
         rub_price = PRICE_PREMIUM_RUB // 100
     usd_price = round(rub_price / rate, 2)
-    return {
-        "inline_keyboard": [
-            [{"text": f"⭐ Stars — {stars_price}⭐", "callback_data": f"pay_stars_{plan}"}],
-            [{"text": f"💳 Карта — {rub_price}₽ (≈${usd_price})", "callback_data": f"pay_rub_{plan}"}],
-        ]
-    }
+    from config import YOOKASSA_TOKEN
+    rows = [[{"text": f"⭐ Stars — {stars_price}⭐", "callback_data": f"pay_stars_{plan}"}]]
+    if YOOKASSA_TOKEN:
+        rows.append([{"text": f"💳 Карта — {rub_price}₽ (≈${usd_price})", "callback_data": f"pay_rub_{plan}"}])
+    else:
+        rows.append([{"text": "💳 Карта — скоро (ЮKassa подключается)", "callback_data": "pay_soon"}])
+    return {"inline_keyboard": rows}
 
 def get_main_keyboard(chat_id):
     """One consistent menu for every plan. Access is checked on click."""
