@@ -44,6 +44,15 @@ def _scheduler_loop():
             except Exception as e:
                 logger.error(f"VK HOURLY POST ошибка: {e}")
             
+            # Ежечасные уведомления (в начале каждого часа)
+            if now.minute == 0:
+                try:
+                    import send_notifications as _sn
+                    _sn.main()
+                    logger.info(f"NOTIFICATIONS: проверено в {now.strftime('%H:%M')} UTC")
+                except Exception as e:
+                    logger.error(f"NOTIFICATIONS ошибка: {e}")
+            
             sleep_sec = 60 - now.second - now.microsecond / 1e6
             _time.sleep(max(sleep_sec, 1) + 0.5)
             if advanced_features:

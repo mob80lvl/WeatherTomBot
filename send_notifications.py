@@ -168,11 +168,14 @@ def send_notification(chat_id, lang, city, prefs):
 
 def main():
     """Основная функция."""
-    now = datetime.now()
-    current_hour = now.strftime("%H")
+    try:
+        from zoneinfo import ZoneInfo
+    except ImportError:
+        ZoneInfo = None
+    now_utc = datetime.now()
     
-    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] Запуск проверки уведомлений...")
-    print(f"  Текущее время: {now.strftime('%H:%M')}")
+    print(f"[{now_utc.strftime('%Y-%m-%d %H:%M:%S')}] Запуск проверки уведомлений...")
+    print(f"  Серверное время (UTC): {now_utc.strftime('%H:%M')}")
     
     db = _db()
     users = db.get("users", {})
@@ -194,11 +197,22 @@ def main():
             
             user_time = prefs.get("time") or "08:00"
             try:
-                user_hour = str(user_time).split(":")[0]
+                user_hour = str(user_time).split(":")[0].zfill(2)
             except:
                 user_hour = "08"
             
-            if user_hour != current_hour:
+            # Сверка часа в часовом поясе пользователя
+            tz_name = prefs.get("timezone") or user_data.get("timezone") or "Europe/Moscow"
+            if ZoneInfo:
+                try:
+                    user_now = datetime.now(ZoneInfo(tz_name))
+                except Exception:
+                    user_now = now_utc
+            else:
+                user_now = now_utc
+            current_hour_for_user = user_now.strftime("%H")
+            
+            if user_hour != current_hour_for_user:
                 continue
             
             if not should_send_today(prefs, now):
