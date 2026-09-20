@@ -349,7 +349,7 @@ def _tg_send_photo(topic, text):
     import random as _rnd
     from urllib.parse import quote
     token = os.getenv("TELEGRAM_TOKEN", "").strip()
-    chan = os.getenv("TG_CHANNEL_ID", "").strip()
+    chan = os.getenv("TG_CHANNEL_ID", "").strip() or os.getenv("TG_CHANNEL", "").strip()
     if not token or not chan:
         return False
     prompt = _generate_image_prompt(topic, text)
@@ -358,9 +358,22 @@ def _tg_send_photo(topic, text):
         url = (f"https://image.pollinations.ai/prompt/{quote(prompt)}"
                f"?width=1280&height=720&nologo=true&model=flux&seed={seed}")
         try:
-            r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
-                              json={"chat_id": chan, "photo": url, "caption": (text or "")[:1024]},
-                              timeout=90)
+            blob = None
+            try:
+                gr = requests.get(url, timeout=60)
+                if gr.status_code == 200 and gr.content:
+                    blob = gr.content
+            except Exception as e:
+                logger.error(f"TG photo download error: {e}")
+            if blob:
+                r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
+                                  data={"chat_id": chan, "caption": (text or "")[:1024]},
+                                  files={"photo": ("post.jpg", blob, "image/jpeg")},
+                                  timeout=90)
+            else:
+                r = requests.post(f"https://api.telegram.org/bot{token}/sendPhoto",
+                                  json={"chat_id": chan, "photo": url, "caption": (text or "")[:1024]},
+                                  timeout=90)
             d = r.json()
             if d.get("ok"):
                 logger.info(f"TG AI-photo sent (prompt: {prompt[:60]})")
@@ -378,7 +391,7 @@ def _tg_send_photo(topic, text):
 def _tg_send(text):
     """Отправка текста в TG-канал (кросспостинг)."""
     token = os.getenv("TELEGRAM_TOKEN", "").strip()
-    chan = os.getenv("TG_CHANNEL_ID", "").strip()
+    chan = os.getenv("TG_CHANNEL_ID", "").strip() or os.getenv("TG_CHANNEL", "").strip()
     if not token or not chan:
         return False
     try:
