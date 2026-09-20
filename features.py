@@ -1835,6 +1835,12 @@ def tg_official_post():
     """Постит в официальный TG-канал каждые 2 часа (8-22 МСК), синхронно с VK."""
     tg_channel = os.getenv("TG_OFFICIAL_CHANNEL", "").strip()
     if not tg_channel:
+        try:
+            import config as _cfg
+            tg_channel = (_cfg.TG_OFFICIAL_CHANNEL or "").strip()
+        except Exception:
+            tg_channel = ""
+    if not tg_channel:
         return None
     try:
         from zoneinfo import ZoneInfo
