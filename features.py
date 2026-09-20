@@ -1831,50 +1831,6 @@ def process_due_channels():
             posted += 1
     return posted
 
-def tg_official_post():
-    """Постит в официальный TG-канал каждые 2 часа (8-22 МСК), синхронно с VK."""
-    tg_channel = os.getenv("TG_OFFICIAL_CHANNEL", "").strip()
-    if not tg_channel:
-        try:
-            import config as _cfg
-            tg_channel = (_cfg.TG_OFFICIAL_CHANNEL or "").strip()
-        except Exception:
-            tg_channel = ""
-    if not tg_channel:
-        return None
-    try:
-        from zoneinfo import ZoneInfo
-        now = datetime.now(ZoneInfo("Europe/Moscow"))
-    except Exception:
-        now = datetime.utcnow()
-    if now.hour not in (8, 10, 12, 14, 16, 18, 20, 22):
-        return None
-    slot_key = f"{now.hour:02d}:00_{now.strftime('%Y-%m-%d')}"
-    db = _db()
-    state = db.get("settings", {})
-    last_slot = state.get("tg_last_slot", "")
-    if last_slot == slot_key:
-        return None
-    try:
-        import vk_posts as _vp
-        topic = _vp._pick_topic()
-        text = _vp.generate_post_text(topic)
-        label = _vp.TOPIC_LABELS.get(topic, "🌤")
-        full_text = f"{label}\n\n{text}\n\n— WeatherTomBot 🌦"
-    except Exception as e:
-        logger.error(f"TG official: gen text error: {e}")
-        return None
-    result = _telegram("sendMessage", {"chat_id": tg_channel, "text": full_text, "parse_mode": "Markdown"})
-    if result.get("ok"):
-        state["tg_last_slot"] = slot_key
-        db["settings"] = state
-        _save_db(db)
-        logger.info(f"TG OFFICIAL POST: topic={topic}")
-        return {"topic": topic, "slot": slot_key}
-    else:
-        logger.error(f"TG OFFICIAL POST fail: {result}")
-        return None
-
 def scheduled_job():
     return {"notifications": daily_notification_job(), "channels": process_due_channels()}
 
