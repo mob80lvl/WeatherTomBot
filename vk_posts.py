@@ -145,6 +145,14 @@ def _save_state():
 
 _load_state()
 
+def generate_post_text(topic):
+    """Публичная обёртка: генерирует текст поста по теме через AI или fallback."""
+    text = _generate_text_with_ll(topic)
+    if text:
+        return text
+    fb = FALLBACK_TEXTS.get(topic, [])
+    return random.choice(fb) if fb else "🌤 Погодный пост скоро!"
+
 def _pick_topic():
     topic = TOPICS[_state["topic_idx"] % len(TOPICS)]
     _state["topic_idx"] = (_state["topic_idx"] + 1) % len(TOPICS)

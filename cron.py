@@ -44,6 +44,15 @@ def _scheduler_loop():
             except Exception as e:
                 logger.error(f"VK HOURLY POST ошибка: {e}")
             
+            # Пост в официальный TG-канал каждые 2 часа (синхронно с VK)
+            try:
+                if advanced_features:
+                    tg_result = advanced_features.tg_official_post()
+                    if tg_result:
+                        logger.info(f"TG OFFICIAL POST: {tg_result}")
+            except Exception as e:
+                logger.error(f"TG OFFICIAL POST ошибка: {e}")
+            
             # Ежечасные уведомления (в начале каждого часа)
             if now.minute == 0:
                 try:
