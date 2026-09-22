@@ -44,6 +44,13 @@ def _scheduler_loop():
             except Exception as e:
                 logger.error(f"VK HOURLY POST ошибка: {e}")
             
+            # Видеопост в TG в :30 (YouTube, защита от дублей внутри)
+            try:
+                import video_posts
+                video_posts.half_hour_job()
+            except Exception as e:
+                logger.error(f"TG VIDEO POST ошибка: {e}")
+            
             # Ежечасные уведомления (в начале каждого часа)
             if now.minute == 0:
                 try:
