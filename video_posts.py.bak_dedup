@@ -91,20 +91,20 @@ def _vk_call(method, token, **params):
 
 TOPIC_KEYWORDS = {
     "weather_fact": ["погод", "климат", "метео", "дожд", "снег", "ветер", "weather"],
-    "travel": ["путешеств", "стран", "город", "travel", "экспедиц", "турист", "туризм", "поход", "природ"],
+    "travel": ["путешеств", "стран", "город", "тур", "travel", "экспедиц", "мест", "природ"],
     "humor": ["юмор", "смеш", "прикол", "шутк", "funny", "весел"],
     "tip": ["совет", "лайфхак", "как ", "секрет", "способ", "правил"],
-    "history": ["истори", "древн", "прошл", "эпох", "археолог"],
+    "history": ["истори", "древн", "век", "прошл", "history", "эпох"],
     "science": ["наук", "космос", "физик", "учен", "исслед", "технолог", "science", "факт"],
     "folklore": ["примет", "народн", "традиц", "обряд", "легенд"],
-    "records": ["рекорд", "уникальн", "необычн", "удивительн", "крупней", "грандиоз"],
-    "myths": ["миф", "разоблач", "легенд", "заблужден"],
-    "season": ["сезон", "осень", "зим", "весн", "лето", "природ", "лес", "листь", "солнц", "пейзаж"],
+    "records": ["рекорд", "самый", "уникальн", "необычн", "удивительн", "миров", "больш", "высокий", "крупней", "перв"],
+    "myths": ["миф", "правда", "разоблач", "легенд", "заблужден"],
+    "season": ["сезон", "осень", "зим", "весн", "лето", "природ", "лес", "листь", "дожд", "снег", "солнц", "пейзаж"],
     "clothing": ["одежд", "стиль", "гардероб", "мод"],
-    "cozy": ["уют", "интерьер", "атмосфер", "комфорт", "домашн"],
+    "cozy": ["уют", "дом", "интерьер", "атмосфер", "комфорт"],
     "health": ["здоров", "врач", "организм", "болезн", "медицин"],
     "mood": ["настроен", "психолог", "счасть", "радост", "вдохнов"],
-    "activity": ["спорт", "трениров", "активн", "фитнес", "бег", "упражнен", "йога", "зарядк", "танц"],
+    "activity": ["спорт", "трениров", "активн", "фитнес", "бег", "упражнен", "йога", "ходьб", "зарядк", "движен", "танц"],
 }
 
 
@@ -134,8 +134,7 @@ def _search_vk_video(topic, used):
                 if _title_matches(v.get("title", ""), topic):
                     return {"owner_id": v["owner_id"], "id": v["id"],
                             "title": v.get("title", ""),
-                            "duration": v.get("duration", 0),
-                            "matched": True}
+                            "duration": v.get("duration", 0)}
         except Exception as e:
             logger.warning(f"vk video fetch error ({owner_id}): {e}")
             continue
@@ -154,8 +153,7 @@ def _search_vk_video(topic, used):
                     continue
                 return {"owner_id": v["owner_id"], "id": v["id"],
                         "title": v.get("title", ""),
-                        "duration": v.get("duration", 0),
-                        "matched": False}
+                        "duration": v.get("duration", 0)}
         except Exception:
             continue
     return None
@@ -167,20 +165,11 @@ def publish_vk_video(topic=None):
         return False, "vk tokens not set"
     st = _state()
     topic = topic or _pick_topic(st)
-    used = st.setdefault("used_vk_all", [])
-    if not used and st.get("used_vk"):
-        for _lst in st["used_vk"].values():
-            used.extend(_lst)
+    used = st.setdefault("used_vk", {}).setdefault(topic, [])
     vid = _search_vk_video(topic, used)
     if not vid:
         _save_state(st)
         return False, "no vk video found"
-    matched = vid.get("matched", True)
-    if not matched:
-        # Нет релевантного видео по теме — пропускаем пост (лучше пропуск, чем нерелевантный контент)
-        logger.info(f"VK VIDEO SKIP: нет релевантного видео для темы {topic}")
-        _save_state(st)
-        return False, f"no relevant vk video for topic {topic} (fallback disabled)"
     desc = _ai_description(topic, vid["title"])
     label = LABELS.get(topic, "🎬 Видео")
     if not desc:
@@ -200,11 +189,9 @@ def publish_vk_video(topic=None):
         _save_state(st)
         return False, d["error"].get("error_msg", "unknown error")
     post_id = d.get("response", {}).get("post_id")
-    vk_key = f"{vid['owner_id']}_{vid['id']}"
-    if vk_key not in used:
-        used.append(vk_key)
-    if len(used) > 100:
-        st["used_vk_all"] = used[-100:]
+    used.append(f"{vid['owner_id']}_{vid['id']}")
+    if len(used) > 30:
+        st["used_vk"][topic] = used[-30:]
     _save_state(st)
     logger.info(f"VK VIDEO POST: topic={topic} post_id={post_id}")
     return True, {"topic": topic, "post_id": post_id,
