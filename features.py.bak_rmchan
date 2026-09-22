@@ -2175,36 +2175,6 @@ def handle(uid, text):
             _send(uid, _FT(uid, "channel_connected", channel=channel_id, city=city, schedule=schedule))
         return True
 
-    if low.startswith("/channel_remove"):
-        if not _business(uid):
-            _send(uid, _FT(uid, "business_channel")); return True
-        parts = raw.split()
-        db = _db()
-        mine = {k: v for k, v in db["channels"].items() if str(v.get("owner")) == str(uid)}
-        if len(parts) < 2:
-            if not mine:
-                _send(uid, _FT(uid, "no_channels"))
-            else:
-                hint = "Выберите канал для удаления:" if _lang(uid) == "ru" else "Choose a channel to remove:"
-                _send(uid, "🗑 " + hint + "\n" + "\n".join(f"/channel_remove {k}" for k in mine.keys()))
-            return True
-        arg = parts[1].strip()
-        cid = arg if arg.startswith("@") else "@" + arg
-        if cid not in db["channels"]:
-            msg = "Канал не найден. Список: /channels" if _lang(uid) == "ru" else "Channel not found. List: /channels"
-            _send(uid, "❌ " + msg)
-            return True
-        if str(db["channels"][cid].get("owner")) != str(uid):
-            msg = "Это не ваш канал." if _lang(uid) == "ru" else "This is not your channel."
-            _send(uid, "⛔ " + msg)
-            return True
-        del db["channels"][cid]
-        _save_db(db)
-        track(uid, "channel_removed", {"channel_id": cid})
-        msg = f"Канал {cid} отключён." if _lang(uid) == "ru" else f"Channel {cid} disconnected."
-        _send(uid, "🗑 " + msg)
-        return True
-
     if low == "/channels":
         if not _business(uid):
             _send(uid, _FT(uid, "business_channel")); return True
