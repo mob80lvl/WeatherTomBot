@@ -77,21 +77,31 @@ def _pick_topic(st):
     return TOPICS[idx]
 
 
-def _get_tomsk_weather_snippet():
-    """Короткая сводка погоды в Томске для AI-промпта."""
+def _get_weather_context_snippet():
+    """Короткая сводка погоды в мире (несколько городов) для AI-промпта."""
     try:
         import config
         fn = config.CFG.get("get_weather_aggregated")
-        if fn:
-            w = fn("Tomsk")
-            if isinstance(w, dict):
-                t = w.get("temp") or w.get("temperature")
-                desc = w.get("description", "")
-                if t is not None:
-                    return f"Сейчас в Томске {t}°C, {desc}."
+        if not fn:
+            return "Погода в мире разнообразная."
+        cities = ["Moscow", "New York", "Tokyo", "London", "Sydney"]
+        parts = []
+        for city in cities:
+            try:
+                w = fn(city)
+                if isinstance(w, dict):
+                    t = w.get("temp") or w.get("temperature")
+                    if t is not None:
+                        parts.append(f"{city}: {t}°C")
+                        if len(parts) >= 3:
+                            break
+            except Exception:
+                continue
+        if parts:
+            return "Погода сейчас: " + ", ".join(parts) + "."
     except Exception as e:
-        logger.warning(f"tomsk weather snippet error: {e}")
-    return "Сейчас в Томске обычная осенняя погода."
+        logger.warning(f"weather context snippet error: {e}")
+    return "Погода в мире разнообразная."
 
 
 def _ai_description(topic, title):
@@ -102,12 +112,13 @@ def _ai_description(topic, title):
         if not provider or not api_key:
             return None
         label = LABELS.get(topic, "🎬 Видео")
-        tomsk = _get_tomsk_weather_snippet()
-        prompt = (f"Ты ведёшь уютный паблик «Погода в Томске». "
-                  f"{tomsk}\n"
+        ctx = _get_weather_context_snippet()
+        prompt = (f"Ты ведёшь международный погодный паблик WeatherTomBot для аудитории по всему миру. "
+                  f"{ctx}\n"
                   f"Составь короткое описание (2-3 предложения, до 250 символов) "
                   f"для видеоролика «{title}» в рубрике «{label}». "
-                  f"Свяжи тему видео с погодой или настроением, добавь пользу или интересную мысль. "
+                  f"Свяжи тему видео с погодой или настроением глобально (не привязывайся к конкретному городу), "
+                  f"добавь пользу, интересную мысль или атмосферную зарисовку. "
                   f"Стиль: дружелюбно, живо, 1-2 эмодзи, на русском. "
                   f"Ответ только текстом описания, без кавычек и пояснений.")
         headers = {"Content-Type": "application/json",
