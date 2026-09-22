@@ -77,17 +77,38 @@ def _pick_topic(st):
     return TOPICS[idx]
 
 
+def _get_tomsk_weather_snippet():
+    """Короткая сводка погоды в Томске для AI-промпта."""
+    try:
+        import config
+        fn = config.CFG.get("get_weather_aggregated")
+        if fn:
+            w = fn("Tomsk")
+            if isinstance(w, dict):
+                t = w.get("temp") or w.get("temperature")
+                desc = w.get("description", "")
+                if t is not None:
+                    return f"Сейчас в Томске {t}°C, {desc}."
+    except Exception as e:
+        logger.warning(f"tomsk weather snippet error: {e}")
+    return "Сейчас в Томске обычная осенняя погода."
+
+
 def _ai_description(topic, title):
-    """Короткое AI-описание под видео."""
+    """AI-описание под видео: учитывает погоду Томска и тему канала."""
     try:
         from features import _get_ai_provider
         provider, api_key, model, base_url = _get_ai_provider()
         if not provider or not api_key:
             return None
         label = LABELS.get(topic, "🎬 Видео")
-        prompt = (f"Составь короткое описание (2 предложения) для видеоролика "
-                  f"«{title}» в рубрике «{label}» погодного паблика. "
-                  f"Стиль: дружелюбно, с 1-2 эмодзи, на русском. "
+        tomsk = _get_tomsk_weather_snippet()
+        prompt = (f"Ты ведёшь уютный паблик «Погода в Томске». "
+                  f"{tomsk}\n"
+                  f"Составь короткое описание (2-3 предложения, до 250 символов) "
+                  f"для видеоролика «{title}» в рубрике «{label}». "
+                  f"Свяжи тему видео с погодой или настроением, добавь пользу или интересную мысль. "
+                  f"Стиль: дружелюбно, живо, 1-2 эмодзи, на русском. "
                   f"Ответ только текстом описания, без кавычек и пояснений.")
         headers = {"Content-Type": "application/json",
                    "Authorization": f"Bearer {api_key}"}
