@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Видео-автопостинг в TG-канал из YouTube.
+"""Видео-автопостинг в VK + TG из YouTube.
 Расписание: :30 каждого часа 8-22 МСК (текстовые посты в :00).
+Одно видео → две платформы (VK: ссылка, TG: с превью).
 """
 import os
 import json
@@ -13,6 +14,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_FILE = os.path.join(BASE_DIR, "video_posts_state.json")
 
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "").strip()
+VK_POST_TOKEN = os.getenv("VK_POST_TOKEN", "").strip()
+VK_GROUP_ID = os.getenv("VK_GROUP_ID", "").strip()
 
 TOPICS = ["weather_fact", "travel", "humor", "tip", "history", "science",
           "folklore", "records", "myths", "season", "clothing", "cozy",
@@ -53,164 +56,6 @@ LABELS = {
     "mood": "💭 Настроение",
     "activity": "🎯 Активность",
 }
-# === VK VIDEO ===
-# Источники VK Video (owner_id → список тем, где использовать)
-VK_VIDEO_SOURCES = {
-    "weather_fact": [-133441491, -30666517],   # Фактрум, NatGeo
-    "travel":       [-30666517],                # NatGeo
-    "humor":        [-133441491],               # Фактрум
-    "tip":          [-133441491, -32515515],    # Фактрум, Спорт
-    "history":      [-30666517, -133441491],    # NatGeo, Фактрум
-    "science":      [-30666517, -133441491],    # NatGeo, Фактрум
-    "folklore":     [-23230836, -30666517],     # Мир вокруг, NatGeo
-    "records":      [-133441491, -30666517],    # Фактрум, NatGeo
-    "myths":        [-133441491],               # Фактрум
-    "season":       [-30666517, -23230836],     # NatGeo, Мир вокруг
-    "clothing":     [-23230836, -32515515],     # Мир вокруг, Спорт
-    "cozy":         [-23230836],                # Мир вокруг
-    "health":       [-32515515],                # Спорт
-    "mood":         [-23230836],                # Мир вокруг
-    "activity":     [-32515515],                # Спорт
-}
-
-VK_USER_TOKEN = os.getenv("VK_USER_TOKEN", "").strip()
-VK_POST_TOKEN = os.getenv("VK_POST_TOKEN", "").strip()
-VK_GROUP_ID = os.getenv("VK_GROUP_ID", "").strip()
-
-
-def _vk_call(method, token, **params):
-    params.update({"access_token": token, "v": "5.199"})
-    try:
-        r = requests.post(f"https://api.vk.com/method/{method}",
-                          data=params, timeout=20)
-        return r.json()
-    except Exception as e:
-        logger.error(f"VK call error: {e}")
-        return {"error": {"error_msg": str(e)}}
-
-
-TOPIC_KEYWORDS = {
-    "weather_fact": ["погод", "климат", "метео", "дожд", "снег", "ветер", "weather"],
-    "travel": ["путешеств", "стран", "город", "travel", "экспедиц", "турист", "туризм", "поход", "природ"],
-    "humor": ["юмор", "смеш", "прикол", "шутк", "funny", "весел"],
-    "tip": ["совет", "лайфхак", "как ", "секрет", "способ", "правил"],
-    "history": ["истори", "древн", "прошл", "эпох", "археолог"],
-    "science": ["наук", "космос", "физик", "учен", "исслед", "технолог", "science", "факт"],
-    "folklore": ["примет", "народн", "традиц", "обряд", "легенд"],
-    "records": ["рекорд", "уникальн", "необычн", "удивительн", "крупней", "грандиоз"],
-    "myths": ["миф", "разоблач", "легенд", "заблужден"],
-    "season": ["сезон", "осень", "зим", "весн", "лето", "природ", "лес", "листь", "солнц", "пейзаж"],
-    "clothing": ["одежд", "стиль", "гардероб", "мод"],
-    "cozy": ["уют", "интерьер", "атмосфер", "комфорт", "домашн"],
-    "health": ["здоров", "врач", "организм", "болезн", "медицин"],
-    "mood": ["настроен", "психолог", "счасть", "радост", "вдохнов"],
-    "activity": ["спорт", "трениров", "активн", "фитнес", "бег", "упражнен", "йога", "зарядк", "танц"],
-}
-
-
-def _title_matches(title, topic):
-    t = (title or "").lower()
-    return any(kw in t for kw in TOPIC_KEYWORDS.get(topic, []))
-
-
-def _search_vk_video(topic, used):
-    """Берёт видео из VK-сообществ ТОЛЬКО если заголовок подходит теме."""
-    if not VK_USER_TOKEN:
-        return None
-    sources = VK_VIDEO_SOURCES.get(topic) or [-30666517, -133441491]
-    for owner_id in sources:
-        try:
-            d = _vk_call("video.get", VK_USER_TOKEN,
-                         owner_id=owner_id, count=50)
-            if "error" in d:
-                continue
-            items = d.get("response", {}).get("items", [])
-            for v in items:
-                if not (v.get("owner_id") and v.get("id")):
-                    continue
-                key = f"{v.get('owner_id')}_{v.get('id')}"
-                if key in used:
-                    continue
-                if _title_matches(v.get("title", ""), topic):
-                    return {"owner_id": v["owner_id"], "id": v["id"],
-                            "title": v.get("title", ""),
-                            "duration": v.get("duration", 0),
-                            "matched": True}
-        except Exception as e:
-            logger.warning(f"vk video fetch error ({owner_id}): {e}")
-            continue
-    # Fallback: если нет релевантного — берём любое свежее не повторявшееся
-    for owner_id in sources:
-        try:
-            d = _vk_call("video.get", VK_USER_TOKEN,
-                         owner_id=owner_id, count=50)
-            if "error" in d:
-                continue
-            for v in d.get("response", {}).get("items", []):
-                if not (v.get("owner_id") and v.get("id")):
-                    continue
-                key = f"{v.get('owner_id')}_{v.get('id')}"
-                if key in used:
-                    continue
-                return {"owner_id": v["owner_id"], "id": v["id"],
-                        "title": v.get("title", ""),
-                        "duration": v.get("duration", 0),
-                        "matched": False}
-        except Exception:
-            continue
-    return None
-
-
-def publish_vk_video(topic=None):
-    """Публикует VK Video с AI-описанием в группу (attachment)."""
-    if not VK_POST_TOKEN or not VK_GROUP_ID:
-        return False, "vk tokens not set"
-    st = _state()
-    topic = topic or _pick_topic(st)
-    used = st.setdefault("used_vk_all", [])
-    if not used and st.get("used_vk"):
-        for _lst in st["used_vk"].values():
-            used.extend(_lst)
-    vid = _search_vk_video(topic, used)
-    if not vid:
-        _save_state(st)
-        return False, "no vk video found"
-    matched = vid.get("matched", True)
-    if not matched:
-        # Нет релевантного видео по теме — пропускаем пост (лучше пропуск, чем нерелевантный контент)
-        logger.info(f"VK VIDEO SKIP: нет релевантного видео для темы {topic}")
-        _save_state(st)
-        return False, f"no relevant vk video for topic {topic} (fallback disabled)"
-    desc = _ai_description(topic, vid["title"])
-    label = LABELS.get(topic, "🎬 Видео")
-    if not desc:
-        desc = f"{label}: интересное видео!"
-    hashtags = " ".join(["#погода", "#weather", "#weathertom", "#" + topic])
-    text = (f"{label}\n\n{desc}\n\n"
-            f"🌍 WeatherTom — погода во всём мире\n\n{hashtags}")
-    att = f"video{vid['owner_id']}_{vid['id']}"
-    import time as _t
-    _t.sleep(5)  # пауза между запросами VK
-    d = _vk_call("wall.post", VK_POST_TOKEN,
-                 owner_id=f"-{VK_GROUP_ID}",
-                 from_group=1,
-                 message=text,
-                 attachments=att)
-    if "error" in d:
-        _save_state(st)
-        return False, d["error"].get("error_msg", "unknown error")
-    post_id = d.get("response", {}).get("post_id")
-    vk_key = f"{vid['owner_id']}_{vid['id']}"
-    if vk_key not in used:
-        used.append(vk_key)
-    if len(used) > 100:
-        st["used_vk_all"] = used[-100:]
-    _save_state(st)
-    logger.info(f"VK VIDEO POST: topic={topic} post_id={post_id}")
-    return True, {"topic": topic, "post_id": post_id,
-                  "video_id": f"{vid['owner_id']}_{vid['id']}",
-                  "title": vid["title"]}
-
 
 
 def _state():
@@ -263,7 +108,7 @@ def _get_weather_context_snippet():
 
 
 def _ai_description(topic, title):
-    """AI-описание под видео: учитывает погоду Томска и тему канала."""
+    """AI-описание под видео: учитывает погоду мира и тему канала."""
     try:
         from features import _get_ai_provider
         provider, api_key, model, base_url = _get_ai_provider()
@@ -302,7 +147,7 @@ def _ai_description(topic, title):
 
 
 def _search_youtube(topic, used):
-    """Поиск короткого YouTube-видео по теме, пропуская использованные."""
+    """Поиск YouTube-видео по теме, пропуская использованные."""
     if not YOUTUBE_API_KEY:
         return None
     q = YT_QUERIES.get(topic, "погода")
@@ -328,64 +173,90 @@ def _search_youtube(topic, used):
     return None
 
 
-def publish_tg_video(topic=None):
-    """Публикует YouTube-видео с AI-описанием в TG-канал."""
-    from vk_posts import _tg_send
-    st = _state()
-    topic = topic or _pick_topic(st)
-    used = st.setdefault("used_yt", {}).setdefault(topic, [])
-    vid = _search_youtube(topic, used)
-    if not vid:
-        _save_state(st)
-        return False, "no youtube video found"
-    desc = _ai_description(topic, vid["title"])
-    label = LABELS.get(topic, "🎬 Видео")
-    if not desc:
-        desc = f"{label}: интересное короткое видео о погоде! ☀️"
-    text = (f"{label}\n\n{desc}\n\n📺 Смотреть видео: "
-            f"https://youtu.be/{vid['id']}\n\n"
-            f"📍 Погода в Томске от WeatherTomBot")
-    ok = _tg_send(text)
-    if ok:
-        used.append(vid["id"])
-        if len(used) > 40:
-            st["used_yt"][topic] = used[-40:]
-        _save_state(st)
-        logger.info(f"TG VIDEO POST: topic={topic} vid={vid['id']}")
-        return True, {"topic": topic, "video_id": vid["id"],
-                      "title": vid["title"], "text": text}
-    _save_state(st)
-    return False, "tg send failed"
+def _send_vk(text):
+    """Публикация текста в VK-группу (ссылка YouTube в тексте)."""
+    if not VK_POST_TOKEN or not VK_GROUP_ID:
+        return False
+    try:
+        r = requests.post("https://api.vk.com/method/wall.post", data={
+            "owner_id": f"-{VK_GROUP_ID}", "from_group": 1,
+            "message": text,
+            "access_token": VK_POST_TOKEN, "v": "5.199"}, timeout=20)
+        d = r.json()
+        if "error" in d:
+            logger.error(f"VK wall.post error: {d['error'].get('error_msg')}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"VK wall.post exception: {e}")
+        return False
 
 
 def half_hour_job():
-    """Автопостинг в :30 каждого часа 8-22 МСК."""
+    """Автопостинг: :30 каждого часа 8-22 МСК.
+    Одно YouTube-видео → пост в VK (ссылка) + TG (с превью)."""
     try:
         from datetime import datetime
         from zoneinfo import ZoneInfo
         now = datetime.now(ZoneInfo("Europe/Moscow"))
     except Exception:
         return None
-    if now.hour not in (8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22):
+    if now.hour not in range(8, 23):
         return None
     if now.minute != 30:
         return None
+
     st = _state()
     slot = f"{now.hour:02d}:30_{now.strftime('%Y-%m-%d')}"
     if st.get("last_slot") == slot:
         return None
     st["last_slot"] = slot
     _save_state(st)
-    tg_ok, tg_info = publish_tg_video()
-    if tg_ok:
-        logger.info(f"TG VIDEO POST ok: {tg_info.get('topic')}")
-    else:
-        logger.error(f"TG VIDEO POST fail: {tg_info}")
-    import time as _t
-    _t.sleep(5)
-    vk_ok, vk_info = publish_vk_video()
+
+    topic = _pick_topic(st)
+    used = st.setdefault("used_yt", {}).setdefault(topic, [])
+    vid = _search_youtube(topic, used)
+    if not vid:
+        logger.error(f"VIDEO JOB: no youtube video for topic {topic}")
+        return False
+
+    desc = _ai_description(topic, vid["title"])
+    label = LABELS.get(topic, "🎬 Видео")
+    if not desc:
+        desc = f"{label}: интересное короткое видео о погоде! ☀️"
+
+    hashtags = " ".join(["#погода", "#weather", "#weathertom", "#" + topic])
+    yt_link = f"https://youtu.be/{vid['id']}"
+
+    text = (f"{label}\n\n"
+            f"{desc}\n\n"
+            f"📺 {yt_link}\n\n"
+            f"🌍 WeatherTom — погода во всём мире\n\n"
+            f"{hashtags}")
+
+    # VK: просто пост со ссылкой
+    vk_ok = _send_vk(text)
     if vk_ok:
-        logger.info(f"VK VIDEO POST ok: {vk_info.get('topic')} post_id={vk_info.get('post_id')}")
+        logger.info(f"VK VIDEO POST ok: topic={topic} vid={vid['id']}")
     else:
-        logger.error(f"VK VIDEO POST fail: {vk_info}")
-    return tg_ok or vk_ok
+        logger.error(f"VK VIDEO POST fail: topic={topic}")
+
+    # TG: тот же текст (TG сам сделает превью YouTube)
+    try:
+        from vk_posts import _tg_send
+        tg_ok = _tg_send(text)
+        if tg_ok:
+            logger.info(f"TG VIDEO POST ok: topic={topic} vid={vid['id']}")
+        else:
+            logger.error(f"TG VIDEO POST fail: topic={topic}")
+    except Exception as e:
+        logger.error(f"TG VIDEO POST exception: {e}")
+        tg_ok = False
+
+    # Сохраняем использованное видео
+    used.append(vid["id"])
+    if len(used) > 40:
+        st["used_yt"][topic] = used[-40:]
+    _save_state(st)
+
+    return vk_ok or tg_ok
