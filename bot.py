@@ -240,9 +240,7 @@ def webhook():
                 new_status = (chat_member_event.get("new_chat_member") or {}).get("status", "")
                 old_status = (chat_member_event.get("old_chat_member") or {}).get("status", "")
                 is_our_channel = (chat_username and chan and chat_username.lower() == chan.lower()) or (chan.startswith("-100") and chat_id_raw == chan)
-                logger.info(f"CHAT_MEMBER CHECK: is_our={is_our_channel}, new={new_status}, old={old_status}, chan={chan}, chat={chat_username}")
                 if is_our_channel and new_status in ("member", "administrator") and old_status not in ("member", "administrator"):
-                    logger.info(f"CHAT_MEMBER: condition passed, extracting user...")
                     new_cm = chat_member_event.get("new_chat_member") or {}
                     # new_chat_member может быть {"user": {...}, "status": ...} или сам user
                     user = new_cm.get("user") or {}
@@ -252,14 +250,11 @@ def webhook():
                     if not user.get("id"):
                         user = chat_member_event.get("from") or {}
                     uid = str(user.get("id", ""))
-                    logger.info(f"CHAT_MEMBER: extracted uid={uid}")
                     if uid:
                         import features as _ft
                         d = _ft._plans_load()
                         e = d.setdefault(uid, {})
-                        logger.info(f"CHAT_MEMBER: channel_welcomed={e.get('channel_welcomed')}")
                         if not e.get("channel_welcomed"):
-                            logger.info(f"CHAT_MEMBER: sending welcome to {uid}")
                             e["channel_welcomed"] = True
                             _ft._plans_save(d)
                             welcome = (
