@@ -240,6 +240,7 @@ def webhook():
                 new_status = (chat_member_event.get("new_chat_member") or {}).get("status", "")
                 old_status = (chat_member_event.get("old_chat_member") or {}).get("status", "")
                 is_our_channel = (chat_username and chan and chat_username.lower() == chan.lower()) or (chan.startswith("-100") and chat_id_raw == chan)
+                logger.info(f"chat_member: is_our={is_our_channel}, new_status={new_status}, old_status={old_status}, uid={user.get('id') if 'user' in locals() else 'unknown'}")
                 if is_our_channel and new_status in ("member", "administrator") and old_status not in ("member", "administrator"):
                     user = chat_member_event.get("new_chat_member", {}).get("user") or {}
                     uid = str(user.get("id", ""))
@@ -269,6 +270,15 @@ def webhook():
                                 logger.warning(f"CHANNEL WELCOME send error {uid}: {ex}")
             except Exception as ex:
                 logger.warning(f"chat_member handler error: {ex}")
+        else:
+            # Логируем когда chat_member пришёл, но не наш канал
+            try:
+                chan = (os.getenv("TG_CHANNEL", "").strip() or "").lstrip("@")
+                chat = data.get("chat_member", {}).get("chat", {}) or {}
+                chat_username = (chat.get("username") or "").lstrip("@")
+                logger.info(f"chat_member NOT OUR: chan={chan}, chat_username={chat_username}, chat_id={chat.get('id')}")
+            except Exception:
+                pass
             return "ok", 200
         if data.get('pre_checkout_query'):
             pre_checkout_query = data['pre_checkout_query']
