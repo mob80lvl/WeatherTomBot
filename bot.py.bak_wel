@@ -229,47 +229,6 @@ def webhook():
 
         logger.info(f"Получено: {json.dumps(data, ensure_ascii=False)[:200]}")
 
-        # Обработка вступления в канал @weathertom1
-        chat_member_event = data.get('chat_member')
-        if chat_member_event:
-            try:
-                chan = (os.getenv("TG_CHANNEL", "").strip() or os.getenv("TG_CHANNEL_ID", "").strip()).lstrip("@")
-                chat = chat_member_event.get("chat", {}) or {}
-                chat_username = (chat.get("username") or "").lstrip("@")
-                chat_id_raw = str(chat.get("id", ""))
-                new_status = (chat_member_event.get("new_chat_member") or {}).get("status", "")
-                old_status = (chat_member_event.get("old_chat_member") or {}).get("status", "")
-                is_our_channel = (chat_username and chan and chat_username.lower() == chan.lower()) or (chan.startswith("-100") and chat_id_raw == chan)
-                if is_our_channel and new_status in ("member", "administrator") and old_status not in ("member", "administrator"):
-                    user = chat_member_event.get("new_chat_member", {}).get("user") or {}
-                    uid = str(user.get("id", ""))
-                    if uid:
-                        import features as _ft
-                        d = _ft._plans_load()
-                        e = d.setdefault(uid, {})
-                        if not e.get("channel_welcomed"):
-                            e["channel_welcomed"] = True
-                            _ft._plans_save(d)
-                            welcome = (
-                                "🎉 Добро пожаловать в команду!\n\n"
-                                "Здесь каждый час:\n"
-                                "• посты рубрик о погоде планеты\n"
-                                "• видео с описаниями от AI\n"
-                                "• факты, наука, юмор, уют\n\n"
-                                "🎁 Ваш подарок уже ждёт:\n"
-                                "Введите в боте /free_business —\n"
-                                "получите 14 дней тарифа Business бесплатно.\n"
-                                "А раз вы подписаны на канал — сразу 30 дней. Автоматически ❤️\n\n"
-                                f"🤖 Забирайте: https://t.me/WeatherTomBot"
-                            )
-                            try:
-                                _ft._send(uid, welcome)
-                                logger.info(f"CHANNEL WELCOME sent to {uid}")
-                            except Exception as ex:
-                                logger.warning(f"CHANNEL WELCOME send error {uid}: {ex}")
-            except Exception as ex:
-                logger.warning(f"chat_member handler error: {ex}")
-            return "ok", 200
         if data.get('pre_checkout_query'):
             pre_checkout_query = data['pre_checkout_query']
             answer_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/answerPreCheckoutQuery"

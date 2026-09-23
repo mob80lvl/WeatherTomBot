@@ -161,12 +161,6 @@ def handle_buttons(chat_id, text, lang, keyboard, current_city, b2b_type=None):
         return "ok", 200
 
     elif action == "subscription_status":
-        # Force-проверка подписки на канал перед показом статуса
-        try:
-            import features as _ft
-            _ft._maybe_upgrade_channel_trial(chat_id, force=True)
-        except Exception:
-            pass
         send_message(chat_id, format_subscription_status(chat_id), keyboard)
         return "ok", 200
 

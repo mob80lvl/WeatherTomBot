@@ -38,10 +38,10 @@ def set_webhook():
     webhook_url = WEBHOOK_URL or request.host_url.rstrip("/") + "/webhook"
     webhook_secret = os.getenv("WEBHOOK_SECRET", "")
     if webhook_secret:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}&secret_token={webhook_secret}&allowed_updates=["message","callback_query","chat_member"]"
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}&secret_token={webhook_secret}"
         logger.info("Устанавливаем webhook с секретным токеном")
     else:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}&allowed_updates=["message","callback_query","chat_member"]"
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={webhook_url}"
         logger.warning("WEBHOOK_SECRET не задан! Webhook не защищен.")
     try:
         response = requests.get(url, timeout=30)
