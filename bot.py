@@ -281,15 +281,6 @@ def webhook():
                                 logger.warning(f"CHANNEL WELCOME send error {uid}: {ex}")
             except Exception as ex:
                 logger.warning(f"chat_member handler error: {ex}")
-        else:
-            # Логируем когда chat_member пришёл, но не наш канал
-            try:
-                chan = (os.getenv("TG_CHANNEL", "").strip() or "").lstrip("@")
-                chat = data.get("chat_member", {}).get("chat", {}) or {}
-                chat_username = (chat.get("username") or "").lstrip("@")
-                logger.info(f"chat_member NOT OUR: chan={chan}, chat_username={chat_username}, chat_id={chat.get('id')}")
-            except Exception:
-                pass
             return "ok", 200
         if data.get('pre_checkout_query'):
             pre_checkout_query = data['pre_checkout_query']
