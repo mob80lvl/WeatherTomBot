@@ -270,8 +270,15 @@ def webhook():
                                 f"🤖 Забирайте: https://t.me/WeatherTomBot"
                             )
                             try:
-                                _ft._send(uid, welcome)
-                                logger.info(f"CHANNEL WELCOME sent to {uid}")
+                                # Используем прямой API для надёжности
+                                import requests as _rq
+                                _token = os.getenv("TELEGRAM_TOKEN", "").strip()
+                                _r = _rq.post(f"https://api.telegram.org/bot{_token}/sendMessage",
+                                             data={"chat_id": uid, "text": welcome}, timeout=15)
+                                if _r.json().get("ok"):
+                                    logger.info(f"CHANNEL WELCOME sent to {uid}")
+                                else:
+                                    logger.warning(f"CHANNEL WELCOME API error {uid}: {_r.json().get('description')}")
                             except Exception as ex:
                                 logger.warning(f"CHANNEL WELCOME send error {uid}: {ex}")
             except Exception as ex:
