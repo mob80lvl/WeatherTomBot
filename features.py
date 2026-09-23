@@ -399,11 +399,17 @@ def track(uid, event, props=None):
 
 import time as _time_mod
 
-TRIAL_DAYS = 7
+TRIAL_DAYS = 14
 AI_LIMIT_FREE = 10
 AI_LIMIT_PREMIUM = 50
 AI_LIMIT_BUSINESS = 100
 PLANS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plans.json")
+
+FREE_BUSINESS_ENABLED = os.getenv("FREE_BUSINESS_ENABLED", "1").strip() == "1"
+try:
+    FREE_BUSINESS_DAYS = int(os.getenv("FREE_BUSINESS_DAYS", "30") or 30)
+except Exception:
+    FREE_BUSINESS_DAYS = 30
 
 def _plans_load():
     try:
@@ -1943,7 +1949,69 @@ def feature_button_action(uid, text):
 def _help(uid):
     return _FT(uid, "help")
 
+def _tg_channel_member(uid):
+    """Проверяет подписку пользователя на промо-канал."""
+    try:
+        import requests as _rq
+        token = os.getenv("TELEGRAM_TOKEN", "").strip()
+        channel = os.getenv("TG_CHANNEL_ID", "").strip() or os.getenv("TG_CHANNEL", "").strip()
+        if not token or not channel:
+            return True
+        if not channel.startswith("@") and not channel.startswith("-100"):
+            channel = "@" + channel
+        r = _rq.post(f"https://api.telegram.org/bot{token}/getChatMember",
+                     data={"chat_id": channel, "user_id": int(uid)}, timeout=15)
+        d = r.json()
+        if not d.get("ok"):
+            return True
+        status = (d.get("result") or {}).get("status", "")
+        return status in ("member", "administrator", "creator")
+    except Exception:
+        return True
+
+
+def _cmd_free_business(uid):
+    """Команда /free_business: бесплатный Business на N дней подписчикам канала."""
+    if not FREE_BUSINESS_ENABLED:
+        _send(uid, "🎁 Акция завершена. Следите за новыми акциями на канале!")
+        return True
+    d = _plans_load()
+    e = d.setdefault(str(uid), {})
+    if e.get("free_trial_granted"):
+        exp = e.get("expires", 0)
+        if exp > int(_time_mod.time()):
+            from datetime import datetime as _dt
+            dt = _dt.fromtimestamp(exp).strftime("%d.%m.%Y")
+            _send(uid, f"✅ У вас уже активирован бесплатный доступ — действует до {dt}.")
+        else:
+            _send(uid, "⏳ Бесплатный доступ завершился.\nПродлить можно по платному тарифу — меню «💰 Купить подписку».")
+        return True
+    if _premium(uid) or _business(uid):
+        _send(uid, "✅ У вас уже есть активный тариф — акция не нужна.")
+        return True
+    if not _tg_channel_member(uid):
+        channel = os.getenv("TG_CHANNEL", "").strip() or os.getenv("TG_CHANNEL_ID", "").strip()
+        _send(uid, f"🎁 Бесплатный тариф Business на {FREE_BUSINESS_DAYS} дней!\n\n"
+                   f"Доступно: автопостинг в канал, API, команды, white-label.\n\n"
+                   f"Для активации:\n1️⃣ Подпишитесь на канал: https://t.me/{channel.lstrip('@')}\n"
+                   f"2️⃣ Нажмите /free_business ещё раз")
+        return True
+    e["free_trial_granted"] = True
+    e["plan"] = "business"
+    e["expires"] = int(_time_mod.time()) + FREE_BUSINESS_DAYS * 86400
+    e["notice_pending"] = True
+    _plans_save(d)
+    from datetime import datetime as _dt
+    dt = _dt.fromtimestamp(e["expires"]).strftime("%d.%m.%Y")
+    _send(uid, f"🎁 Готово! Тариф Business бесплатно до {dt}.\n\n"
+               f"Доступно: автопостинг в канал, API, команды, white-label.\n"
+               f"После окончания срока — по платным тарифам.")
+    return True
+
+
 def handle(uid, text):
+    if str(text).strip() == "/free_business":
+        return _cmd_free_business(uid)
     """Return True if this module consumed the incoming text."""
     if not uid or not text:
         return False
