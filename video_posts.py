@@ -231,7 +231,7 @@ def half_hour_job():
     text = (f"{label}\n\n"
             f"{desc}\n\n"
             f"📺 {yt_link}\n\n"
-            f"🌍 WeatherTom — погода во всём мире\n\n"
+            f"📍 Погода в Мире от WeatherTomBot\n\n"
             f"{hashtags}")
 
     # VK: просто пост со ссылкой
