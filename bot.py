@@ -227,7 +227,10 @@ def webhook():
         if not data:
             return "no data", 400
 
-        logger.info(f"Получено: {json.dumps(data, ensure_ascii=False)[:200]}")
+        if data.get('chat_member'):
+            logger.info(f"FULL_CHAT_MEMBER: {json.dumps(data, ensure_ascii=False)}")
+        else:
+            logger.info(f"Получено: {json.dumps(data, ensure_ascii=False)[:200]}")
 
         # Обработка вступления в канал @weathertom1
         chat_member_event = data.get('chat_member')
@@ -242,8 +245,16 @@ def webhook():
                 is_our_channel = (chat_username and chan and chat_username.lower() == chan.lower()) or (chan.startswith("-100") and chat_id_raw == chan)
                 logger.info(f"chat_member: is_our={is_our_channel}, new_status={new_status}, old_status={old_status}, uid={user.get('id') if 'user' in locals() else 'unknown'}")
                 if is_our_channel and new_status in ("member", "administrator") and old_status not in ("member", "administrator"):
-                    user = chat_member_event.get("new_chat_member", {}).get("user") or {}
+                    new_cm = chat_member_event.get("new_chat_member") or {}
+                    # new_chat_member может быть {"user": {...}, "status": ...} или сам user
+                    user = new_cm.get("user") or {}
+                    if not user and new_cm.get("id"):
+                        user = new_cm
+                    # fallback: from
+                    if not user.get("id"):
+                        user = chat_member_event.get("from") or {}
                     uid = str(user.get("id", ""))
+                    logger.info(f"chat_member extracted: uid={uid}, user_keys={list(user.keys())}")
                     if uid:
                         import features as _ft
                         d = _ft._plans_load()
