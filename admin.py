@@ -309,6 +309,31 @@ def admin_users():
 def admin_user_delete(chat_id):
     conn = sqlite3.connect(DB_FILE)
     conn.execute("DELETE FROM users WHERE chat_id=?", (str(chat_id),))
+    # Полная очистка: plans.json (триалы/тарифы) + все таблицы bot.db
+    try:
+        import json as _json
+        import os as _os
+        _pp = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "plans.json")
+        try:
+            _d = _json.load(open(_pp, encoding="utf-8"))
+            if str(chat_id) in _d:
+                del _d[str(chat_id)]
+                _json.dump(_d, open(_pp, "w", encoding="utf-8"))
+        except Exception:
+            pass
+        for _t in ("subscriptions", "b2b_users", "user_states", "notifications",
+                   "f_users", "f_channels", "f_card_settings", "f_white_labels",
+                   "f_referrals", "f_promos", "f_payments", "api_keys",
+                   "f_team_members", "f_teams", "f_events", "f_settings"):
+            try:
+                _cols = [r[1] for r in conn.execute(f"PRAGMA table_info({_t})").fetchall()]
+                _col = next((x for x in ("chat_id", "uid", "owner", "user_id") if x in _cols), None)
+                if _col:
+                    conn.execute(f"DELETE FROM {_t} WHERE {_col}=?", (str(chat_id),))
+            except Exception:
+                pass
+    except Exception as _e:
+        print(f"admin delete cleanup error: {_e}")
     conn.commit()
     conn.close()
     return redirect(url_for('admin_users'))
