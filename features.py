@@ -345,7 +345,7 @@ def _grant_smart_trial(uid):
             return
         active = e.get("plan") in ("business", "premium") and e.get("expires", 0) > now
         if active:
-            _maybe_upgrade_channel_trial(uid)
+            _maybe_upgrade_channel_trial(uid, force=True)
             return
         subscribed = _tg_channel_member(uid)
         days = FREE_BUSINESS_DAYS if subscribed else TRIAL_DAYS
@@ -373,7 +373,7 @@ def _grant_smart_trial(uid):
         logger.warning(f"smart trial grant error: {ex}")
 
 
-def _maybe_upgrade_channel_trial(uid):
+def _maybe_upgrade_channel_trial(uid, force=False):
     """Одноразовое продление триала до 30 дней за подписку на канал. Кэш проверки 1 час."""
     try:
         now = int(_time_mod.time())
@@ -386,7 +386,7 @@ def _maybe_upgrade_channel_trial(uid):
         if not (e.get("plan") in ("business", "premium") and e.get("expires", 0) > now):
             return
         checked = int(e.get("ch_checked_at", 0) or 0)
-        if now - checked < 3600:
+        if not force and now - checked < 300:
             return
         e["ch_checked_at"] = now
         if _tg_channel_member(uid):
@@ -585,7 +585,6 @@ def register_user(uid, source="organic"):
         p.setdefault("source", source)
     p.setdefault("source", source or "organic")
     _save_db(db)
-    _grant_smart_trial(uid)
     track(uid, "start", {"source": source or "organic"})
 
 def favorites(uid):
@@ -2046,7 +2045,7 @@ def _cmd_free_business(uid):
     if not FREE_BUSINESS_ENABLED:
         _send(uid, "🎁 Акция завершена. Следите за новыми акциями на канале!")
         return True
-    _maybe_upgrade_channel_trial(uid)
+    _maybe_upgrade_channel_trial(uid, force=True)
     d = _plans_load()
     e = d.setdefault(str(uid), {})
     if e.get("free_trial_granted"):

@@ -182,6 +182,11 @@ def handle_stateful_flows(chat_id, text, lang):
         save_user_city(chat_id, city_name)
         _clear_user_state(chat_id)
         send_message(chat_id, T(lang, "city_changed" if state.get("mode") == "change_city" else "city_saved", city=city_name), get_main_keyboard(chat_id))
+        try:
+            import features as _ft
+            _ft._grant_smart_trial(chat_id)
+        except Exception:
+            pass
         send_message(chat_id, format_weather_text(chat_id, weather), get_main_keyboard(chat_id))
         return "ok", 200
 
