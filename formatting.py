@@ -43,7 +43,7 @@ def format_subscription_status(chat_id):
     if tr_active:
         return (f"💼 *Business (пробная)*\n🟢 Активна\n⏳ Осталось: *{tr_days}* дн.\n\n"
                 f"✅ Доступны все Business-функции: 100 AI-запросов в день, каналы, API, white-label.\n"
-                f"🎁 Триал выдан на 7 дней при регистрации.\n\n"
+                f"🎁 Триал выдан на 14 дней при регистрации.\n📢 Подписка на наш канал продляет триал до 30 дней!\n\n"
                 f"После окончания план переключится на Free (10 AI-запросов в день).")
     return T(lang, "subscription_inactive",
              premium=PRICE_PREMIUM, business=PRICE_BUSINESS)

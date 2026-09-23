@@ -335,7 +335,78 @@ def _team_role_info(uid):
         pass
     return None, None
 
+def _grant_smart_trial(uid):
+    """Выдача триала: 30 дней если подписан на канал, иначе 14. Обязательное уведомление."""
+    try:
+        now = int(_time_mod.time())
+        d = _plans_load()
+        e = d.setdefault(str(uid), {})
+        if _own_subscribed(uid):
+            return
+        active = e.get("plan") in ("business", "premium") and e.get("expires", 0) > now
+        if active:
+            _maybe_upgrade_channel_trial(uid)
+            return
+        subscribed = _tg_channel_member(uid)
+        days = FREE_BUSINESS_DAYS if subscribed else TRIAL_DAYS
+        e["trial_granted"] = True
+        e["plan"] = "business"
+        e["expires"] = now + days * 86400
+        e["notice_pending"] = False
+        if subscribed:
+            e["free_trial_granted"] = True
+            e["channel_upgrade_done"] = True
+        _plans_save(d)
+        from datetime import datetime as _dt
+        dt = _dt.fromtimestamp(e["expires"]).strftime("%d.%m.%Y")
+        chan = (os.getenv("TG_CHANNEL", "").strip() or os.getenv("TG_CHANNEL_ID", "").strip()).lstrip("@")
+        if subscribed:
+            _send(uid, f"🎁 Вам выдана пробная подписка Business на {days} дн. — до {dt}!\n\n"
+                       f"Спасибо, что подписаны на наш канал ❤️\n"
+                       f"Доступны: автопостинг в канал, API, команды, white-label.")
+        else:
+            _send(uid, f"🎁 Вам выдана пробная подписка Business на {days} дн. — до {dt}!\n\n"
+                       f"Доступны: автопостинг в канал, API, команды, white-label.\n\n"
+                       f"📢 Подпишитесь на наш канал: https://t.me/{chan}\n"
+                       f"— и подписка автоматически продлится до {FREE_BUSINESS_DAYS} дней!")
+    except Exception as ex:
+        logger.warning(f"smart trial grant error: {ex}")
+
+
+def _maybe_upgrade_channel_trial(uid):
+    """Одноразовое продление триала до 30 дней за подписку на канал. Кэш проверки 1 час."""
+    try:
+        now = int(_time_mod.time())
+        d = _plans_load()
+        e = d.get(str(uid))
+        if not e or not isinstance(e, dict):
+            return
+        if e.get("channel_upgrade_done"):
+            return
+        if not (e.get("plan") in ("business", "premium") and e.get("expires", 0) > now):
+            return
+        checked = int(e.get("ch_checked_at", 0) or 0)
+        if now - checked < 3600:
+            return
+        e["ch_checked_at"] = now
+        if _tg_channel_member(uid):
+            e["expires"] = now + FREE_BUSINESS_DAYS * 86400
+            e["channel_upgrade_done"] = True
+            e["free_trial_granted"] = True
+            _plans_save(d)
+            from datetime import datetime as _dt
+            dt = _dt.fromtimestamp(e["expires"]).strftime("%d.%m.%Y")
+            _send(uid, f"🎁 Спасибо, что подписались на наш канал!\n\n"
+                       f"⏳ Пробная подписка продлена до {FREE_BUSINESS_DAYS} дней — до {dt}.\n"
+                       f"Доступны: автопостинг в канал, API, команды, white-label.")
+        else:
+            _plans_save(d)
+    except Exception as ex:
+        logger.warning(f"upgrade trial error: {ex}")
+
+
 def _trial_active(uid):
+    _maybe_upgrade_channel_trial(uid)
     try:
         d = _plans_load()
         e = d.get(str(uid), {})
@@ -514,7 +585,7 @@ def register_user(uid, source="organic"):
         p.setdefault("source", source)
     p.setdefault("source", source or "organic")
     _save_db(db)
-    _grant_trial(uid)
+    _grant_smart_trial(uid)
     track(uid, "start", {"source": source or "organic"})
 
 def favorites(uid):
@@ -1975,6 +2046,7 @@ def _cmd_free_business(uid):
     if not FREE_BUSINESS_ENABLED:
         _send(uid, "🎁 Акция завершена. Следите за новыми акциями на канале!")
         return True
+    _maybe_upgrade_channel_trial(uid)
     d = _plans_load()
     e = d.setdefault(str(uid), {})
     if e.get("free_trial_granted"):
